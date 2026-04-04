@@ -62,7 +62,7 @@ const verifyRegistrationEmailSchema = z.object({
 });
 
 const verifyRegistrationMobileSchema = z.object({
-  identifier: z.string().min(1, 'Identifier (email or mobile) is required'),
+  identifier: z.string().min(1, 'Mobile number is required (without country code)'),
   otp: otpField,
 });
 

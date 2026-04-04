@@ -50,10 +50,12 @@ class AuthController {
       }
 
       // Email verified, mobile OTP sent → return 200
+      // identifier switches to mobile number for next steps
       return sendSuccess(res, {
         statusCode: StatusCodes.OK,
         message: result.message,
         data: {
+          identifier: result.identifier,
           step: result.step,
           maskedMobile: result.maskedMobile,
           expiresInSeconds: result.expiresInSeconds,

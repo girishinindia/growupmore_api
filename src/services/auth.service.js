@@ -178,8 +178,12 @@ class AuthService {
     // If mobile exists → move to mobile verification step
     if (userData.mobile) {
       userData.step = 'mobile_pending';
-      // Refresh TTL for mobile verification step
-      await redis.set(pendingKey, JSON.stringify(userData), 'EX', config.otp.expiryMinutes * 60);
+
+      // Move pending data from email key → mobile key
+      // So verify-mobile & resend-otp use mobile number as identifier
+      const mobileKey = `${REDIS_PREFIXES.PENDING_REGISTRATION}:${userData.mobile}`;
+      await redis.set(mobileKey, JSON.stringify(userData), 'EX', config.otp.expiryMinutes * 60);
+      await redis.del(pendingKey); // Remove old email-based key
 
       // Generate & send mobile OTP
       const { otp: mobileOtp, expiresInSeconds } = await otpService.generate(
@@ -193,10 +197,11 @@ class AuthService {
         otp: mobileOtp,
       });
 
-      logger.info(`Email verified for registration: ${identifier}. Mobile OTP sent.`);
+      logger.info(`Email verified for registration: ${identifier}. Mobile OTP sent. Pending key moved to mobile.`);
 
       return {
-        message: 'Email verified successfully. OTP sent to your mobile number.',
+        message: 'Email verified successfully. OTP sent to your mobile number. Use your mobile number as identifier for next steps.',
+        identifier: userData.mobile,
         step: 'mobile_pending',
         maskedMobile: maskMobile(userData.mobile),
         expiresInSeconds,

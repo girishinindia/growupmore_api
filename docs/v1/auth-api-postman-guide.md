@@ -74,14 +74,14 @@ sequenceDiagram
     Client->>API: POST /register/verify-email (identifier, otp)
     API->>Redis: Verify EMAIL OTP (max 3 attempts)
     Redis-->>API: Email OTP valid
-    API->>Redis: Update step to mobile_pending, refresh TTL
+    API->>Redis: Move pending data from email key → mobile key
     API->>Redis: Generate & store MOBILE OTP (3 min TTL)
     API->>SMS: Send OTP to MOBILE
-    API-->>Client: 200 OK (step=mobile_pending, maskedMobile)
+    API-->>Client: 200 OK (identifier=mobile, step=mobile_pending, maskedMobile)
 
-    Note over Client: Step 3 — Verify Mobile OTP
+    Note over Client: Step 3 — Verify Mobile OTP (identifier = mobile number without country code)
 
-    Client->>API: POST /register/verify-mobile (identifier, otp)
+    Client->>API: POST /register/verify-mobile (mobile_number, otp)
     API->>Redis: Verify MOBILE OTP (max 3 attempts)
     Redis-->>API: Mobile OTP valid
     API->>Redis: Get pending registration data
@@ -110,6 +110,8 @@ sequenceDiagram
 
 ## Forgot Password Flow
 
+> **Key concept:** A single OTP is generated and sent to **both** email and mobile. The user can read the OTP from whichever channel they prefer. Verification uses the email as the key. No separate mobile OTP verification — it's the same OTP on both channels.
+
 ```mermaid
 sequenceDiagram
     participant Client
@@ -122,14 +124,16 @@ sequenceDiagram
     Client->>API: POST /forgot-password (email + mobile)
     API->>DB: udf_get_users (find by email)
     DB-->>API: User found, verify mobile matches
-    API->>Redis: Store pending forgot password data
-    API->>Redis: Generate OTP
-    API->>Brevo: Send OTP to email
-    API->>SMS: Send OTP to mobile
-    API-->>Client: 200 OK (masked email/mobile)
+    API->>Redis: Store pending data (userId, email, mobile)
+    API->>Redis: Generate single OTP (3 min TTL, keyed by email)
+    API->>Brevo: Send SAME OTP to email
+    API->>SMS: Send SAME OTP to mobile
+    API-->>Client: 200 OK (maskedEmail, maskedMobile)
+
+    Note over Client: User reads OTP from email OR mobile (same OTP)
 
     Client->>API: POST /forgot-password/verify (email, otp)
-    API->>Redis: Verify OTP
+    API->>Redis: Verify OTP (against email key)
     API->>Redis: Generate reset token (UUID, 5 min TTL)
     API-->>Client: 200 OK (resetToken)
 
@@ -138,6 +142,13 @@ sequenceDiagram
     API->>DB: sp_users_update (p_password = RAW, SP hashes)
     API->>Redis: Invalidate ALL sessions
     API-->>Client: 200 OK (password changed, login again)
+
+    Note over Client: If OTP not received after 60 sec
+
+    Client->>API: POST /forgot-password/resend-otp (identifier=email)
+    API->>Brevo: Resend SAME OTP to email
+    API->>SMS: Resend SAME OTP to mobile
+    API-->>Client: 200 OK (resent to both)
 ```
 
 ---
@@ -325,7 +336,7 @@ POST http://localhost:5001/api/v1/auth/register/resend-otp
 |-----|-------|
 | Content-Type | application/json |
 
-**Request Body:**
+**Request Body (email_pending step — use email as identifier):**
 
 ```json
 {
@@ -333,11 +344,21 @@ POST http://localhost:5001/api/v1/auth/register/resend-otp
 }
 ```
 
+**Request Body (mobile_pending step — use mobile number without country code):**
+
+```json
+{
+  "identifier": "9662278990"
+}
+```
+
+> **Important:** After email verification, the pending data moves to a mobile-based key. So use **email** as identifier during `email_pending` step, and **mobile number (without country code)** during `mobile_pending` step.
+
 **Validation Rules:**
 
 | Field | Type | Required | Rules |
 |-------|------|----------|-------|
-| identifier | string | Yes | The email or mobile used during registration |
+| identifier | string | Yes | Email (during email_pending) or mobile without country code (during mobile_pending) |
 
 **Response — 200 OK (email step — OTP resent to email):**
 
@@ -424,8 +445,9 @@ POST http://localhost:5001/api/v1/auth/register/verify-email
 ```json
 {
   "success": true,
-  "message": "Email verified successfully. OTP sent to your mobile number.",
+  "message": "Email verified successfully. OTP sent to your mobile number. Use your mobile number as identifier for next steps.",
   "data": {
+    "identifier": "9662278990",
     "step": "mobile_pending",
     "maskedMobile": "******8990",
     "expiresInSeconds": 180,
@@ -434,7 +456,7 @@ POST http://localhost:5001/api/v1/auth/register/verify-email
 }
 ```
 
-> After this response, proceed to **Step 4 (Verify Mobile OTP)** to complete registration.
+> After this response, proceed to **Step 4 (Verify Mobile OTP)** using your **mobile number (without country code)** as the `identifier`.
 
 **Response — 201 Created (email-only registration — no mobile provided):**
 
@@ -525,18 +547,18 @@ POST http://localhost:5001/api/v1/auth/register/verify-mobile
 
 ```json
 {
-  "identifier": "girish@example.com",
+  "identifier": "9662278990",
   "otp": "739521"
 }
 ```
 
-> **Note:** The `identifier` is still the **email** (or whichever identifier was used in Step 1). The API internally looks up the mobile number from the pending registration data.
+> **Note:** The `identifier` must be the **mobile number without country code** (e.g. `9662278990`, not `919662278990` or `+919662278990`). After email verification, the pending data is moved to a mobile-based key, so the mobile number becomes the identifier for this step and for resend-otp.
 
 **Validation Rules:**
 
 | Field | Type | Required | Rules |
 |-------|------|----------|-------|
-| identifier | string | Yes | The email or mobile used during registration |
+| identifier | string | Yes | Mobile number without country code |
 | otp | string | Yes | Exactly 6 digits (the mobile OTP) |
 
 **Response — 201 Created (both verified, user created + auto-login):**
@@ -765,6 +787,8 @@ POST http://localhost:5001/api/v1/auth/refresh-token
 
 ## 7. Change Password (Protected)
 
+> **How it works:** This is a protected route — user must be logged in. The `Authorization` header contains the JWT access token from login. The `authenticate` middleware extracts the `userId` from the token, so the system knows which user's password to change. The user provides both old and new passwords.
+
 ```
 POST http://localhost:5001/api/v1/auth/change-password
 ```
@@ -774,7 +798,7 @@ POST http://localhost:5001/api/v1/auth/change-password
 | Key | Value |
 |-----|-------|
 | Content-Type | application/json |
-| Authorization | Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... |
+| Authorization | Bearer `<accessToken from login>` |
 
 **Request Body:**
 
@@ -849,6 +873,8 @@ POST http://localhost:5001/api/v1/auth/change-password
 
 ## 8. Change Email — Initiate (Protected)
 
+> **How it works:** This is a protected route. The `Authorization` header contains the JWT access token from login. The `authenticate` middleware extracts the `userId` from the token, so the system knows which user's email to change — no need to send email/user ID in the body. The OTP is sent to the **new** email address to verify the user owns it.
+
 ```
 POST http://localhost:5001/api/v1/auth/change-email
 ```
@@ -858,7 +884,9 @@ POST http://localhost:5001/api/v1/auth/change-email
 | Key | Value |
 |-----|-------|
 | Content-Type | application/json |
-| Authorization | Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... |
+| Authorization | Bearer `<accessToken from login>` |
+
+> **Postman tip:** Set Authorization to `Bearer {{access_token}}` if using Postman environment variables.
 
 **Request Body:**
 
@@ -874,7 +902,7 @@ POST http://localhost:5001/api/v1/auth/change-email
 |-------|------|----------|-------|
 | newEmail | string | Yes | Valid email, max 255 chars |
 
-**Response — 200 OK (OTP sent to new email):**
+**Response — 200 OK (OTP sent to NEW email):**
 
 ```json
 {
@@ -906,9 +934,20 @@ POST http://localhost:5001/api/v1/auth/change-email
 }
 ```
 
+**Response — 401 Unauthorized (not logged in / expired token):**
+
+```json
+{
+  "success": false,
+  "message": "Access token is required"
+}
+```
+
 ---
 
 ## 9. Change Email — Verify OTP (Protected)
+
+> **How it works:** The system verifies the OTP that was sent to the **new** email. It knows which new email to verify because it stored `{userId, newEmail}` in Redis when you initiated the change (Step 8). The `userId` comes from the JWT token in the `Authorization` header.
 
 ```
 POST http://localhost:5001/api/v1/auth/change-email/verify
@@ -919,7 +958,7 @@ POST http://localhost:5001/api/v1/auth/change-email/verify
 | Key | Value |
 |-----|-------|
 | Content-Type | application/json |
-| Authorization | Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... |
+| Authorization | Bearer `<accessToken from login>` |
 
 **Request Body:**
 
@@ -928,6 +967,8 @@ POST http://localhost:5001/api/v1/auth/change-email/verify
   "otp": "739215"
 }
 ```
+
+> Only the OTP is needed. The system already knows which email to update from the pending data stored in Redis (keyed by `userId` from JWT).
 
 **Validation Rules:**
 
@@ -944,7 +985,7 @@ POST http://localhost:5001/api/v1/auth/change-email/verify
 }
 ```
 
-> After this response, the current access token becomes invalid. User must login again with the new email.
+> After this response, the current access token becomes invalid. User must login again with the **new email**.
 
 **Response — 400 Bad Request (session expired):**
 
@@ -968,6 +1009,8 @@ POST http://localhost:5001/api/v1/auth/change-email/verify
 
 ## 10. Change Mobile — Initiate (Protected)
 
+> **How it works:** Same pattern as Change Email. The `userId` comes from the JWT token in `Authorization` header. The OTP is sent to the **new** mobile number to verify the user owns it. The system stores `{userId, newMobile}` in Redis for the verify step.
+
 ```
 POST http://localhost:5001/api/v1/auth/change-mobile
 ```
@@ -977,7 +1020,7 @@ POST http://localhost:5001/api/v1/auth/change-mobile
 | Key | Value |
 |-----|-------|
 | Content-Type | application/json |
-| Authorization | Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... |
+| Authorization | Bearer `<accessToken from login>` |
 
 **Request Body:**
 
@@ -993,7 +1036,7 @@ POST http://localhost:5001/api/v1/auth/change-mobile
 |-------|------|----------|-------|
 | newMobile | string | Yes | 10-15 digits only |
 
-**Response — 200 OK (OTP sent to new mobile):**
+**Response — 200 OK (OTP sent to NEW mobile):**
 
 ```json
 {
@@ -1025,9 +1068,20 @@ POST http://localhost:5001/api/v1/auth/change-mobile
 }
 ```
 
+**Response — 401 Unauthorized (not logged in / expired token):**
+
+```json
+{
+  "success": false,
+  "message": "Access token is required"
+}
+```
+
 ---
 
 ## 11. Change Mobile — Verify OTP (Protected)
+
+> **How it works:** The system verifies the OTP that was sent to the **new** mobile. It knows which new mobile to verify because it stored `{userId, newMobile}` in Redis when you initiated the change (Step 10). The `userId` comes from the JWT token in the `Authorization` header.
 
 ```
 POST http://localhost:5001/api/v1/auth/change-mobile/verify
@@ -1038,7 +1092,7 @@ POST http://localhost:5001/api/v1/auth/change-mobile/verify
 | Key | Value |
 |-----|-------|
 | Content-Type | application/json |
-| Authorization | Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... |
+| Authorization | Bearer `<accessToken from login>` |
 
 **Request Body:**
 
@@ -1047,6 +1101,8 @@ POST http://localhost:5001/api/v1/auth/change-mobile/verify
   "otp": "531842"
 }
 ```
+
+> Only the OTP is needed. The system already knows which mobile to update from the pending data stored in Redis (keyed by `userId` from JWT).
 
 **Validation Rules:**
 
@@ -1063,11 +1119,13 @@ POST http://localhost:5001/api/v1/auth/change-mobile/verify
 }
 ```
 
-> After this response, the current access token becomes invalid. User must login again with the new mobile.
+> After this response, the current access token becomes invalid. User must login again with the **new mobile**.
 
 ---
 
 ## 12. Forgot Password — Initiate
+
+> **How it works:** This is a public route (no login required — user forgot their password!). Both email AND mobile are required as a security measure — they must belong to the same user account. The system generates a **single OTP** and sends it to **both** email and mobile. This way the user receives the OTP on whichever channel they have access to. The OTP is stored against the email for verification in the next step.
 
 ```
 POST http://localhost:5001/api/v1/auth/forgot-password
@@ -1095,9 +1153,9 @@ POST http://localhost:5001/api/v1/auth/forgot-password
 | email | string | Yes | Valid email |
 | mobile | string | Yes | 10-15 digits |
 
-> Both email AND mobile are required. They must belong to the same user account.
+> Both email AND mobile are required. They must belong to the same user account. The same OTP is sent to both channels.
 
-**Response — 200 OK (OTP sent to both):**
+**Response — 200 OK (same OTP sent to both email and mobile):**
 
 ```json
 {
@@ -1134,6 +1192,8 @@ POST http://localhost:5001/api/v1/auth/forgot-password
 
 ## 13. Forgot Password — Resend OTP
 
+> Resends the **same OTP** to both email and mobile again. Uses the email as identifier since the pending data is stored under the email key.
+
 ```
 POST http://localhost:5001/api/v1/auth/forgot-password/resend-otp
 ```
@@ -1156,9 +1216,9 @@ POST http://localhost:5001/api/v1/auth/forgot-password/resend-otp
 
 | Field | Type | Required | Rules |
 |-------|------|----------|-------|
-| identifier | string | Yes | The email used in forgot-password step |
+| identifier | string | Yes | The email used in forgot-password initiation |
 
-**Response — 200 OK:**
+**Response — 200 OK (OTP resent to both email and mobile):**
 
 ```json
 {
@@ -1186,6 +1246,8 @@ POST http://localhost:5001/api/v1/auth/forgot-password/resend-otp
 
 ## 14. Forgot Password — Verify OTP
 
+> **How it works:** The user enters the OTP they received (on either email or mobile — it's the same OTP). The system verifies it against the email-based OTP key. On success, a `resetToken` (UUID, valid 5 minutes) is generated for the password reset step.
+
 ```
 POST http://localhost:5001/api/v1/auth/forgot-password/verify
 ```
@@ -1205,12 +1267,14 @@ POST http://localhost:5001/api/v1/auth/forgot-password/verify
 }
 ```
 
+> The `email` field is required because the OTP was generated and stored against the email. Enter the OTP received via email or mobile (both received the same OTP).
+
 **Validation Rules:**
 
 | Field | Type | Required | Rules |
 |-------|------|----------|-------|
-| email | string | Yes | Valid email |
-| otp | string | Yes | Exactly 6 digits |
+| email | string | Yes | The email used in forgot-password initiation |
+| otp | string | Yes | Exactly 6 digits (received via email or mobile) |
 
 **Response — 200 OK (returns reset token):**
 
@@ -1289,6 +1353,8 @@ POST http://localhost:5001/api/v1/auth/forgot-password/reset
 
 ## 16. Logout (Protected)
 
+> **How it works:** User must be logged in. The `userId` and `sessionId` are extracted from the JWT token. Only the current session is invalidated (not all devices).
+
 ```
 POST http://localhost:5001/api/v1/auth/logout
 ```
@@ -1297,7 +1363,7 @@ POST http://localhost:5001/api/v1/auth/logout
 
 | Key | Value |
 |-----|-------|
-| Authorization | Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... |
+| Authorization | Bearer `<accessToken from login>` |
 
 **Request Body:** None (empty body is fine)
 

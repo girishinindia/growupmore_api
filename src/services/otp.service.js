@@ -49,7 +49,11 @@ class OtpService {
     // Set resend cooldown
     await redis.set(cooldownKey, '1', 'EX', config.otp.resendCooldownSeconds);
 
-    logger.info(`OTP generated for ${purpose}:${identifier}`);
+    // Debug: verify the OTP was actually stored
+    const verifyStored = await redis.get(otpKey);
+    logger.info(
+      `OTP generated for ${purpose}:${identifier} | key=${otpKey} | stored=${verifyStored ? 'YES' : 'NO'} | TTL=${expiresInSeconds}s | mock=${redis._isMock || false}`,
+    );
 
     return { otp, expiresInSeconds };
   }
@@ -67,6 +71,13 @@ class OtpService {
 
     // Check if OTP exists
     const storedOtp = await redis.get(otpKey);
+
+    // Debug: log the lookup result
+    const ttlLeft = await redis.ttl(otpKey);
+    logger.info(
+      `OTP verify attempt for ${purpose}:${identifier} | key=${otpKey} | found=${storedOtp ? 'YES' : 'NO'} | ttl=${ttlLeft}s | mock=${redis._isMock || false}`,
+    );
+
     if (!storedOtp) {
       throw new BadRequestError('OTP has expired or was not generated. Please request a new one.');
     }

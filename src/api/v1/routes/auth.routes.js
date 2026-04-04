@@ -31,6 +31,7 @@ const authController = require('../controllers/auth.controller');
 const validate = require('../../../middleware/validate.middleware');
 const authenticate = require('../../../middleware/auth.middleware');
 const { authLimiter } = require('../../../middleware/rateLimiter.middleware');
+const { verifyRecaptcha } = require('../../../middleware/recaptcha.middleware');
 const {
   initiateRegistrationSchema,
   verifyRegistrationEmailSchema,
@@ -58,6 +59,7 @@ const router = Router();
 router.post(
   '/register',
   authLimiter,
+  verifyRecaptcha('register'),
   validate(initiateRegistrationSchema),
   authController.initiateRegistration,
 );
@@ -87,6 +89,7 @@ router.post(
 router.post(
   '/login',
   authLimiter,
+  verifyRecaptcha('login'),
   validate(loginSchema),
   authController.login,
 );
@@ -95,6 +98,7 @@ router.post(
 router.post(
   '/forgot-password',
   authLimiter,
+  verifyRecaptcha('forgot_password'),
   validate(initiateForgotPasswordSchema),
   authController.initiateForgotPassword,
 );
