@@ -10,7 +10,18 @@ const logger = require('../config/logger');
 async function isSuperAdmin(userId) {
   try {
     const { data: roles, error } = await supabase.rpc('udf_get_user_role_assignments', {
+      p_id: null,
       p_user_id: userId,
+      p_role_id: null,
+      p_role_code: null,
+      p_filter_context_type: null,
+      p_filter_context_id: null,
+      p_filter_is_valid: true,
+      p_search_term: null,
+      p_sort_column: 'assigned_at',
+      p_sort_direction: 'DESC',
+      p_page_index: 1,
+      p_page_size: null,
     });
 
     if (error) {
@@ -81,7 +92,18 @@ async function userHasAnyRole(userId, roleCodes) {
 
   try {
     const { data: roles, error } = await supabase.rpc('udf_get_user_role_assignments', {
+      p_id: null,
       p_user_id: userId,
+      p_role_id: null,
+      p_role_code: null,
+      p_filter_context_type: null,
+      p_filter_context_id: null,
+      p_filter_is_valid: true,
+      p_search_term: null,
+      p_sort_column: 'assigned_at',
+      p_sort_direction: 'DESC',
+      p_page_index: 1,
+      p_page_size: null,
     });
 
     if (error) {

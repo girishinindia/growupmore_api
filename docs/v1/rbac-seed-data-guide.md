@@ -43,12 +43,17 @@ POST http://localhost:5001/api/v1/auth/login
 
 ```json
 {
-  "identifier": "girish@example.com",
-  "password": "Girish@123"
+  "username": "sa@growupmore.com",
+  "password": "Admin@123"
 }
 ```
 
 > **Save the `accessToken` from response as `{{sa_token}}`** — you'll use it in all requests below.
+
+> **Important — How to set the token in Postman:**
+> Go to the **Authorization** tab → Type: **Bearer Token** → paste the token.
+> OR go to the **Headers** tab → add key `Authorization` with value `Bearer <your_token>`.
+> Do **NOT** put the token in the URL — that will NOT work and will return `401 Access token is required`.
 
 **Why:** Every RBAC write operation requires super_admin privileges. Without this token, all create/assign requests will return `403 Forbidden`.
 
@@ -700,7 +705,7 @@ POST http://localhost:5001/api/v1/auth/login
 
 ```json
 {
-  "identifier": "rahul.admin@example.com",
+  "username": "rahul.admin@example.com",
   "password": "Rahul@Admin123"
 }
 ```

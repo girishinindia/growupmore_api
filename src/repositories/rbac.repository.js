@@ -60,6 +60,16 @@ class RbacRepository {
   async findRoleById(roleId) {
     const { data, error } = await supabase.rpc('udf_get_roles', {
       p_id: roleId,
+      p_code: null,
+      p_is_active: null,
+      p_filter_level: null,
+      p_filter_parent_role_id: null,
+      p_filter_is_system_role: null,
+      p_search_term: null,
+      p_sort_column: 'display_order',
+      p_sort_direction: 'ASC',
+      p_page_index: 1,
+      p_page_size: 1,
     });
 
     if (error) {
@@ -77,7 +87,17 @@ class RbacRepository {
    */
   async findRoleByCode(roleCode) {
     const { data, error } = await supabase.rpc('udf_get_roles', {
+      p_id: null,
       p_code: roleCode,
+      p_is_active: null,
+      p_filter_level: null,
+      p_filter_parent_role_id: null,
+      p_filter_is_system_role: null,
+      p_search_term: null,
+      p_sort_column: 'display_order',
+      p_sort_direction: 'ASC',
+      p_page_index: 1,
+      p_page_size: 1,
     });
 
     if (error) {
@@ -117,10 +137,13 @@ class RbacRepository {
     pageSize = 50,
   } = {}) {
     const { data, error } = await supabase.rpc('udf_get_roles', {
+      p_id: null,
+      p_code: null,
       p_is_active: isActive,
       p_filter_level: filterLevel,
       p_filter_parent_role_id: filterParentRoleId,
       p_filter_is_system_role: filterIsSystemRole,
+      p_search_term: null,
       p_sort_column: sortColumn,
       p_sort_direction: sortDirection,
       p_page_index: pageIndex,
@@ -151,8 +174,13 @@ class RbacRepository {
     } = options;
 
     const { data, error } = await supabase.rpc('udf_get_roles', {
-      p_search_term: searchTerm,
+      p_id: null,
+      p_code: null,
       p_is_active: isActive,
+      p_filter_level: null,
+      p_filter_parent_role_id: null,
+      p_filter_is_system_role: null,
+      p_search_term: searchTerm,
       p_sort_column: sortColumn,
       p_sort_direction: sortDirection,
       p_page_index: pageIndex,
@@ -329,6 +357,18 @@ class RbacRepository {
   async findPermissionById(permissionId) {
     const { data, error } = await supabase.rpc('udf_get_permissions', {
       p_id: permissionId,
+      p_code: null,
+      p_is_active: null,
+      p_filter_module_id: null,
+      p_filter_module_code: null,
+      p_filter_resource: null,
+      p_filter_action: null,
+      p_filter_scope: null,
+      p_search_term: null,
+      p_sort_column: 'display_order',
+      p_sort_direction: 'ASC',
+      p_page_index: 1,
+      p_page_size: 1,
     });
 
     if (error) {
@@ -346,7 +386,19 @@ class RbacRepository {
    */
   async findPermissionByCode(permissionCode) {
     const { data, error } = await supabase.rpc('udf_get_permissions', {
+      p_id: null,
       p_code: permissionCode,
+      p_is_active: null,
+      p_filter_module_id: null,
+      p_filter_module_code: null,
+      p_filter_resource: null,
+      p_filter_action: null,
+      p_filter_scope: null,
+      p_search_term: null,
+      p_sort_column: 'display_order',
+      p_sort_direction: 'ASC',
+      p_page_index: 1,
+      p_page_size: 1,
     });
 
     if (error) {
@@ -390,12 +442,15 @@ class RbacRepository {
     pageSize = 50,
   } = {}) {
     const { data, error } = await supabase.rpc('udf_get_permissions', {
+      p_id: null,
+      p_code: null,
       p_is_active: isActive,
       p_filter_module_id: filterModuleId,
       p_filter_module_code: filterModuleCode,
       p_filter_resource: filterResource,
       p_filter_action: filterAction,
       p_filter_scope: filterScope,
+      p_search_term: null,
       p_sort_column: sortColumn,
       p_sort_direction: sortDirection,
       p_page_index: pageIndex,
@@ -427,9 +482,15 @@ class RbacRepository {
     } = options;
 
     const { data, error } = await supabase.rpc('udf_get_permissions', {
-      p_search_term: searchTerm,
+      p_id: null,
+      p_code: null,
       p_is_active: isActive,
+      p_filter_module_id: null,
       p_filter_module_code: filterModuleCode,
+      p_filter_resource: null,
+      p_filter_action: null,
+      p_filter_scope: null,
+      p_search_term: searchTerm,
       p_sort_column: sortColumn,
       p_sort_direction: sortDirection,
       p_page_index: pageIndex,
@@ -467,9 +528,12 @@ class RbacRepository {
 
     const { data, error } = await supabase.rpc('udf_get_role_permissions', {
       p_role_id: roleId,
+      p_role_code: null,
+      p_permission_id: null,
       p_filter_module_code: filterModuleCode,
       p_filter_action: filterAction,
       p_filter_scope: filterScope,
+      p_search_term: null,
       p_sort_column: sortColumn,
       p_sort_direction: sortDirection,
       p_page_index: pageIndex,
@@ -501,6 +565,11 @@ class RbacRepository {
 
     const { data, error } = await supabase.rpc('udf_get_role_permissions', {
       p_role_id: roleId,
+      p_role_code: null,
+      p_permission_id: null,
+      p_filter_module_code: null,
+      p_filter_action: null,
+      p_filter_scope: null,
       p_search_term: searchTerm,
       p_sort_column: sortColumn,
       p_sort_direction: sortDirection,
@@ -619,8 +688,26 @@ class RbacRepository {
    * @returns {Object|null} Assignment object or null if not found
    */
   async findUserRoleAssignmentById(assignmentId) {
+    /**
+     * DB signature: udf_get_user_role_assignments(
+     *   p_id, p_user_id, p_role_id, p_role_code,
+     *   p_filter_context_type, p_filter_context_id, p_filter_is_valid,
+     *   p_search_term, p_sort_column, p_sort_direction, p_page_index, p_page_size
+     * )
+     */
     const { data, error } = await supabase.rpc('udf_get_user_role_assignments', {
       p_id: assignmentId,
+      p_user_id: null,
+      p_role_id: null,
+      p_role_code: null,
+      p_filter_context_type: null,
+      p_filter_context_id: null,
+      p_filter_is_valid: null,
+      p_search_term: null,
+      p_sort_column: 'assigned_at',
+      p_sort_direction: 'DESC',
+      p_page_index: 1,
+      p_page_size: 1,
     });
 
     if (error) {
@@ -639,20 +726,25 @@ class RbacRepository {
    */
   async getUserRoleAssignments(userId, options = {}) {
     const {
-      isActive = true,
       filterContextType = null,
+      filterContextId = null,
       filterRoleCode = null,
-      sortColumn = 'ura_role_name',
-      sortDirection = 'ASC',
+      filterIsValid = null,
+      sortColumn = 'assigned_at',
+      sortDirection = 'DESC',
       pageIndex = 1,
       pageSize = 50,
     } = options;
 
     const { data, error } = await supabase.rpc('udf_get_user_role_assignments', {
+      p_id: null,
       p_user_id: userId,
-      p_is_active: isActive,
+      p_role_id: null,
+      p_role_code: filterRoleCode,
       p_filter_context_type: filterContextType,
-      p_filter_role_code: filterRoleCode,
+      p_filter_context_id: filterContextId,
+      p_filter_is_valid: filterIsValid,
+      p_search_term: null,
       p_sort_column: sortColumn,
       p_sort_direction: sortDirection,
       p_page_index: pageIndex,
@@ -675,18 +767,24 @@ class RbacRepository {
    */
   async getRoleAssignments(roleId, options = {}) {
     const {
-      isActive = true,
       filterContextType = null,
-      sortColumn = 'ura_user_email',
-      sortDirection = 'ASC',
+      filterContextId = null,
+      filterIsValid = null,
+      sortColumn = 'assigned_at',
+      sortDirection = 'DESC',
       pageIndex = 1,
       pageSize = 50,
     } = options;
 
     const { data, error } = await supabase.rpc('udf_get_user_role_assignments', {
+      p_id: null,
+      p_user_id: null,
       p_role_id: roleId,
-      p_is_active: isActive,
+      p_role_code: null,
       p_filter_context_type: filterContextType,
+      p_filter_context_id: filterContextId,
+      p_filter_is_valid: filterIsValid,
+      p_search_term: null,
       p_sort_column: sortColumn,
       p_sort_direction: sortDirection,
       p_page_index: pageIndex,
@@ -709,16 +807,22 @@ class RbacRepository {
    */
   async searchUserRoleAssignments(searchTerm, options = {}) {
     const {
-      isActive = true,
-      sortColumn = 'ura_user_email',
-      sortDirection = 'ASC',
+      filterIsValid = null,
+      sortColumn = 'assigned_at',
+      sortDirection = 'DESC',
       pageIndex = 1,
       pageSize = 50,
     } = options;
 
     const { data, error } = await supabase.rpc('udf_get_user_role_assignments', {
+      p_id: null,
+      p_user_id: null,
+      p_role_id: null,
+      p_role_code: null,
+      p_filter_context_type: null,
+      p_filter_context_id: null,
+      p_filter_is_valid: filterIsValid,
       p_search_term: searchTerm,
-      p_is_active: isActive,
       p_sort_column: sortColumn,
       p_sort_direction: sortDirection,
       p_page_index: pageIndex,
@@ -916,6 +1020,13 @@ class RbacRepository {
   async findModuleById(moduleId) {
     const { data, error } = await supabase.rpc('udf_get_modules', {
       p_id: moduleId,
+      p_code: null,
+      p_is_active: null,
+      p_search_term: null,
+      p_sort_column: 'display_order',
+      p_sort_direction: 'ASC',
+      p_page_index: 1,
+      p_page_size: 1,
     });
 
     if (error) {
@@ -933,7 +1044,14 @@ class RbacRepository {
    */
   async findModuleByCode(moduleCode) {
     const { data, error } = await supabase.rpc('udf_get_modules', {
+      p_id: null,
       p_code: moduleCode,
+      p_is_active: null,
+      p_search_term: null,
+      p_sort_column: 'display_order',
+      p_sort_direction: 'ASC',
+      p_page_index: 1,
+      p_page_size: 1,
     });
 
     if (error) {
@@ -967,7 +1085,10 @@ class RbacRepository {
     pageSize = 50,
   } = {}) {
     const { data, error } = await supabase.rpc('udf_get_modules', {
+      p_id: null,
+      p_code: null,
       p_is_active: isActive,
+      p_search_term: null,
       p_sort_column: sortColumn,
       p_sort_direction: sortDirection,
       p_page_index: pageIndex,
@@ -998,8 +1119,10 @@ class RbacRepository {
     } = options;
 
     const { data, error } = await supabase.rpc('udf_get_modules', {
-      p_search_term: searchTerm,
+      p_id: null,
+      p_code: null,
       p_is_active: isActive,
+      p_search_term: searchTerm,
       p_sort_column: sortColumn,
       p_sort_direction: sortDirection,
       p_page_index: pageIndex,

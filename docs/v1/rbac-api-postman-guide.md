@@ -120,7 +120,9 @@ graph TD
 | Content-Type | application/json |
 | Authorization | Bearer `<access_token>` |
 
-> **Note:** Get the `access_token` from the `/api/v1/auth/login` response. Super admin token is required for most write operations.
+> **Note:** Get the `access_token` from the `/api/v1/auth/login` response (login uses `username` field, not `identifier`). Super admin token is required for most write operations.
+>
+> **In Postman:** Go to **Authorization** tab → Type: **Bearer Token** → paste the token. Do **NOT** put the token in the URL query string.
 
 ---
 
