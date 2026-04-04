@@ -55,5 +55,5 @@ ecosystem.config.js.bak
 api_project_ref/
 database files/
 tests/
-docs/
+# docs/ — keep docs tracked in git
 logs/
