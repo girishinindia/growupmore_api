@@ -57,7 +57,7 @@ const verifyRegistrationEmailSchema = z.object({
 });
 
 const verifyRegistrationMobileSchema = z.object({
-  identifier: z.string().min(1, 'Mobile number is required (without country code)'),
+  identifier: z.string().regex(/^\d{10}$/, 'Mobile number must be exactly 10 digits (without country code)'),
   otp: otpField,
 });
 

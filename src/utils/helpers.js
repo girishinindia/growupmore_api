@@ -39,21 +39,15 @@ const maskMobile = (mobile) => {
 };
 
 /**
- * Normalise mobile number — strip spaces/dashes/+, keep 10 digits only
- * User sends: 9662278990 (10 digits)
- * Stored as:  9662278990 (10 digits — no country code in DB/Redis)
- * Country code 91 is prepended only when sending SMS
+ * Normalise mobile number — strip spaces/dashes/+ only
+ * Always 10 digits, no country code. Validator enforces the format.
+ * Country code 91 is prepended only when sending SMS.
  */
 const normaliseMobile = (mobile) => {
   if (!mobile) {
     return null;
   }
-  const cleaned = mobile.replace(/[\s\-\+]/g, '');
-  // If it has country code prefix (91 + 10 digits = 12 digits), strip 91
-  if (cleaned.length === 12 && cleaned.startsWith('91')) {
-    return cleaned.slice(2);
-  }
-  return cleaned;
+  return mobile.replace(/[\s\-\+]/g, '');
 };
 
 /**
