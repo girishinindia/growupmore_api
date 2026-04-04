@@ -2,24 +2,29 @@
  * ═══════════════════════════════════════════════════════════════
  * USER REPOSITORY — Database Layer (Supabase RPC)
  * ═══════════════════════════════════════════════════════════════
- * All database operations use ONLY the stored procedures and
- * functions defined in the SQL phases:
+ * All database operations use ONLY the functions defined in the
+ * SQL phases:
  *
- *   udf_get_users        — Phase 04 (read, search, filter, paginate)
- *   sp_users_insert       — Phase 04 (create user, hashes password internally)
- *   sp_users_update       — Phase 04 (update user, hashes password internally)
- *   sp_users_delete       — Phase 04 (soft delete)
+ *   udf_get_users     — FUNCTION (read, search, filter, paginate)
+ *   sp_users_insert   — FUNCTION (create user, returns new id,
+ *                        hashes password via pgcrypto internally)
+ *   sp_users_update   — FUNCTION (update user, returns void,
+ *                        hashes password via pgcrypto if provided)
+ *   sp_users_delete   — FUNCTION (soft delete, returns void)
  *
  * IMPORTANT:
  *   - sp_users_insert and sp_users_update hash the password
- *     internally via pgcrypto crypt(). Do NOT pre-hash in Node.
+ *     internally via crypt(p_password, gen_salt('bf')).
+ *     Do NOT pre-hash in Node — send RAW plaintext.
  *   - udf_get_users returns from uv_users view — password is
- *     NEVER returned. For password verification we use a direct
- *     select on users table (only for login/auth).
+ *     NEVER returned. For password verification we query the
+ *     users table directly and use bcryptjs.compare() (Node
+ *     side) against the pgcrypto hash ($2a$ format).
  * ═══════════════════════════════════════════════════════════════
  */
 
 const { supabase } = require('../config/database');
+const bcrypt = require('bcryptjs');
 const logger = require('../config/logger');
 
 class UserRepository {
@@ -29,7 +34,7 @@ class UserRepository {
 
   /**
    * Get user by ID via udf_get_users
-   * NOTE: Does NOT return password (view excludes it)
+   * Returns full user with country info (no password)
    */
   async findById(id) {
     const { data, error } = await supabase.rpc('udf_get_users', {
@@ -46,8 +51,8 @@ class UserRepository {
   }
 
   /**
-   * Get user by email via udf_get_users + search
-   * NOTE: Does NOT return password
+   * Get user by email via udf_get_users + exact match
+   * Returns full user with country info (no password)
    */
   async findByEmail(email) {
     const { data, error } = await supabase.rpc('udf_get_users', {
@@ -62,8 +67,8 @@ class UserRepository {
       throw error;
     }
 
-    // udf_get_users search is ILIKE across many fields — we must
-    // exact-match on email from the results
+    // udf_get_users search is ILIKE across many fields —
+    // we must exact-match on email from the results
     if (data && data.length > 0) {
       const match = data.find(
         (u) => u.user_email && u.user_email.toLowerCase() === email.toLowerCase(),
@@ -75,8 +80,8 @@ class UserRepository {
   }
 
   /**
-   * Get user by mobile via udf_get_users + search
-   * NOTE: Does NOT return password
+   * Get user by mobile via udf_get_users + exact match
+   * Returns full user with country info (no password)
    */
   async findByMobile(mobile) {
     const { data, error } = await supabase.rpc('udf_get_users', {
@@ -100,130 +105,13 @@ class UserRepository {
   }
 
   /**
-   * Find user by email OR mobile (for login, profile lookups)
-   * NOTE: Does NOT return password
+   * Find user by email OR mobile
+   * Returns full user with country info (no password)
    */
   async findByEmailOrMobile(identifier) {
     const byEmail = await this.findByEmail(identifier);
-    if (byEmail) {
-      return byEmail;
-    }
+    if (byEmail) return byEmail;
     return this.findByMobile(identifier);
-  }
-
-  // ─────────────────────────────────────────────────────────────
-  //  PASSWORD VERIFICATION — Direct query (only time we touch
-  //  the users table directly, because udf_get_users / uv_users
-  //  correctly excludes the password column)
-  // ─────────────────────────────────────────────────────────────
-
-  /**
-   * Verify password using pgcrypto crypt() in the database.
-   * Returns the full user row (including id, role, etc.) if
-   * the password matches, or null if it doesn't.
-   *
-   * SQL: WHERE password = crypt(p_raw_password, password)
-   * This is how pgcrypto bcrypt verification works — it re-hashes
-   * the input using the stored hash as the salt.
-   */
-  async verifyPasswordByEmail(email, rawPassword) {
-    const { data, error } = await supabase
-      .from('users')
-      .select('id, country_id, first_name, last_name, email, mobile, role, is_active, is_deleted, is_email_verified, is_mobile_verified, last_login, created_at')
-      .ilike('email', email)
-      .eq('is_deleted', false)
-      .filter('password', 'eq', supabase.rpc ? undefined : undefined) // Can't filter by crypt in PostgREST
-      .limit(1);
-
-    // PostgREST cannot do crypt() comparison in a filter,
-    // so we use a raw RPC call instead
-    const { data: verifyData, error: verifyError } = await supabase.rpc('udf_verify_user_password', {
-      p_identifier: email,
-      p_password: rawPassword,
-    }).maybeSingle();
-
-    // If the platform doesn't have udf_verify_user_password,
-    // fall back to a raw SQL approach via supabase.rpc
-    if (verifyError) {
-      logger.warn('udf_verify_user_password not found — using fallback SQL verification');
-      return this._verifyPasswordFallback(email, rawPassword);
-    }
-
-    return verifyData || null;
-  }
-
-  /**
-   * Verify password by email or mobile — uses raw SQL via
-   * supabase.rpc to leverage pgcrypto crypt() in the DB.
-   *
-   * Since the SPs hash passwords via crypt(), we MUST verify
-   * in the DB using the same crypt() function.
-   */
-  async verifyPassword(identifier, rawPassword) {
-    // Use a direct query with crypt() for password comparison
-    // This is the ONLY place we query the users table directly
-    const { data, error } = await supabase
-      .from('users')
-      .select('id, country_id, first_name, last_name, email, mobile, role, is_active, is_deleted, is_email_verified, is_mobile_verified, last_login, email_verified_at, mobile_verified_at, created_at, updated_at')
-      .or(`email.ilike.${identifier},mobile.eq.${identifier}`)
-      .eq('is_deleted', false)
-      .limit(1)
-      .single();
-
-    if (error && error.code !== 'PGRST116') {
-      logger.error({ error }, 'UserRepository.verifyPassword — user lookup failed');
-      throw error;
-    }
-
-    if (!data) {
-      return null;
-    }
-
-    // Now verify password using pgcrypto crypt() via raw SQL
-    const { data: pwMatch, error: pwError } = await supabase.rpc('udf_check_user_password', {
-      p_user_id: data.id,
-      p_password: rawPassword,
-    });
-
-    if (pwError) {
-      // Fallback: if udf_check_user_password doesn't exist, use raw SQL
-      logger.warn('udf_check_user_password not available — using raw SQL fallback');
-      return this._verifyPasswordRawSql(data.id, rawPassword, data);
-    }
-
-    return pwMatch === true ? data : null;
-  }
-
-  /**
-   * Fallback password verification using raw SQL.
-   * Uses the Supabase PostgREST RPC to call a one-off SQL check.
-   */
-  async _verifyPasswordRawSql(userId, rawPassword, userData) {
-    // Query: SELECT (password = crypt($2, password)) AS matched
-    //        FROM users WHERE id = $1
-    const { data, error } = await supabase
-      .from('users')
-      .select('password')
-      .eq('id', userId)
-      .eq('is_deleted', false)
-      .single();
-
-    if (error) {
-      logger.error({ error }, 'UserRepository._verifyPasswordRawSql failed');
-      throw error;
-    }
-
-    if (!data || !data.password) {
-      return null;
-    }
-
-    // We need bcryptjs on the Node side to compare against pgcrypto hash
-    // pgcrypto crypt('bf') produces standard bcrypt hashes ($2a$) that
-    // bcryptjs can verify
-    const bcrypt = require('bcryptjs');
-    const isMatch = await bcrypt.compare(rawPassword, data.password);
-
-    return isMatch ? userData : null;
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -247,22 +135,67 @@ class UserRepository {
   }
 
   // ─────────────────────────────────────────────────────────────
-  //  CREATE — via sp_users_insert
-  //  Password is hashed INSIDE the SP via crypt(p_password, gen_salt('bf'))
-  //  So we pass the RAW plaintext password here.
+  //  PASSWORD VERIFICATION
+  //  Direct query on users table (ONLY place we touch the table
+  //  directly) because uv_users view excludes the password column.
+  //  pgcrypto crypt('bf') produces $2a$ bcrypt hashes that
+  //  bcryptjs.compare() can verify on the Node side.
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * Verify password by email or mobile.
+   * Step 1: Find user row from users table (includes password)
+   * Step 2: bcryptjs.compare(rawPassword, storedHash)
+   * Returns the user row (without password) if match, null otherwise.
+   */
+  async verifyPassword(identifier, rawPassword) {
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, country_id, first_name, last_name, email, mobile, password, role, is_active, is_deleted, is_email_verified, is_mobile_verified, last_login, email_verified_at, mobile_verified_at, created_at, updated_at')
+      .or(`email.ilike.${identifier},mobile.eq.${identifier}`)
+      .eq('is_deleted', false)
+      .limit(1)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      logger.error({ error }, 'UserRepository.verifyPassword — user lookup failed');
+      throw error;
+    }
+
+    if (!data || !data.password) {
+      return null;
+    }
+
+    // Compare using bcryptjs (compatible with pgcrypto $2a$ hash)
+    const isMatch = await bcrypt.compare(rawPassword, data.password);
+
+    if (!isMatch) {
+      return null;
+    }
+
+    // Return user data WITHOUT password
+    const { password: _pw, ...userWithoutPassword } = data;
+    return userWithoutPassword;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  CREATE — via sp_users_insert (FUNCTION, returns new user ID)
+  //  Password is hashed INSIDE the function via pgcrypto.
+  //  We send RAW plaintext password — never pre-hash.
   // ─────────────────────────────────────────────────────────────
 
   /**
    * Create a new user via sp_users_insert
    * @param {Object} params
-   * @param {string} params.password — RAW plaintext (SP hashes it)
+   * @param {string} params.password — RAW plaintext (function hashes it)
+   * @returns {Object} Full user object from udf_get_users
    */
   async create({ firstName, lastName, email, mobile, password, role, countryId, isEmailVerified, isMobileVerified }) {
-    const { data, error } = await supabase.rpc('sp_users_insert', {
+    const { data: newId, error } = await supabase.rpc('sp_users_insert', {
       p_country_id: countryId,
       p_first_name: firstName,
       p_last_name: lastName,
-      p_password: password, // RAW — SP hashes internally
+      p_password: password, // RAW — function hashes via pgcrypto
       p_email: email || null,
       p_mobile: mobile || null,
       p_role: role || 'student',
@@ -276,33 +209,34 @@ class UserRepository {
       throw error;
     }
 
-    // sp_users_insert is a PROCEDURE (no return value).
-    // After insert, fetch the newly created user via udf_get_users.
-    const identifier = email || mobile;
-    const newUser = email ? await this.findByEmail(email) : await this.findByMobile(mobile);
+    // sp_users_insert now returns the new user's ID (BIGINT)
+    // Fetch full user data with country info via udf_get_users
+    const newUser = await this.findById(newId);
 
     if (!newUser) {
-      throw new Error(`User created but could not be fetched: ${identifier}`);
+      throw new Error(`User created (id: ${newId}) but could not be fetched via udf_get_users`);
     }
 
+    logger.info(`User created via sp_users_insert: id=${newId}`);
     return newUser;
   }
 
   // ─────────────────────────────────────────────────────────────
-  //  UPDATE — via sp_users_update
-  //  Uses COALESCE pattern: pass NULL to keep current value.
-  //  Password is hashed INSIDE the SP if provided.
+  //  UPDATE — via sp_users_update (FUNCTION, returns void)
+  //  Uses COALESCE pattern: pass only the fields you want to
+  //  change. Omitted params default to NULL → keep current value.
+  //  Password is hashed INSIDE the function if provided.
   // ─────────────────────────────────────────────────────────────
 
   /**
    * Update user password via sp_users_update
    * @param {number} userId
-   * @param {string} rawPassword — RAW plaintext (SP hashes it)
+   * @param {string} rawPassword — RAW plaintext (function hashes it)
    */
   async updatePassword(userId, rawPassword) {
     const { error } = await supabase.rpc('sp_users_update', {
       p_id: userId,
-      p_password: rawPassword, // RAW — SP hashes internally
+      p_password: rawPassword, // RAW — function hashes via pgcrypto
     });
 
     if (error) {
@@ -350,9 +284,9 @@ class UserRepository {
   }
 
   /**
-   * Update last login timestamp via sp_users_update
-   * (sp_users_update doesn't have a last_login param,
-   *  so we do a minimal direct update for this one field)
+   * Update last login timestamp.
+   * sp_users_update doesn't have a last_login param,
+   * so we do a direct update for this one field.
    */
   async updateLastLogin(userId) {
     const { error } = await supabase
@@ -363,11 +297,13 @@ class UserRepository {
 
     if (error) {
       logger.error({ error }, 'UserRepository.updateLastLogin failed');
+      // Non-blocking — don't throw, login should still succeed
     }
   }
 
   // ─────────────────────────────────────────────────────────────
-  //  DELETE — via sp_users_delete (soft delete)
+  //  DELETE — via sp_users_delete (FUNCTION, returns void)
+  //  Soft delete: sets is_deleted=true, is_active=false
   // ─────────────────────────────────────────────────────────────
 
   /**

@@ -27,12 +27,12 @@ graph TB
         S --> EMAIL[Email Service - Brevo]
         S --> SMS[SMS Service - Gateway Hub]
     end
-    subgraph "Data Layer"
+    subgraph "Data Layer (all FUNCTIONS via supabase.rpc)"
         S --> REPO[User Repository]
-        REPO -->|supabase.rpc| SP1[sp_users_insert]
-        REPO -->|supabase.rpc| SP2[sp_users_update]
-        REPO -->|supabase.rpc| SP3[sp_users_delete]
-        REPO -->|supabase.rpc| UDF[udf_get_users]
+        REPO -->|"rpc → BIGINT"| SP1["sp_users_insert (returns new ID)"]
+        REPO -->|"rpc → void"| SP2["sp_users_update (COALESCE)"]
+        REPO -->|"rpc → void"| SP3["sp_users_delete (soft)"]
+        REPO -->|"rpc → TABLE"| UDF["udf_get_users (uv_users view)"]
     end
     subgraph "Storage"
         OTP --> REDIS[(Redis / Upstash)]
@@ -1451,17 +1451,19 @@ if (pm.response.code === 200) {
 
 ## Database Operations Summary
 
+All DB operations use **FUNCTIONS** (not procedures) via `supabase.rpc()`. Each function has `SECURITY DEFINER` to bypass RLS.
+
 ```mermaid
 graph LR
-    subgraph "Stored Procedures Used"
-        A["sp_users_insert<br/>(password hashed by pgcrypto)"] --> DB[(Supabase)]
-        B["sp_users_update<br/>(COALESCE pattern, pgcrypto hash)"] --> DB
-        C["sp_users_delete<br/>(soft delete only)"] --> DB
-        D["udf_get_users<br/>(from uv_users view, no password)"] --> DB
+    subgraph "Database Functions (all via supabase.rpc)"
+        A["sp_users_insert → RETURNS BIGINT<br/>(password hashed by pgcrypto, returns new user ID)"] --> DB[(Supabase)]
+        B["sp_users_update → RETURNS void<br/>(COALESCE pattern, pgcrypto hash if password provided)"] --> DB
+        C["sp_users_delete → RETURNS void<br/>(soft delete: is_deleted=true, is_active=false)"] --> DB
+        D["udf_get_users → RETURNS TABLE<br/>(from uv_users view, no password, with country info)"] --> DB
     end
 
-    subgraph "API Operations → SP Mapping"
-        R1["Register Verify-Mobile<br/>(or Verify-Email if email-only)"] -->|rpc| A
+    subgraph "API Operations → Function Mapping"
+        R1["Register Verify-Mobile<br/>(or Verify-Email if email-only)"] -->|"rpc → gets new ID"| A
         R2[Change Password] -->|rpc| B
         R3[Reset Password] -->|rpc| B
         R4[Change Email] -->|rpc| B
@@ -1475,15 +1477,15 @@ graph LR
 
 ```mermaid
 flowchart LR
-    A[Client sends RAW password] --> B[API passes RAW to SP]
+    A[Client sends RAW password] --> B[API passes RAW to function]
     B --> C["sp_users_insert / sp_users_update"]
     C --> D["crypt(p_password, gen_salt('bf'))"]
-    D --> E[Bcrypt hash stored in DB]
+    D --> E["Bcrypt $2a$ hash stored in DB"]
 
-    F[Client sends login password] --> G[API queries users table]
-    G --> H["bcryptjs.compare(input, stored_hash)"]
+    F[Client sends login password] --> G["API queries users table directly<br/>(only place we touch users table)"]
+    G --> H["bcryptjs.compare(input, stored_hash)<br/>(Node side — compatible with pgcrypto $2a$)"]
     H --> I{Match?}
-    I -->|Yes| J[Issue JWT tokens]
+    I -->|Yes| J["Fetch full user via udf_get_users<br/>(with country info) → Issue JWT tokens"]
     I -->|No| K[401 Unauthorized]
 ```
 
