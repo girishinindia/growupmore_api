@@ -36,19 +36,6 @@ class AuthController {
     try {
       const result = await authService.verifyRegistrationEmail(req.body);
 
-      // If step is complete (email-only registration), return 201 with user
-      if (result.step === 'complete') {
-        return sendCreated(res, {
-          message: result.message,
-          data: {
-            user: result.user,
-            accessToken: result.accessToken,
-            refreshToken: result.refreshToken,
-            expiresIn: result.expiresIn,
-          },
-        });
-      }
-
       // Email verified, mobile OTP sent → return 200
       // identifier switches to mobile number for next steps
       return sendSuccess(res, {

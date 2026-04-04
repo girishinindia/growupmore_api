@@ -53,43 +53,32 @@ class AuthService {
   //  Flow when BOTH email & mobile provided:
   //    register → verify-email → verify-mobile → user created
   //  Flow when ONLY email provided:
-  //    register → verify-email → user created
-  //  Flow when ONLY mobile provided:
-  //    register → verify-mobile → user created
+  //  Both email and mobile are REQUIRED.
+  //  Flow: register → verify-email → verify-mobile → user created
   // ─────────────────────────────────────────────────────────────
   async initiateRegistration({ firstName, lastName, email, mobile, password }) {
     // Normalise
     email = normaliseEmail(email);
     mobile = normaliseMobile(mobile);
 
-    // Validate: at least one login method
-    if (!email && !mobile) {
-      throw new BadRequestError('Either email or mobile is required');
+    // Both email and mobile are required
+    if (!email || !mobile) {
+      throw new BadRequestError('Both email and mobile are required for registration');
     }
 
     // Check uniqueness via udf_get_users
-    if (email) {
-      const emailTaken = await userRepository.emailExists(email);
-      if (emailTaken) {
-        throw new ConflictError('Email is already registered');
-      }
+    const emailTaken = await userRepository.emailExists(email);
+    if (emailTaken) {
+      throw new ConflictError('Email is already registered');
     }
 
-    if (mobile) {
-      const mobileTaken = await userRepository.mobileExists(mobile);
-      if (mobileTaken) {
-        throw new ConflictError('Mobile number is already registered');
-      }
+    const mobileTaken = await userRepository.mobileExists(mobile);
+    if (mobileTaken) {
+      throw new ConflictError('Mobile number is already registered');
     }
 
-    // Determine first verification step
-    // If email exists → verify email first; else → verify mobile directly
-    const step = email ? 'email_pending' : 'mobile_pending';
-
-    // Store pending registration data in Redis (NOT in DB yet)
-    // Password stored as RAW plaintext — sp_users_insert will hash it
-    const otpIdentifier = email || mobile;
-    const pendingKey = `${REDIS_PREFIXES.PENDING_REGISTRATION}:${otpIdentifier}`;
+    // Always start with email verification first
+    const pendingKey = `${REDIS_PREFIXES.PENDING_REGISTRATION}:${email}`;
     const pendingData = JSON.stringify({
       firstName,
       lastName,
@@ -98,58 +87,33 @@ class AuthService {
       password, // RAW — sp_users_insert hashes via pgcrypto
       role: ROLES.STUDENT,
       countryId: DEFAULT_COUNTRY_ID,
-      step,
+      step: 'email_pending',
     });
 
     await redis.set(pendingKey, pendingData, 'EX', config.otp.expiryMinutes * 60);
 
-    // Send OTP based on which step we're starting with
-    if (step === 'email_pending') {
-      // Send OTP to email ONLY (mobile comes after email is verified)
-      const { otp, expiresInSeconds } = await otpService.generate(
-        OTP_PURPOSES.REGISTRATION,
-        email,
-      );
+    // Send OTP to email first (mobile comes after email is verified)
+    const { otp, expiresInSeconds } = await otpService.generate(
+      OTP_PURPOSES.REGISTRATION,
+      email,
+    );
 
-      await emailService.sendOtp({
-        to: email,
-        toName: firstName,
-        otp,
-        purpose: OTP_PURPOSES.REGISTRATION,
-      });
+    await emailService.sendOtp({
+      to: email,
+      toName: firstName,
+      otp,
+      purpose: OTP_PURPOSES.REGISTRATION,
+    });
 
-      return {
-        message: 'OTP sent to your email. Please verify your email first.',
-        identifier: otpIdentifier,
-        maskedEmail: maskEmail(email),
-        maskedMobile: mobile ? maskMobile(mobile) : null,
-        step: 'email_pending',
-        expiresInSeconds,
-        resendAfterSeconds: config.otp.resendCooldownSeconds,
-      };
-    } else {
-      // Only mobile provided → send OTP to mobile
-      const { otp, expiresInSeconds } = await otpService.generate(
-        OTP_PURPOSES.REGISTRATION_MOBILE,
-        mobile,
-      );
-
-      await smsService.sendOtp({
-        mobile,
-        name: firstName,
-        otp,
-      });
-
-      return {
-        message: 'OTP sent to your mobile. Please verify your mobile number.',
-        identifier: otpIdentifier,
-        maskedEmail: null,
-        maskedMobile: maskMobile(mobile),
-        step: 'mobile_pending',
-        expiresInSeconds,
-        resendAfterSeconds: config.otp.resendCooldownSeconds,
-      };
-    }
+    return {
+      message: 'OTP sent to your email. Please verify your email first.',
+      identifier: email,
+      maskedEmail: maskEmail(email),
+      maskedMobile: maskMobile(mobile),
+      step: 'email_pending',
+      expiresInSeconds,
+      resendAfterSeconds: config.otp.resendCooldownSeconds,
+    };
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -175,79 +139,43 @@ class AuthService {
 
     const userData = JSON.parse(pendingData);
 
-    // If mobile exists → move to mobile verification step
-    if (userData.mobile) {
-      userData.step = 'mobile_pending';
+    // Email verified → move to mobile verification step
+    userData.step = 'mobile_pending';
 
-      // Move pending data from email key → mobile key
-      // So verify-mobile & resend-otp use mobile number as identifier
-      const mobileKey = `${REDIS_PREFIXES.PENDING_REGISTRATION}:${userData.mobile}`;
-      await redis.set(mobileKey, JSON.stringify(userData), 'EX', config.otp.expiryMinutes * 60);
-      await redis.del(pendingKey); // Remove old email-based key
+    // Move pending data from email key → mobile key
+    // So verify-mobile & resend-otp use mobile number as identifier
+    const mobileKey = `${REDIS_PREFIXES.PENDING_REGISTRATION}:${userData.mobile}`;
+    await redis.set(mobileKey, JSON.stringify(userData), 'EX', config.otp.expiryMinutes * 60);
+    await redis.del(pendingKey); // Remove old email-based key
 
-      // Generate & send mobile OTP
-      const { otp: mobileOtp, expiresInSeconds } = await otpService.generate(
-        OTP_PURPOSES.REGISTRATION_MOBILE,
-        userData.mobile,
-      );
+    // Generate & send mobile OTP
+    const { otp: mobileOtp, expiresInSeconds } = await otpService.generate(
+      OTP_PURPOSES.REGISTRATION_MOBILE,
+      userData.mobile,
+    );
 
-      await smsService.sendOtp({
-        mobile: userData.mobile,
-        name: userData.firstName,
-        otp: mobileOtp,
-      });
-
-      logger.info(`Email verified for registration: ${identifier}. Mobile OTP sent. Pending key moved to mobile.`);
-
-      return {
-        message: 'Email verified successfully. OTP sent to your mobile number. Use your mobile number as identifier for next steps.',
-        identifier: userData.mobile,
-        step: 'mobile_pending',
-        maskedMobile: maskMobile(userData.mobile),
-        expiresInSeconds,
-        resendAfterSeconds: config.otp.resendCooldownSeconds,
-      };
-    }
-
-    // No mobile → create user now (email-only registration)
-    // Race condition guard
-    const emailTaken = await userRepository.emailExists(userData.email);
-    if (emailTaken) {
-      await redis.del(pendingKey);
-      throw new ConflictError('Email was registered by another user. Please try again.');
-    }
-
-    // Save to DB via sp_users_insert (RAW password → SP hashes)
-    const user = await userRepository.create({
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      email: userData.email,
-      mobile: null,
-      password: userData.password,
-      role: userData.role,
-      countryId: userData.countryId,
-      isEmailVerified: true,
-      isMobileVerified: false,
+    await smsService.sendOtp({
+      mobile: userData.mobile,
+      name: userData.firstName,
+      otp: mobileOtp,
     });
 
-    await redis.del(pendingKey);
-    logger.info(`User registered (email only): ${user.user_id} (${user.user_email})`);
-
-    // Auto-login
-    const tokens = await this._createSession(user);
+    logger.info(`Email verified for registration: ${identifier}. Mobile OTP sent. Pending key moved to mobile.`);
 
     return {
-      message: 'Registration successful!',
-      step: 'complete',
-      user: this._sanitizeUser(user),
-      ...tokens,
+      message: 'Email verified successfully. OTP sent to your mobile number. Use your mobile number as identifier for next steps.',
+      identifier: userData.mobile,
+      step: 'mobile_pending',
+      maskedMobile: maskMobile(userData.mobile),
+      expiresInSeconds,
+      resendAfterSeconds: config.otp.resendCooldownSeconds,
     };
   }
 
   // ─────────────────────────────────────────────────────────────
   //  REGISTRATION — Step 2b: Verify Mobile OTP & Create User
-  //  Called after email is verified (both channels) OR directly
-  //  when only mobile was provided.
+  //  Called after email is verified. Both email and mobile are
+  //  always present.
   // ─────────────────────────────────────────────────────────────
   async verifyRegistrationMobile({ identifier, otp }) {
     identifier = normaliseEmail(identifier) || normaliseMobile(identifier);

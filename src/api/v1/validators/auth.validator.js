@@ -43,18 +43,13 @@ const nameField = z
 //  REGISTRATION
 // ═══════════════════════════════════════════════════════════════
 
-const initiateRegistrationSchema = z
-  .object({
-    firstName: nameField,
-    lastName: nameField,
-    email: emailField.optional(),
-    mobile: mobileField.optional(),
-    password: passwordField,
-  })
-  .refine((data) => data.email || data.mobile, {
-    message: 'Either email or mobile is required',
-    path: ['email'],
-  });
+const initiateRegistrationSchema = z.object({
+  firstName: nameField,
+  lastName: nameField,
+  email: emailField,
+  mobile: mobileField,
+  password: passwordField,
+});
 
 const verifyRegistrationEmailSchema = z.object({
   identifier: z.string().min(1, 'Identifier (email or mobile) is required'),

@@ -47,7 +47,7 @@ graph TB
 
 ## Registration Flow (Two-Step OTP Verification)
 
-When **both email and mobile** are provided, the registration requires **two separate OTP verifications** — email first, then mobile. The user is only created in the database after both are verified.
+Registration requires **both email and mobile**. Two separate OTP verifications are performed — email first, then mobile. The user is only created in the database after both are verified.
 
 ```mermaid
 sequenceDiagram
@@ -102,9 +102,7 @@ sequenceDiagram
     API-->>Client: 200 OK (resent to current step's channel)
 ```
 
-> **Email-only signup** (no mobile provided): `/register` → `/register/verify-email` → user created directly.
->
-> **Mobile-only signup** (no email provided): `/register` → `/register/verify-mobile` → user created directly.
+> Both email and mobile are **required**. The flow is always: `/register` → `/register/verify-email` → `/register/verify-mobile` → user created.
 
 ---
 
@@ -236,13 +234,11 @@ POST http://localhost:5001/api/v1/auth/register
 |-------|------|----------|-------|
 | firstName | string | Yes | 2-100 chars, letters/spaces/hyphens/apostrophes only |
 | lastName | string | Yes | 2-100 chars, letters/spaces/hyphens/apostrophes only |
-| email | string | No* | Valid email, max 255 chars |
-| mobile | string | No* | 10-15 digits only (no spaces, dashes, or +) |
+| email | string | Yes | Valid email, max 255 chars |
+| mobile | string | Yes | 10-15 digits only (no spaces, dashes, or +) |
 | password | string | Yes | Min 8 chars, 1 lowercase, 1 uppercase, 1 digit, 1 special char |
 
-> *At least one of email or mobile is required.
-
-**Response — 200 OK (email OTP sent — both email & mobile provided):**
+**Response — 200 OK (email OTP sent):**
 
 ```json
 {
@@ -253,23 +249,6 @@ POST http://localhost:5001/api/v1/auth/register
     "maskedEmail": "gi***@example.com",
     "maskedMobile": "******8990",
     "step": "email_pending",
-    "expiresInSeconds": 180,
-    "resendAfterSeconds": 60
-  }
-}
-```
-
-**Response — 200 OK (mobile OTP sent — only mobile provided, no email):**
-
-```json
-{
-  "success": true,
-  "message": "OTP sent to your mobile. Please verify your mobile number.",
-  "data": {
-    "identifier": "919662278990",
-    "maskedEmail": null,
-    "maskedMobile": "******8990",
-    "step": "mobile_pending",
     "expiresInSeconds": 180,
     "resendAfterSeconds": 60
   }
@@ -457,41 +436,6 @@ POST http://localhost:5001/api/v1/auth/register/verify-email
 ```
 
 > After this response, proceed to **Step 4 (Verify Mobile OTP)** using your **mobile number (without country code)** as the `identifier`.
-
-**Response — 201 Created (email-only registration — no mobile provided):**
-
-```json
-{
-  "success": true,
-  "message": "Registration successful!",
-  "data": {
-    "user": {
-      "id": 2,
-      "firstName": "Girish",
-      "lastName": "Chaudhary",
-      "email": "girish@example.com",
-      "mobile": null,
-      "role": "student",
-      "isActive": true,
-      "isEmailVerified": true,
-      "isMobileVerified": false,
-      "lastLogin": null,
-      "createdAt": "2026-04-04T10:32:00.000Z",
-      "country": {
-        "name": "India",
-        "iso2": "IN",
-        "phoneCode": "91",
-        "currency": "INR",
-        "currencySymbol": "₹",
-        "flagImage": "https://cdn.growupmore.com/flags/in.svg"
-      }
-    },
-    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "expiresIn": "15m"
-  }
-}
-```
 
 **Response — 400 Bad Request (expired OTP):**
 
