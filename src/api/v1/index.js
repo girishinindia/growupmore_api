@@ -6,15 +6,12 @@
 
 const { Router } = require('express');
 const authRoutes = require('./routes/auth.routes');
+const rbacRoutes = require('./routes/rbac.routes');
 
 const router = Router();
 
 // Mount route modules
 router.use('/auth', authRoutes);
-
-// Future routes will be added here:
-// router.use('/users', usersRoutes);
-// router.use('/courses', coursesRoutes);
-// etc.
+router.use('/rbac', rbacRoutes);
 
 module.exports = router;

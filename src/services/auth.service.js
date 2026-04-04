@@ -31,6 +31,7 @@ const userRepository = require('../repositories/user.repository');
 const otpService = require('./otp.service');
 const emailService = require('./email.service');
 const smsService = require('./sms.service');
+const rbacRepository = require('../repositories/rbac.repository');
 const logger = require('../config/logger');
 const {
   BadRequestError,
@@ -238,6 +239,22 @@ class AuthService {
 
     // Clean up pending data
     await redis.del(pendingKey);
+
+    // Auto-assign 'student' role to new user
+    try {
+      const studentRole = await rbacRepository.findRoleByCode('student');
+      if (studentRole) {
+        await rbacRepository.assignRoleToUser({
+          userId: user.user_id || user.id,
+          roleId: studentRole.role_id,
+          reason: 'Auto-assigned on registration',
+        });
+        logger.info(`Student role auto-assigned to user: ${user.user_id || user.id}`);
+      }
+    } catch (roleErr) {
+      // Don't fail registration if role assignment fails
+      logger.warn({ error: roleErr }, `Failed to auto-assign student role to user: ${user.user_id || user.id}`);
+    }
 
     logger.info(`User registered: ${user.user_id} (${user.user_email || user.user_mobile})`);
 

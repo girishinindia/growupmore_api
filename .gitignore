@@ -57,3 +57,5 @@ database files/
 tests/
 # docs/ — keep docs tracked in git
 logs/
+
+*.sql

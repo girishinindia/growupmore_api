@@ -5,10 +5,25 @@
  */
 
 const ROLES = Object.freeze({
-  SUPER_ADMIN: 'sa',
+  SUPER_ADMIN: 'super_admin',
   ADMIN: 'admin',
-  STUDENT: 'student',
+  MODERATOR: 'moderator',
+  CONTENT_MANAGER: 'content_manager',
+  FINANCE_ADMIN: 'finance_admin',
+  SUPPORT_AGENT: 'support_agent',
   INSTRUCTOR: 'instructor',
+  STUDENT: 'student',
+});
+
+const ROLE_LEVELS = Object.freeze({
+  super_admin: 0,
+  admin: 1,
+  moderator: 2,
+  content_manager: 2,
+  finance_admin: 2,
+  support_agent: 3,
+  instructor: 4,
+  student: 5,
 });
 
 const OTP_PURPOSES = Object.freeze({
@@ -35,6 +50,7 @@ const DEFAULT_COUNTRY_ID = 1; // India
 
 module.exports = {
   ROLES,
+  ROLE_LEVELS,
   OTP_PURPOSES,
   REDIS_PREFIXES,
   DEFAULT_COUNTRY_ID,
