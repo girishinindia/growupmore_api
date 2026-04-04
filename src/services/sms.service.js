@@ -28,12 +28,15 @@ class SmsService {
   /**
    * Send OTP SMS via SMS Gateway Hub
    * @param {Object} options
-   * @param {string} options.mobile - Mobile number with country code (e.g. 919662278990)
+   * @param {string} options.mobile - Mobile number (10 digits without country code)
    * @param {string} options.name - Recipient name (1st DLT variable)
    * @param {string} options.otp - OTP value (2nd DLT variable)
    */
   async sendOtp({ mobile, name, otp }) {
     try {
+      // Prepend country code 91 (India) for SMS gateway — stored as 10 digits internally
+      const mobileWithCode = mobile.length === 10 ? `91${mobile}` : mobile;
+
       // DLT template must match exactly
       const text = `Dear ${name}, OTP is for new user registration is ${otp}. Thank You, Genius ITens (Grow Up More)`;
 
@@ -43,7 +46,7 @@ class SmsService {
         channel: this.channel,
         DCS: this.dcs,
         flashsms: this.flash,
-        number: mobile,
+        number: mobileWithCode,
         text,
         route: this.route,
         EntityId: this.entityId,

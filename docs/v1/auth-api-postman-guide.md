@@ -228,7 +228,7 @@ POST http://localhost:5001/api/v1/auth/register
 }
 ```
 
-> **Note:** Mobile number must be exactly **10 digits without country code**. The system automatically prepends `91` (India) before storing.
+> **Note:** Mobile number must be exactly **10 digits without country code** (e.g. `9662278990`). The system stores 10 digits as-is. Country code `91` is only added internally when sending SMS.
 
 **Validation Rules:**
 
@@ -519,7 +519,7 @@ POST http://localhost:5001/api/v1/auth/register/verify-mobile
       "firstName": "Girish",
       "lastName": "Chaudhary",
       "email": "girish@example.com",
-      "mobile": "919662278990",
+      "mobile": "9662278990",
       "role": "student",
       "isActive": true,
       "isEmailVerified": true,
@@ -638,7 +638,7 @@ POST http://localhost:5001/api/v1/auth/login
       "firstName": "Girish",
       "lastName": "Chaudhary",
       "email": "girish@example.com",
-      "mobile": "919662278990",
+      "mobile": "9662278990",
       "role": "student",
       "isActive": true,
       "isEmailVerified": true,
@@ -1521,7 +1521,7 @@ flowchart LR
 {
   "userId": 2,
   "email": "girish@example.com",
-  "mobile": "919662278990",
+  "mobile": "9662278990",
   "role": "student",
   "sessionId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "iat": 1743763200,

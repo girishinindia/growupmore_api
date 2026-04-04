@@ -164,7 +164,7 @@ class AuthService {
 
     return {
       message: 'Email verified successfully. OTP sent to your mobile number. Use your 10-digit mobile number as identifier for next steps.',
-      identifier: userData.mobile.replace(/^91/, ''),
+      identifier: userData.mobile,
       step: 'mobile_pending',
       maskedMobile: maskMobile(userData.mobile),
       expiresInSeconds,
