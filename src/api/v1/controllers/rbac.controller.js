@@ -30,7 +30,7 @@ class RbacController {
         totalPages: Math.ceil(Number(totalCount) / Number(limit)),
       };
 
-      sendSuccess(res, data, 'Roles retrieved successfully', meta);
+      sendSuccess(res, { data, message: 'Roles retrieved successfully', meta });
     } catch (error) {
       next(error);
     }
@@ -39,7 +39,7 @@ class RbacController {
   async getRoleById(req, res, next) {
     try {
       const data = await rbacService.getRoleById(req.params.id);
-      sendSuccess(res, data, 'Role retrieved successfully');
+      sendSuccess(res, { data, message: 'Role retrieved successfully' });
     } catch (error) {
       next(error);
     }
@@ -48,7 +48,7 @@ class RbacController {
   async createRole(req, res, next) {
     try {
       const data = await rbacService.createRole(req.body, req.user.userId);
-      sendCreated(res, data, 'Role created successfully');
+      sendCreated(res, { data, message: 'Role created successfully' });
     } catch (error) {
       next(error);
     }
@@ -57,7 +57,7 @@ class RbacController {
   async updateRole(req, res, next) {
     try {
       const data = await rbacService.updateRole(req.params.id, req.body, req.user.userId);
-      sendSuccess(res, data, 'Role updated successfully');
+      sendSuccess(res, { data, message: 'Role updated successfully' });
     } catch (error) {
       next(error);
     }
@@ -66,7 +66,7 @@ class RbacController {
   async deleteRole(req, res, next) {
     try {
       const data = await rbacService.deleteRole(req.params.id, req.user.userId);
-      sendSuccess(res, data, 'Role deleted successfully');
+      sendSuccess(res, { data, message: 'Role deleted successfully' });
     } catch (error) {
       next(error);
     }
@@ -75,7 +75,7 @@ class RbacController {
   async restoreRole(req, res, next) {
     try {
       const data = await rbacService.restoreRole(req.params.id, req.body.restorePermissions, req.user.userId);
-      sendSuccess(res, data, 'Role restored successfully');
+      sendSuccess(res, { data, message: 'Role restored successfully' });
     } catch (error) {
       next(error);
     }
@@ -101,7 +101,7 @@ class RbacController {
         totalPages: Math.ceil(Number(totalCount) / Number(limit)),
       };
 
-      sendSuccess(res, data, 'Role permissions retrieved successfully', meta);
+      sendSuccess(res, { data, message: 'Role permissions retrieved successfully', meta });
     } catch (error) {
       next(error);
     }
@@ -110,7 +110,7 @@ class RbacController {
   async assignPermission(req, res, next) {
     try {
       const data = await rbacService.assignPermissionToRole(req.params.roleId, req.body.permissionId, req.user.userId);
-      sendCreated(res, data, 'Permission assigned to role successfully');
+      sendCreated(res, { data, message: 'Permission assigned to role successfully' });
     } catch (error) {
       next(error);
     }
@@ -119,7 +119,7 @@ class RbacController {
   async bulkAssignPermissions(req, res, next) {
     try {
       const data = await rbacService.assignPermissionsToRole(req.params.roleId, req.body.permissionIds, req.user.userId);
-      sendCreated(res, data, 'Permissions assigned to role successfully');
+      sendCreated(res, { data, message: 'Permissions assigned to role successfully' });
     } catch (error) {
       next(error);
     }
@@ -128,7 +128,7 @@ class RbacController {
   async removePermission(req, res, next) {
     try {
       const data = await rbacService.removePermissionFromRole(req.params.roleId, req.params.permissionId, req.user.userId);
-      sendSuccess(res, data, 'Permission removed from role successfully');
+      sendSuccess(res, { data, message: 'Permission removed from role successfully' });
     } catch (error) {
       next(error);
     }
@@ -137,7 +137,7 @@ class RbacController {
   async removeAllPermissions(req, res, next) {
     try {
       const data = await rbacService.removeAllPermissionsFromRole(req.params.roleId, req.user.userId);
-      sendSuccess(res, data, 'All permissions removed from role successfully');
+      sendSuccess(res, { data, message: 'All permissions removed from role successfully' });
     } catch (error) {
       next(error);
     }
@@ -170,7 +170,7 @@ class RbacController {
         totalPages: Math.ceil(Number(totalCount) / Number(limit)),
       };
 
-      sendSuccess(res, data, 'User role assignments retrieved successfully', meta);
+      sendSuccess(res, { data, message: 'User role assignments retrieved successfully', meta });
     } catch (error) {
       next(error);
     }
@@ -179,7 +179,7 @@ class RbacController {
   async assignRoleToUser(req, res, next) {
     try {
       const data = await rbacService.assignRoleToUser(req.body, req.user.userId);
-      sendCreated(res, data, 'Role assigned to user successfully');
+      sendCreated(res, { data, message: 'Role assigned to user successfully' });
     } catch (error) {
       next(error);
     }
@@ -188,7 +188,7 @@ class RbacController {
   async updateAssignment(req, res, next) {
     try {
       const data = await rbacService.updateUserRoleAssignment(req.params.id, req.body, req.user.userId);
-      sendSuccess(res, data, 'User role assignment updated successfully');
+      sendSuccess(res, { data, message: 'User role assignment updated successfully' });
     } catch (error) {
       next(error);
     }
@@ -197,7 +197,7 @@ class RbacController {
   async revokeAssignment(req, res, next) {
     try {
       const data = await rbacService.revokeUserRoleAssignment(req.params.id, req.user.userId);
-      sendSuccess(res, data, 'User role assignment revoked successfully');
+      sendSuccess(res, { data, message: 'User role assignment revoked successfully' });
     } catch (error) {
       next(error);
     }
@@ -206,7 +206,7 @@ class RbacController {
   async restoreAssignment(req, res, next) {
     try {
       const data = await rbacService.restoreUserRoleAssignment(req.params.id, req.user.userId);
-      sendSuccess(res, data, 'User role assignment restored successfully');
+      sendSuccess(res, { data, message: 'User role assignment restored successfully' });
     } catch (error) {
       next(error);
     }
@@ -232,7 +232,7 @@ class RbacController {
         totalPages: Math.ceil(Number(totalCount) / Number(limit)),
       };
 
-      sendSuccess(res, data, 'Permissions retrieved successfully', meta);
+      sendSuccess(res, { data, message: 'Permissions retrieved successfully', meta });
     } catch (error) {
       next(error);
     }
@@ -241,7 +241,7 @@ class RbacController {
   async getPermissionById(req, res, next) {
     try {
       const data = await rbacService.getPermissionById(req.params.id);
-      sendSuccess(res, data, 'Permission retrieved successfully');
+      sendSuccess(res, { data, message: 'Permission retrieved successfully' });
     } catch (error) {
       next(error);
     }
@@ -252,7 +252,7 @@ class RbacController {
   async getModules(req, res, next) {
     try {
       const data = await rbacService.getModules();
-      sendSuccess(res, data, 'Modules retrieved successfully');
+      sendSuccess(res, { data, message: 'Modules retrieved successfully' });
     } catch (error) {
       next(error);
     }
@@ -263,7 +263,7 @@ class RbacController {
   async getMyPermissions(req, res, next) {
     try {
       const data = await rbacService.getUserPermissions(req.user.userId);
-      sendSuccess(res, data, 'Your permissions retrieved successfully');
+      sendSuccess(res, { data, message: 'Your permissions retrieved successfully' });
     } catch (error) {
       next(error);
     }
@@ -272,7 +272,7 @@ class RbacController {
   async getUserPermissions(req, res, next) {
     try {
       const data = await rbacService.getUserPermissions(req.params.userId);
-      sendSuccess(res, data, 'User permissions retrieved successfully');
+      sendSuccess(res, { data, message: 'User permissions retrieved successfully' });
     } catch (error) {
       next(error);
     }
