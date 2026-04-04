@@ -1,128 +1,119 @@
 /**
- * OTP SERVICE — Generate, Store, Verify OTPs via Redis
+ * ═══════════════════════════════════════════════════════════════
+ * OTP SERVICE — Generate, Store, Verify, Resend Cooldown
+ * ═══════════════════════════════════════════════════════════════
+ * OTPs are stored in Redis with TTL.
+ * Key format:  otp:{purpose}:{identifier}
+ * Cooldown:    otp_cooldown:{purpose}:{identifier}
+ * Attempts:    otp_attempts:{purpose}:{identifier}
+ * ═══════════════════════════════════════════════════════════════
  */
 
 const redis = require('../config/redis');
-const config = require('../config/index');
+const config = require('../config');
+const { generateOtp } = require('../utils/helpers');
+const { BadRequestError, TooManyRequestsError } = require('../utils/errors');
+const { REDIS_PREFIXES } = require('../utils/constants');
 const logger = require('../config/logger');
-const { generateOTP } = require('../utils/helpers');
-const { ValidationError, RateLimitError } = require('../utils/errors');
-
-const OTP_PREFIX = 'otp';
-const OTP_COOLDOWN_PREFIX = 'otp_cooldown';
-const OTP_ATTEMPTS_PREFIX = 'otp_attempts';
 
 class OtpService {
   /**
-   * Generate and store OTP for a target (email or mobile)
-   * @param {string} target - email or mobile number
-   * @param {string} purpose - 'register', 'login', 'reset_password', 'change_email', 'change_mobile', 'verify_email', 'verify_mobile'
-   * @returns {string} The generated OTP
+   * Generate and store an OTP in Redis
+   * @param {string} purpose - e.g. 'registration', 'forgot_password'
+   * @param {string} identifier - email or mobile
+   * @returns {{ otp: string, expiresInSeconds: number }}
    */
-  async generate(target, purpose = 'register') {
-    const key = `${OTP_PREFIX}:${purpose}:${target}`;
-    const cooldownKey = `${OTP_COOLDOWN_PREFIX}:${purpose}:${target}`;
+  async generate(purpose, identifier) {
+    const cooldownKey = `${REDIS_PREFIXES.OTP_COOLDOWN}:${purpose}:${identifier}`;
+    const otpKey = `${REDIS_PREFIXES.OTP}:${purpose}:${identifier}`;
+    const attemptsKey = `${REDIS_PREFIXES.OTP_ATTEMPTS}:${purpose}:${identifier}`;
 
-    // Check cooldown (prevent rapid resend)
-    const cooldown = await redis.get(cooldownKey);
-    if (cooldown) {
-      const ttl = await redis.ttl(cooldownKey);
-      throw new RateLimitError(
-        `Please wait ${ttl > 0 ? ttl : config.otp.resendCooldownSeconds} seconds before requesting a new OTP.`
+    // Check resend cooldown (60 seconds)
+    const cooldownTtl = await redis.ttl(cooldownKey);
+    if (cooldownTtl > 0) {
+      throw new TooManyRequestsError(
+        `Please wait ${cooldownTtl} seconds before requesting a new OTP`,
       );
     }
 
     // Generate OTP
-    const otp = generateOTP(config.otp.length);
-    const expirySeconds = config.otp.expiryMinutes * 60;
+    const otp = generateOtp();
+    const expiresInSeconds = config.otp.expiryMinutes * 60;
 
-    // Store OTP in Redis with expiry
-    const otpData = JSON.stringify({
-      otp,
-      purpose,
-      target,
-      attempts: 0,
-      createdAt: new Date().toISOString(),
-    });
+    // Store OTP in Redis with TTL
+    await redis.set(otpKey, otp, 'EX', expiresInSeconds);
 
-    await redis.set(key, otpData, 'EX', expirySeconds);
+    // Reset attempt counter
+    await redis.set(attemptsKey, '0', 'EX', expiresInSeconds);
 
-    // Set cooldown
+    // Set resend cooldown
     await redis.set(cooldownKey, '1', 'EX', config.otp.resendCooldownSeconds);
 
-    logger.debug({ target, purpose }, 'OTP generated and stored');
+    logger.info(`OTP generated for ${purpose}:${identifier}`);
 
-    return otp;
+    return { otp, expiresInSeconds };
   }
 
   /**
    * Verify an OTP
-   * @param {string} target - email or mobile number
-   * @param {string} otp - The OTP to verify
-   * @param {string} purpose - Must match the purpose used during generation
-   * @returns {boolean} true if valid
+   * @param {string} purpose
+   * @param {string} identifier
+   * @param {string} inputOtp
+   * @returns {boolean}
    */
-  async verify(target, otp, purpose = 'register') {
-    const key = `${OTP_PREFIX}:${purpose}:${target}`;
-    const attemptsKey = `${OTP_ATTEMPTS_PREFIX}:${purpose}:${target}`;
+  async verify(purpose, identifier, inputOtp) {
+    const otpKey = `${REDIS_PREFIXES.OTP}:${purpose}:${identifier}`;
+    const attemptsKey = `${REDIS_PREFIXES.OTP_ATTEMPTS}:${purpose}:${identifier}`;
 
-    // Check max attempts
+    // Check if OTP exists
+    const storedOtp = await redis.get(otpKey);
+    if (!storedOtp) {
+      throw new BadRequestError('OTP has expired or was not generated. Please request a new one.');
+    }
+
+    // Check attempt count
     const attempts = parseInt(await redis.get(attemptsKey) || '0', 10);
     if (attempts >= config.otp.maxAttempts) {
-      // Delete the OTP — force regeneration
-      await redis.del(key);
-      await redis.del(attemptsKey);
-      throw new ValidationError(
-        'Maximum OTP verification attempts exceeded. Please request a new OTP.'
+      // Delete the OTP — force re-request
+      await redis.del(otpKey, attemptsKey);
+      throw new TooManyRequestsError(
+        'Maximum OTP attempts exceeded. Please request a new OTP.',
       );
     }
 
-    // Get stored OTP
-    const stored = await redis.get(key);
-    if (!stored) {
-      throw new ValidationError('OTP has expired or was not found. Please request a new OTP.');
-    }
+    // Increment attempt
+    await redis.incr(attemptsKey);
 
-    const otpData = JSON.parse(stored);
-
-    // Increment attempts
-    await redis.set(attemptsKey, String(attempts + 1), 'EX', config.otp.expiryMinutes * 60);
-
-    // Verify OTP
-    if (otpData.otp !== otp) {
+    // Compare
+    if (storedOtp !== inputOtp) {
       const remaining = config.otp.maxAttempts - (attempts + 1);
-      throw new ValidationError(
-        `Invalid OTP. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.`
+      throw new BadRequestError(
+        `Invalid OTP. ${remaining} attempt(s) remaining.`,
       );
     }
 
     // OTP is valid — clean up
-    await redis.del(key);
-    await redis.del(attemptsKey);
-    await redis.del(`${OTP_COOLDOWN_PREFIX}:${purpose}:${target}`);
+    await redis.del(otpKey, attemptsKey, `${REDIS_PREFIXES.OTP_COOLDOWN}:${purpose}:${identifier}`);
 
-    logger.debug({ target, purpose }, 'OTP verified successfully');
+    logger.info(`OTP verified for ${purpose}:${identifier}`);
     return true;
   }
 
   /**
-   * Invalidate any existing OTP for a target
+   * Check cooldown status (for resend endpoint)
+   * @param {string} purpose
+   * @param {string} identifier
+   * @returns {{ canResend: boolean, waitSeconds: number }}
    */
-  async invalidate(target, purpose = 'register') {
-    const key = `${OTP_PREFIX}:${purpose}:${target}`;
-    const attemptsKey = `${OTP_ATTEMPTS_PREFIX}:${purpose}:${target}`;
-    const cooldownKey = `${OTP_COOLDOWN_PREFIX}:${purpose}:${target}`;
-    await redis.del(key);
-    await redis.del(attemptsKey);
-    await redis.del(cooldownKey);
-  }
+  async checkCooldown(purpose, identifier) {
+    const cooldownKey = `${REDIS_PREFIXES.OTP_COOLDOWN}:${purpose}:${identifier}`;
+    const ttl = await redis.ttl(cooldownKey);
 
-  /**
-   * Check if OTP exists (without verifying)
-   */
-  async exists(target, purpose = 'register') {
-    const key = `${OTP_PREFIX}:${purpose}:${target}`;
-    return (await redis.exists(key)) === 1;
+    if (ttl > 0) {
+      return { canResend: false, waitSeconds: ttl };
+    }
+
+    return { canResend: true, waitSeconds: 0 };
   }
 }
 

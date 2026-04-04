@@ -1,40 +1,34 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * VALIDATION MIDDLEWARE (Zod)
+ * MIDDLEWARE — Zod Validation
  * ═══════════════════════════════════════════════════════════════
- * Generic middleware that takes a Zod schema and validates req.body,
- * req.query, or req.params. Returns formatted errors.
- *
- * Usage:
- *   router.post('/', validate(createUserSchema), controller.create);
- *   router.get('/', validate(listQuerySchema, 'query'), controller.list);
+ * Validates req.body / req.query / req.params against Zod schema.
+ * Returns 422 with structured errors on failure.
  * ═══════════════════════════════════════════════════════════════
  */
 
 const { ValidationError } = require('../utils/errors');
 
 /**
- * @param {import('zod').ZodSchema} schema - Zod schema to validate against
- * @param {string} source - 'body' | 'query' | 'params' (default: 'body')
+ * @param {import('zod').ZodSchema} schema
+ * @param {'body' | 'query' | 'params'} source
  */
 const validate = (schema, source = 'body') => {
   return (req, _res, next) => {
-    try {
-      const result = schema.parse(req[source]);
-      // Replace the source with parsed (and potentially transformed) data
-      req[source] = result;
-      next();
-    } catch (err) {
-      if (err.errors) {
-        const details = err.errors.map((e) => ({
-          field: e.path.join('.'),
-          message: e.message,
-          code: e.code,
-        }));
-        return next(new ValidationError('Validation failed.', details));
-      }
-      next(err);
+    const result = schema.safeParse(req[source]);
+
+    if (!result.success) {
+      const errors = result.error.issues.map((issue) => ({
+        field: issue.path.join('.'),
+        message: issue.message,
+      }));
+
+      return next(new ValidationError('Validation failed', errors));
     }
+
+    // Replace source data with parsed (cleaned) data
+    req[source] = result.data;
+    next();
   };
 };
 

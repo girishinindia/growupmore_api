@@ -1,67 +1,62 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * SERVER.JS — Entry Point
- * ═══════════════════════════════════════════════════════════════
- * ONLY starts the server. No Express logic here.
- * Handles graceful shutdown, uncaught exceptions.
+ * SERVER — Entry Point, Starts HTTP Server
  * ═══════════════════════════════════════════════════════════════
  */
 
-const config = require('./config/index');
-const logger = require('./config/logger');
 const app = require('./app');
+const config = require('./config');
+const logger = require('./config/logger');
+const { testConnection } = require('./config/database');
 
-// ─── Uncaught Exception Handler ──────────────────────────────
-process.on('uncaughtException', (err) => {
-  logger.error({ err }, 'UNCAUGHT EXCEPTION — Shutting down...');
-  process.exit(1);
-});
+const PORT = config.port;
 
 // ─── Start Server ────────────────────────────────────────────
-const server = app.listen(config.port, () => {
-  logger.info(`
-  ╔═══════════════════════════════════════════════╗
-  ║   ${config.appName}                        ║
-  ║   Environment : ${config.env.padEnd(28)}║
-  ║   Port        : ${String(config.port).padEnd(28)}║
-  ║   API Version : ${config.apiVersion.padEnd(28)}║
-  ║   Health      : http://localhost:${config.port}/api/health  ║
-  ╚═══════════════════════════════════════════════╝
-  `);
 
-  // Test database connection on startup (non-blocking)
-  if (!config.isTest) {
-    const { testConnection } = require('./config/database');
-    testConnection().catch(() => {
-      logger.warn('Could not connect to Supabase on startup. Will retry on first request.');
+const startServer = async () => {
+  // Test database connection
+  await testConnection();
+
+  const server = app.listen(PORT, () => {
+    logger.info('═══════════════════════════════════════════════════');
+    logger.info(`  ${config.appName}`);
+    logger.info(`  Environment : ${config.env}`);
+    logger.info(`  Port        : ${PORT}`);
+    logger.info(`  API URL     : ${config.appUrl}/api/${config.apiVersion}`);
+    logger.info(`  Health      : ${config.appUrl}/api/health`);
+    logger.info('═══════════════════════════════════════════════════');
+  });
+
+  // ─── Graceful Shutdown ───────────────────────────────────────
+
+  const gracefulShutdown = (signal) => {
+    logger.info(`${signal} received. Shutting down gracefully...`);
+
+    server.close(() => {
+      logger.info('HTTP server closed');
+      process.exit(0);
     });
-  }
-});
 
-// ─── Unhandled Rejection Handler ─────────────────────────────
-process.on('unhandledRejection', (err) => {
-  logger.error({ err }, 'UNHANDLED REJECTION — Shutting down...');
-  server.close(() => {
+    // Force shutdown after 10 seconds
+    setTimeout(() => {
+      logger.error('Forced shutdown after timeout');
+      process.exit(1);
+    }, 10000);
+  };
+
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+  // ─── Unhandled Errors ────────────────────────────────────────
+
+  process.on('unhandledRejection', (reason) => {
+    logger.error({ reason }, 'Unhandled Promise Rejection');
+  });
+
+  process.on('uncaughtException', (error) => {
+    logger.error({ error }, 'Uncaught Exception');
     process.exit(1);
   });
-});
+};
 
-// ─── Graceful Shutdown (SIGTERM from PM2/Docker) ─────────────
-process.on('SIGTERM', () => {
-  logger.info('SIGTERM received. Shutting down gracefully...');
-  server.close(() => {
-    logger.info('Server closed. Process terminating.');
-    process.exit(0);
-  });
-});
-
-// ─── Graceful Shutdown (SIGINT from Ctrl+C) ──────────────────
-process.on('SIGINT', () => {
-  logger.info('SIGINT received. Shutting down gracefully...');
-  server.close(() => {
-    logger.info('Server closed. Process terminating.');
-    process.exit(0);
-  });
-});
-
-module.exports = server;
+startServer();

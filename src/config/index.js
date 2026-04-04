@@ -11,9 +11,8 @@ const dotenv = require('dotenv');
 const path = require('path');
 
 // Load .env file based on NODE_ENV
-const envFile = process.env.NODE_ENV === 'production'
-  ? '.env'
-  : `.env.${process.env.NODE_ENV || 'development'}`;
+const envFile =
+  process.env.NODE_ENV === 'production' ? '.env' : `.env.${process.env.NODE_ENV || 'development'}`;
 
 dotenv.config({ path: path.resolve(process.cwd(), envFile) });
 
@@ -23,10 +22,10 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 const config = {
   // ─── Server ────────────────────────────────────────────────
   env: process.env.NODE_ENV || 'development',
-  port: parseInt(process.env.PORT, 10) || 5000,
+  port: parseInt(process.env.PORT, 10) || 5001,
   apiVersion: process.env.API_VERSION || 'v1',
   appName: process.env.APP_NAME || 'GrowUpMore API',
-  appUrl: process.env.APP_URL || 'http://localhost:5000',
+  appUrl: process.env.APP_URL || 'http://localhost:5001',
   timezone: process.env.TIMEZONE || 'Asia/Kolkata',
 
   isDev: (process.env.NODE_ENV || 'development') === 'development',
@@ -141,7 +140,9 @@ const config = {
   upload: {
     maxFileSizeMB: parseInt(process.env.MAX_FILE_SIZE_MB, 10) || 50,
     maxFileSizeBytes: (parseInt(process.env.MAX_FILE_SIZE_MB, 10) || 50) * 1024 * 1024,
-    allowedImageTypes: (process.env.ALLOWED_IMAGE_TYPES || 'image/jpeg,image/png,image/gif,image/webp,image/svg+xml').split(','),
+    allowedImageTypes: (
+      process.env.ALLOWED_IMAGE_TYPES || 'image/jpeg,image/png,image/gif,image/webp,image/svg+xml'
+    ).split(','),
     allowedDocTypes: (process.env.ALLOWED_DOC_TYPES || 'application/pdf').split(','),
   },
 
@@ -154,9 +155,9 @@ const config = {
   // ─── OTP ───────────────────────────────────────────────────
   otp: {
     length: parseInt(process.env.OTP_LENGTH, 10) || 6,
-    expiryMinutes: parseInt(process.env.OTP_EXPIRY_MINUTES, 10) || 10,
+    expiryMinutes: parseInt(process.env.OTP_EXPIRY_MINUTES, 10) || 3,
     maxAttempts: parseInt(process.env.OTP_MAX_ATTEMPTS, 10) || 3,
-    resendCooldownSeconds: parseInt(process.env.OTP_RESEND_COOLDOWN_SECONDS, 10) || 180,
+    resendCooldownSeconds: parseInt(process.env.OTP_RESEND_COOLDOWN_SECONDS, 10) || 60,
   },
 
   // ─── Bcrypt ────────────────────────────────────────────────

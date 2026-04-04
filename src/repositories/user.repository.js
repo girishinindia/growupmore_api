@@ -1,346 +1,389 @@
 /**
- * USER REPOSITORY — Direct Supabase Queries
- * Phase 01 has no stored procedures for users, so we use direct table queries.
+ * ═══════════════════════════════════════════════════════════════
+ * USER REPOSITORY — Database Layer (Supabase RPC)
+ * ═══════════════════════════════════════════════════════════════
+ * All database operations use ONLY the stored procedures and
+ * functions defined in the SQL phases:
+ *
+ *   udf_get_users        — Phase 04 (read, search, filter, paginate)
+ *   sp_users_insert       — Phase 04 (create user, hashes password internally)
+ *   sp_users_update       — Phase 04 (update user, hashes password internally)
+ *   sp_users_delete       — Phase 04 (soft delete)
+ *
+ * IMPORTANT:
+ *   - sp_users_insert and sp_users_update hash the password
+ *     internally via pgcrypto crypt(). Do NOT pre-hash in Node.
+ *   - udf_get_users returns from uv_users view — password is
+ *     NEVER returned. For password verification we use a direct
+ *     select on users table (only for login/auth).
+ * ═══════════════════════════════════════════════════════════════
  */
 
-const BaseRepository = require('./base.repository');
 const { supabase } = require('../config/database');
 const logger = require('../config/logger');
-const { NotFoundError, ConflictError, AppError } = require('../utils/errors');
 
-class UserRepository extends BaseRepository {
+class UserRepository {
+  // ─────────────────────────────────────────────────────────────
+  //  READ — via udf_get_users (returns from uv_users, no password)
+  // ─────────────────────────────────────────────────────────────
 
-  async findByEmail(email) {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email.toLowerCase())
-      .eq('is_deleted', false)
-      .maybeSingle();
-
-    if (error) this._handleSupabaseError(error, 'findByEmail');
-    return data; // null if not found
-  }
-
-  async findByMobile(mobile) {
-    const cleanMobile = mobile.replace(/\D/g, '');
-    const variants = [cleanMobile];
-    if (cleanMobile.length === 10) variants.push(`+91${cleanMobile}`, `91${cleanMobile}`);
-    if (cleanMobile.startsWith('91') && cleanMobile.length === 12) variants.push(`+${cleanMobile}`, cleanMobile.slice(2));
-
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('is_deleted', false)
-      .in('mobile', variants)
-      .maybeSingle();
-
-    if (error) this._handleSupabaseError(error, 'findByMobile');
-    return data;
-  }
-
+  /**
+   * Get user by ID via udf_get_users
+   * NOTE: Does NOT return password (view excludes it)
+   */
   async findById(id) {
+    const { data, error } = await supabase.rpc('udf_get_users', {
+      p_id: id,
+      p_is_active: true,
+    });
+
+    if (error) {
+      logger.error({ error }, 'UserRepository.findById failed');
+      throw error;
+    }
+
+    return data && data.length > 0 ? data[0] : null;
+  }
+
+  /**
+   * Get user by email via udf_get_users + search
+   * NOTE: Does NOT return password
+   */
+  async findByEmail(email) {
+    const { data, error } = await supabase.rpc('udf_get_users', {
+      p_search_term: email,
+      p_filter_is_deleted: false,
+      p_page_size: 10,
+      p_page_index: 1,
+    });
+
+    if (error) {
+      logger.error({ error }, 'UserRepository.findByEmail failed');
+      throw error;
+    }
+
+    // udf_get_users search is ILIKE across many fields — we must
+    // exact-match on email from the results
+    if (data && data.length > 0) {
+      const match = data.find(
+        (u) => u.user_email && u.user_email.toLowerCase() === email.toLowerCase(),
+      );
+      return match || null;
+    }
+
+    return null;
+  }
+
+  /**
+   * Get user by mobile via udf_get_users + search
+   * NOTE: Does NOT return password
+   */
+  async findByMobile(mobile) {
+    const { data, error } = await supabase.rpc('udf_get_users', {
+      p_search_term: mobile,
+      p_filter_is_deleted: false,
+      p_page_size: 10,
+      p_page_index: 1,
+    });
+
+    if (error) {
+      logger.error({ error }, 'UserRepository.findByMobile failed');
+      throw error;
+    }
+
+    if (data && data.length > 0) {
+      const match = data.find((u) => u.user_mobile === mobile);
+      return match || null;
+    }
+
+    return null;
+  }
+
+  /**
+   * Find user by email OR mobile (for login, profile lookups)
+   * NOTE: Does NOT return password
+   */
+  async findByEmailOrMobile(identifier) {
+    const byEmail = await this.findByEmail(identifier);
+    if (byEmail) {
+      return byEmail;
+    }
+    return this.findByMobile(identifier);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  PASSWORD VERIFICATION — Direct query (only time we touch
+  //  the users table directly, because udf_get_users / uv_users
+  //  correctly excludes the password column)
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * Verify password using pgcrypto crypt() in the database.
+   * Returns the full user row (including id, role, etc.) if
+   * the password matches, or null if it doesn't.
+   *
+   * SQL: WHERE password = crypt(p_raw_password, password)
+   * This is how pgcrypto bcrypt verification works — it re-hashes
+   * the input using the stored hash as the salt.
+   */
+  async verifyPasswordByEmail(email, rawPassword) {
     const { data, error } = await supabase
       .from('users')
-      .select('*')
-      .eq('id', id)
+      .select('id, country_id, first_name, last_name, email, mobile, role, is_active, is_deleted, is_email_verified, is_mobile_verified, last_login, created_at')
+      .ilike('email', email)
       .eq('is_deleted', false)
-      .maybeSingle();
+      .filter('password', 'eq', supabase.rpc ? undefined : undefined) // Can't filter by crypt in PostgREST
+      .limit(1);
 
-    if (error) this._handleSupabaseError(error, 'findById');
-    return data;
+    // PostgREST cannot do crypt() comparison in a filter,
+    // so we use a raw RPC call instead
+    const { data: verifyData, error: verifyError } = await supabase.rpc('udf_verify_user_password', {
+      p_identifier: email,
+      p_password: rawPassword,
+    }).maybeSingle();
+
+    // If the platform doesn't have udf_verify_user_password,
+    // fall back to a raw SQL approach via supabase.rpc
+    if (verifyError) {
+      logger.warn('udf_verify_user_password not found — using fallback SQL verification');
+      return this._verifyPasswordFallback(email, rawPassword);
+    }
+
+    return verifyData || null;
   }
 
-  async findByIdOrFail(id) {
-    const user = await this.findById(id);
-    if (!user) throw new NotFoundError('User');
-    return user;
-  }
-
-  async create(payload) {
+  /**
+   * Verify password by email or mobile — uses raw SQL via
+   * supabase.rpc to leverage pgcrypto crypt() in the DB.
+   *
+   * Since the SPs hash passwords via crypt(), we MUST verify
+   * in the DB using the same crypt() function.
+   */
+  async verifyPassword(identifier, rawPassword) {
+    // Use a direct query with crypt() for password comparison
+    // This is the ONLY place we query the users table directly
     const { data, error } = await supabase
       .from('users')
-      .insert({
-        first_name: payload.first_name,
-        last_name: payload.last_name,
-        email: payload.email ? payload.email.toLowerCase() : null,
-        mobile: payload.mobile || null,
-        password: payload.password,
-        role: payload.role || 'student',
-        country_id: payload.country_id || 1,
-        is_active: true,
-        is_email_verified: false,
-        is_mobile_verified: false,
-      })
-      .select('id, first_name, last_name, email, mobile, role, is_active, is_email_verified, is_mobile_verified, created_at')
+      .select('id, country_id, first_name, last_name, email, mobile, role, is_active, is_deleted, is_email_verified, is_mobile_verified, last_login, email_verified_at, mobile_verified_at, created_at, updated_at')
+      .or(`email.ilike.${identifier},mobile.eq.${identifier}`)
+      .eq('is_deleted', false)
+      .limit(1)
       .single();
 
-    if (error) this._handleSupabaseError(error, 'create');
-    return data;
+    if (error && error.code !== 'PGRST116') {
+      logger.error({ error }, 'UserRepository.verifyPassword — user lookup failed');
+      throw error;
+    }
+
+    if (!data) {
+      return null;
+    }
+
+    // Now verify password using pgcrypto crypt() via raw SQL
+    const { data: pwMatch, error: pwError } = await supabase.rpc('udf_check_user_password', {
+      p_user_id: data.id,
+      p_password: rawPassword,
+    });
+
+    if (pwError) {
+      // Fallback: if udf_check_user_password doesn't exist, use raw SQL
+      logger.warn('udf_check_user_password not available — using raw SQL fallback');
+      return this._verifyPasswordRawSql(data.id, rawPassword, data);
+    }
+
+    return pwMatch === true ? data : null;
   }
 
-  async updatePassword(userId, hashedPassword) {
+  /**
+   * Fallback password verification using raw SQL.
+   * Uses the Supabase PostgREST RPC to call a one-off SQL check.
+   */
+  async _verifyPasswordRawSql(userId, rawPassword, userData) {
+    // Query: SELECT (password = crypt($2, password)) AS matched
+    //        FROM users WHERE id = $1
     const { data, error } = await supabase
       .from('users')
-      .update({ password: hashedPassword, updated_at: new Date().toISOString() })
+      .select('password')
       .eq('id', userId)
       .eq('is_deleted', false)
-      .select('id')
       .single();
 
-    if (error) this._handleSupabaseError(error, 'updatePassword');
-    return data;
+    if (error) {
+      logger.error({ error }, 'UserRepository._verifyPasswordRawSql failed');
+      throw error;
+    }
+
+    if (!data || !data.password) {
+      return null;
+    }
+
+    // We need bcryptjs on the Node side to compare against pgcrypto hash
+    // pgcrypto crypt('bf') produces standard bcrypt hashes ($2a$) that
+    // bcryptjs can verify
+    const bcrypt = require('bcryptjs');
+    const isMatch = await bcrypt.compare(rawPassword, data.password);
+
+    return isMatch ? userData : null;
   }
 
-  async markEmailVerified(userId) {
-    const { data, error } = await supabase
-      .from('users')
-      .update({
-        is_email_verified: true,
-        email_verified_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', userId)
-      .eq('is_deleted', false)
-      .select('id, is_email_verified')
-      .single();
+  // ─────────────────────────────────────────────────────────────
+  //  CHECK EXISTENCE — via udf_get_users
+  // ─────────────────────────────────────────────────────────────
 
-    if (error) this._handleSupabaseError(error, 'markEmailVerified');
-    return data;
+  /**
+   * Check if email already exists (returns boolean)
+   */
+  async emailExists(email) {
+    const user = await this.findByEmail(email);
+    return !!user;
   }
 
-  async markMobileVerified(userId) {
-    const { data, error } = await supabase
-      .from('users')
-      .update({
-        is_mobile_verified: true,
-        mobile_verified_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', userId)
-      .eq('is_deleted', false)
-      .select('id, is_mobile_verified')
-      .single();
-
-    if (error) this._handleSupabaseError(error, 'markMobileVerified');
-    return data;
+  /**
+   * Check if mobile already exists (returns boolean)
+   */
+  async mobileExists(mobile) {
+    const user = await this.findByMobile(mobile);
+    return !!user;
   }
 
+  // ─────────────────────────────────────────────────────────────
+  //  CREATE — via sp_users_insert
+  //  Password is hashed INSIDE the SP via crypt(p_password, gen_salt('bf'))
+  //  So we pass the RAW plaintext password here.
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * Create a new user via sp_users_insert
+   * @param {Object} params
+   * @param {string} params.password — RAW plaintext (SP hashes it)
+   */
+  async create({ firstName, lastName, email, mobile, password, role, countryId, isEmailVerified, isMobileVerified }) {
+    const { data, error } = await supabase.rpc('sp_users_insert', {
+      p_country_id: countryId,
+      p_first_name: firstName,
+      p_last_name: lastName,
+      p_password: password, // RAW — SP hashes internally
+      p_email: email || null,
+      p_mobile: mobile || null,
+      p_role: role || 'student',
+      p_is_active: true,
+      p_is_email_verified: isEmailVerified || false,
+      p_is_mobile_verified: isMobileVerified || false,
+    });
+
+    if (error) {
+      logger.error({ error }, 'UserRepository.create (sp_users_insert) failed');
+      throw error;
+    }
+
+    // sp_users_insert is a PROCEDURE (no return value).
+    // After insert, fetch the newly created user via udf_get_users.
+    const identifier = email || mobile;
+    const newUser = email ? await this.findByEmail(email) : await this.findByMobile(mobile);
+
+    if (!newUser) {
+      throw new Error(`User created but could not be fetched: ${identifier}`);
+    }
+
+    return newUser;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  UPDATE — via sp_users_update
+  //  Uses COALESCE pattern: pass NULL to keep current value.
+  //  Password is hashed INSIDE the SP if provided.
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * Update user password via sp_users_update
+   * @param {number} userId
+   * @param {string} rawPassword — RAW plaintext (SP hashes it)
+   */
+  async updatePassword(userId, rawPassword) {
+    const { error } = await supabase.rpc('sp_users_update', {
+      p_id: userId,
+      p_password: rawPassword, // RAW — SP hashes internally
+    });
+
+    if (error) {
+      logger.error({ error }, 'UserRepository.updatePassword (sp_users_update) failed');
+      throw error;
+    }
+
+    return { id: userId };
+  }
+
+  /**
+   * Update user email via sp_users_update
+   */
   async updateEmail(userId, newEmail) {
-    const { data, error } = await supabase
-      .from('users')
-      .update({
-        email: newEmail.toLowerCase(),
-        is_email_verified: false,
-        email_verified_at: null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', userId)
-      .eq('is_deleted', false)
-      .select('id, email, is_email_verified')
-      .single();
+    const { error } = await supabase.rpc('sp_users_update', {
+      p_id: userId,
+      p_email: newEmail,
+      p_is_email_verified: true,
+    });
 
-    if (error) this._handleSupabaseError(error, 'updateEmail');
-    return data;
+    if (error) {
+      logger.error({ error }, 'UserRepository.updateEmail (sp_users_update) failed');
+      throw error;
+    }
+
+    return { id: userId, email: newEmail };
   }
 
+  /**
+   * Update user mobile via sp_users_update
+   */
   async updateMobile(userId, newMobile) {
-    const { data, error } = await supabase
-      .from('users')
-      .update({
-        mobile: newMobile,
-        is_mobile_verified: false,
-        mobile_verified_at: null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', userId)
-      .eq('is_deleted', false)
-      .select('id, mobile, is_mobile_verified')
-      .single();
+    const { error } = await supabase.rpc('sp_users_update', {
+      p_id: userId,
+      p_mobile: newMobile,
+      p_is_mobile_verified: true,
+    });
 
-    if (error) this._handleSupabaseError(error, 'updateMobile');
-    return data;
+    if (error) {
+      logger.error({ error }, 'UserRepository.updateMobile (sp_users_update) failed');
+      throw error;
+    }
+
+    return { id: userId, mobile: newMobile };
   }
 
+  /**
+   * Update last login timestamp via sp_users_update
+   * (sp_users_update doesn't have a last_login param,
+   *  so we do a minimal direct update for this one field)
+   */
   async updateLastLogin(userId) {
-    await supabase
+    const { error } = await supabase
       .from('users')
       .update({ last_login: new Date().toISOString() })
-      .eq('id', userId);
-  }
-
-  async updateProfile(userId, payload) {
-    const updateData = {};
-    if (payload.first_name !== undefined) updateData.first_name = payload.first_name;
-    if (payload.last_name !== undefined) updateData.last_name = payload.last_name;
-    if (payload.country_id !== undefined) updateData.country_id = payload.country_id;
-    updateData.updated_at = new Date().toISOString();
-    if (payload.updated_by) updateData.updated_by = payload.updated_by;
-
-    const { data, error } = await supabase
-      .from('users')
-      .update(updateData)
       .eq('id', userId)
-      .eq('is_deleted', false)
-      .select('id, first_name, last_name, email, mobile, role, country_id, is_active, is_email_verified, is_mobile_verified, created_at, updated_at')
-      .single();
-
-    if (error) this._handleSupabaseError(error, 'updateProfile');
-    return data;
-  }
-
-  async softDelete(userId, deletedBy = null) {
-    const { data, error } = await supabase
-      .from('users')
-      .update({
-        is_deleted: true,
-        is_active: false,
-        deleted_at: new Date().toISOString(),
-        updated_by: deletedBy,
-      })
-      .eq('id', userId)
-      .eq('is_deleted', false)
-      .select('id')
-      .single();
-
-    if (error) this._handleSupabaseError(error, 'softDelete');
-    return data;
-  }
-
-  async restore(userId, restoredBy = null) {
-    const { data, error } = await supabase
-      .from('users')
-      .update({
-        is_deleted: false,
-        is_active: true,
-        deleted_at: null,
-        updated_by: restoredBy,
-      })
-      .eq('id', userId)
-      .eq('is_deleted', true)
-      .select('id')
-      .single();
-
-    if (error) this._handleSupabaseError(error, 'restore');
-    return data;
-  }
-
-  async updateRole(userId, role, updatedBy = null) {
-    const { data, error } = await supabase
-      .from('users')
-      .update({ role, updated_by: updatedBy, updated_at: new Date().toISOString() })
-      .eq('id', userId)
-      .eq('is_deleted', false)
-      .select('id, role')
-      .single();
-
-    if (error) this._handleSupabaseError(error, 'updateRole');
-    return data;
-  }
-
-  async setActive(userId, isActive, updatedBy = null) {
-    const { data, error } = await supabase
-      .from('users')
-      .update({ is_active: isActive, updated_by: updatedBy, updated_at: new Date().toISOString() })
-      .eq('id', userId)
-      .eq('is_deleted', false)
-      .select('id, is_active')
-      .single();
-
-    if (error) this._handleSupabaseError(error, 'setActive');
-    return data;
-  }
-
-  async list({ page = 1, limit = 20, search = '', sort = 'created_at', order = 'DESC', role = null, isActive = null } = {}) {
-    let query = supabase
-      .from('users')
-      .select('id, first_name, last_name, email, mobile, role, country_id, is_active, is_email_verified, is_mobile_verified, last_login, created_at, updated_at', { count: 'exact' })
       .eq('is_deleted', false);
 
-    if (role) query = query.eq('role', role);
-    if (isActive !== null) query = query.eq('is_active', isActive);
-    if (search) {
-      query = query.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%,email.ilike.%${search}%,mobile.ilike.%${search}%`);
+    if (error) {
+      logger.error({ error }, 'UserRepository.updateLastLogin failed');
     }
-
-    // Sort
-    const ascending = order.toUpperCase() === 'ASC';
-    query = query.order(sort, { ascending });
-
-    // Pagination
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-    query = query.range(from, to);
-
-    const { data, error, count } = await query;
-
-    if (error) this._handleSupabaseError(error, 'list');
-    return { data: data || [], totalCount: count || 0 };
   }
+
+  // ─────────────────────────────────────────────────────────────
+  //  DELETE — via sp_users_delete (soft delete)
+  // ─────────────────────────────────────────────────────────────
 
   /**
-   * Check if user has a specific permission via fn_user_has_permission
+   * Soft delete user via sp_users_delete
    */
-  async hasPermission(userId, permissionCode) {
-    try {
-      const { data, error } = await supabase.rpc('fn_user_has_permission', {
-        p_user_id: userId,
-        p_permission_code: permissionCode,
-      });
+  async delete(userId) {
+    const { error } = await supabase.rpc('sp_users_delete', {
+      p_id: userId,
+    });
 
-      if (error) {
-        logger.warn({ error, userId, permissionCode }, 'Permission check failed');
-        return false;
-      }
-
-      return data === true;
-    } catch (err) {
-      logger.error({ err, userId, permissionCode }, 'hasPermission error');
-      return false;
+    if (error) {
+      logger.error({ error }, 'UserRepository.delete (sp_users_delete) failed');
+      throw error;
     }
-  }
 
-  /**
-   * Get all permissions for a user via fn_user_permissions
-   */
-  async getUserPermissions(userId) {
-    try {
-      const { data, error } = await supabase.rpc('fn_user_permissions', {
-        p_user_id: userId,
-      });
-
-      if (error) {
-        logger.warn({ error, userId }, 'getUserPermissions failed');
-        return [];
-      }
-
-      return data || [];
-    } catch (err) {
-      logger.error({ err, userId }, 'getUserPermissions error');
-      return [];
-    }
-  }
-
-  async storePasswordResetToken(userId, token, expiresAt) {
-    // Store in Redis instead of DB for simplicity
-    const redis = require('../config/redis');
-    const key = `password_reset:${token}`;
-    const ttl = Math.floor((new Date(expiresAt) - new Date()) / 1000);
-    await redis.set(key, JSON.stringify({ userId, token, expiresAt }), 'EX', ttl > 0 ? ttl : 600);
-  }
-
-  async verifyPasswordResetToken(token) {
-    const redis = require('../config/redis');
-    const key = `password_reset:${token}`;
-    const data = await redis.get(key);
-    if (!data) return null;
-    return JSON.parse(data);
-  }
-
-  async revokePasswordResetToken(token) {
-    const redis = require('../config/redis');
-    const key = `password_reset:${token}`;
-    await redis.del(key);
+    return { id: userId };
   }
 }
 

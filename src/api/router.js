@@ -1,20 +1,17 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * API VERSION ROUTER
- * ═══════════════════════════════════════════════════════════════
- * /api/v1  → v1 routes (current)
- * /api/v2  → v2 routes (inherits from v1, overrides only changed)
+ * MASTER ROUTER — /api/v1 → v1, /api/v2 → v2
  * ═══════════════════════════════════════════════════════════════
  */
 
 const { Router } = require('express');
-const v1Routes = require('./v1/index');
-const v2Routes = require('./v2/index');
+const v1Routes = require('./v1');
 
 const router = Router();
 
-// Mount version routes
+// API version routing
 router.use('/v1', v1Routes);
-router.use('/v2', v2Routes);
+
+// Future: router.use('/v2', v2Routes);
 
 module.exports = router;

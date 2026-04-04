@@ -1,126 +1,64 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * AUTH MIDDLEWARE — JWT Verification
+ * MIDDLEWARE — JWT Authentication
  * ═══════════════════════════════════════════════════════════════
- * Extracts Bearer token from Authorization header, verifies with
- * jsonwebtoken, and attaches user to req.user.
- * Includes optional Redis cache for revoked tokens.
+ * Verifies Bearer token, checks session in Redis, attaches user
+ * to req.user
  * ═══════════════════════════════════════════════════════════════
  */
 
 const jwt = require('jsonwebtoken');
-const config = require('../config/index');
+const config = require('../config');
+const redis = require('../config/redis');
+const { UnauthorizedError } = require('../utils/errors');
+const { REDIS_PREFIXES } = require('../utils/constants');
 const logger = require('../config/logger');
-const { AuthenticationError } = require('../utils/errors');
 
-let redis = null;
-// Try to load Redis (optional — if not available, continue without caching)
-try {
-  redis = require('../config/redis');
-} catch (_err) {
-  // Redis not configured, continue without token revocation cache
-}
-
-/**
- * Middleware: Verify Bearer token and attach user to req.user
- * Used on protected routes.
- *
- * @example
- * router.get('/me', auth, controller.getProfile);
- *
- * @throws {AuthenticationError} If token is missing, invalid, or expired
- */
-const auth = async (req, _res, next) => {
+const authenticate = async (req, _res, next) => {
   try {
-    // Extract Bearer token from Authorization header
+    // 1. Extract token from Authorization header
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new AuthenticationError(
-        'No authentication token. Please provide a valid Bearer token.'
-      );
+      throw new UnauthorizedError('Access token is required');
     }
 
-    const token = authHeader.slice(7); // Remove 'Bearer ' prefix
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+      throw new UnauthorizedError('Access token is required');
+    }
 
-    // Check if token is blacklisted in Redis (optional)
-    if (redis && !redis._isMock) {
-      try {
-        const isBlacklisted = await redis.get(`blacklist:${token}`);
-        if (isBlacklisted) {
-          throw new AuthenticationError('Token has been revoked.');
-        }
-      } catch (redisErr) {
-        logger.warn({ err: redisErr }, 'Failed to check token blacklist');
-        // Continue anyway — don't fail auth if Redis is down
+    // 2. Verify JWT
+    let decoded;
+    try {
+      decoded = jwt.verify(token, config.jwt.accessSecret);
+    } catch (err) {
+      if (err.name === 'TokenExpiredError') {
+        throw new UnauthorizedError('Access token has expired');
       }
+      throw new UnauthorizedError('Invalid access token');
     }
 
-    // Verify JWT using access secret
-    const decoded = jwt.verify(token, config.jwt.accessSecret);
+    // 3. Check session exists in Redis (not logged out)
+    const sessionKey = `${REDIS_PREFIXES.SESSION}:${decoded.userId}:${decoded.sessionId}`;
+    const session = await redis.get(sessionKey);
 
-    // Attach decoded user to request
-    req.user = decoded;
-    req.token = token; // Store token for later use (e.g., logout)
+    if (!session) {
+      throw new UnauthorizedError('Session expired or logged out. Please login again.');
+    }
 
-    logger.debug({ userId: req.user.id }, 'User authenticated');
+    // 4. Attach user info to request
+    req.user = {
+      userId: decoded.userId,
+      email: decoded.email,
+      mobile: decoded.mobile,
+      role: decoded.role,
+      sessionId: decoded.sessionId,
+    };
 
     next();
-  } catch (err) {
-    if (err instanceof jwt.JsonWebTokenError) {
-      return next(new AuthenticationError('Invalid token.'));
-    }
-    if (err instanceof jwt.TokenExpiredError) {
-      return next(new AuthenticationError('Token has expired. Please refresh.'));
-    }
-    if (err instanceof AuthenticationError) {
-      return next(err);
-    }
-    logger.error({ err }, 'Auth middleware error');
-    next(new AuthenticationError('Authentication failed.'));
+  } catch (error) {
+    next(error);
   }
 };
 
-/**
- * Middleware: Optional authentication
- * Verifies token if present, but doesn't fail if missing.
- * Useful for routes that work with or without auth.
- *
- * @example
- * router.get('/articles', optionalAuth, controller.list);
- */
-const optionalAuth = async (req, _res, next) => {
-  try {
-    const authHeader = req.headers.authorization;
-
-    // If no auth header, continue without user
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return next();
-    }
-
-    const token = authHeader.slice(7);
-
-    // Check blacklist
-    if (redis && !redis._isMock) {
-      try {
-        const isBlacklisted = await redis.get(`blacklist:${token}`);
-        if (isBlacklisted) {
-          return next(); // Token revoked, treat as unauthenticated
-        }
-      } catch (_err) {
-        // Redis error, continue
-      }
-    }
-
-    // Verify token
-    const decoded = jwt.verify(token, config.jwt.accessSecret);
-    req.user = decoded;
-    req.token = token;
-  } catch (_err) {
-    // Token invalid or expired, continue as unauthenticated
-    req.user = null;
-  }
-
-  next();
-};
-
-module.exports = { auth, optionalAuth };
+module.exports = authenticate;

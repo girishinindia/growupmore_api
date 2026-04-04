@@ -1,156 +1,302 @@
 /**
- * AUTH CONTROLLER — All Authentication Endpoints
+ * ═══════════════════════════════════════════════════════════════
+ * AUTH CONTROLLER — Handles HTTP request/response for Auth
+ * ═══════════════════════════════════════════════════════════════
+ * Thin layer: validate → call service → send response
+ * ═══════════════════════════════════════════════════════════════
  */
 
 const authService = require('../../../services/auth.service');
-const { successResponse, createdResponse } = require('../../../utils/response');
+const { sendSuccess, sendCreated } = require('../../../utils/response');
+const { StatusCodes } = require('http-status-codes');
 
-// POST /auth/register (Step 1 — sends OTPs to email & mobile, returns registration_token)
-const register = async (req, res) => {
-  const result = await authService.register(req.body);
-  createdResponse(res, result, result.message);
-};
+class AuthController {
+  // ─── Registration ──────────────────────────────────────────
 
-// POST /auth/verify-registration-email (Step 2a — verify email OTP during registration)
-const verifyRegistrationEmail = async (req, res) => {
-  const result = await authService.verifyRegistrationEmailOtp(req.body);
-  successResponse(res, result, result.message);
-};
+  async initiateRegistration(req, res, next) {
+    try {
+      const result = await authService.initiateRegistration(req.body);
+      return sendSuccess(res, {
+        statusCode: StatusCodes.OK,
+        message: result.message,
+        data: {
+          identifier: result.identifier,
+          maskedEmail: result.maskedEmail,
+          maskedMobile: result.maskedMobile,
+          expiresInSeconds: result.expiresInSeconds,
+          resendAfterSeconds: result.resendAfterSeconds,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 
-// POST /auth/verify-registration-mobile (Step 2b — verify mobile OTP during registration)
-const verifyRegistrationMobile = async (req, res) => {
-  const result = await authService.verifyRegistrationMobileOtp(req.body);
-  successResponse(res, result, result.message);
-};
+  async verifyRegistrationEmail(req, res, next) {
+    try {
+      const result = await authService.verifyRegistrationEmail(req.body);
 
-// POST /auth/resend-registration-otp (resend OTP for pending registration)
-const resendRegistrationOtp = async (req, res) => {
-  const result = await authService.resendRegistrationOtp(req.body);
-  successResponse(res, null, result.message);
-};
+      // If step is complete (email-only registration), return 201 with user
+      if (result.step === 'complete') {
+        return sendCreated(res, {
+          message: result.message,
+          data: {
+            user: result.user,
+            accessToken: result.accessToken,
+            refreshToken: result.refreshToken,
+            expiresIn: result.expiresIn,
+          },
+        });
+      }
 
-// POST /auth/login
-const login = async (req, res) => {
-  const { identifier, password } = req.body;
-  const result = await authService.login({
-    identifier,
-    password,
-    ip: req.ip,
-    userAgent: req.headers['user-agent'],
-  });
-  successResponse(res, result, 'Login successful');
-};
+      // Email verified, mobile OTP sent → return 200
+      return sendSuccess(res, {
+        statusCode: StatusCodes.OK,
+        message: result.message,
+        data: {
+          step: result.step,
+          maskedMobile: result.maskedMobile,
+          expiresInSeconds: result.expiresInSeconds,
+          resendAfterSeconds: result.resendAfterSeconds,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 
-// POST /auth/verify-email-otp
-const verifyEmailOtp = async (req, res) => {
-  const result = await authService.verifyEmailOtp(req.body);
-  successResponse(res, result, result.message);
-};
+  async verifyRegistrationMobile(req, res, next) {
+    try {
+      const result = await authService.verifyRegistrationMobile(req.body);
+      return sendCreated(res, {
+        message: result.message,
+        data: {
+          user: result.user,
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+          expiresIn: result.expiresIn,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 
-// POST /auth/verify-mobile-otp
-const verifyMobileOtp = async (req, res) => {
-  const result = await authService.verifyMobileOtp(req.body);
-  successResponse(res, result, result.message);
-};
+  async resendRegistrationOtp(req, res, next) {
+    try {
+      const result = await authService.resendRegistrationOtp(req.body);
+      return sendSuccess(res, {
+        message: result.message,
+        data: {
+          maskedEmail: result.maskedEmail,
+          maskedMobile: result.maskedMobile,
+          expiresInSeconds: result.expiresInSeconds,
+          resendAfterSeconds: result.resendAfterSeconds,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 
-// POST /auth/resend-otp
-const resendOtp = async (req, res) => {
-  const result = await authService.resendOtp(req.body);
-  successResponse(res, null, result.message);
-};
+  // ─── Login ─────────────────────────────────────────────────
 
-// POST /auth/forgot-password
-const forgotPassword = async (req, res) => {
-  const result = await authService.forgotPassword(req.body);
-  successResponse(res, null, result.message);
-};
+  async login(req, res, next) {
+    try {
+      const result = await authService.login(req.body);
+      return sendSuccess(res, {
+        message: result.message,
+        data: {
+          user: result.user,
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+          expiresIn: result.expiresIn,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 
-// POST /auth/verify-reset-otp
-const verifyResetOtp = async (req, res) => {
-  const result = await authService.verifyResetOtp(req.body);
-  successResponse(res, { resetToken: result.resetToken }, result.message);
-};
+  // ─── Forgot Password ──────────────────────────────────────
 
-// POST /auth/reset-password
-const resetPassword = async (req, res) => {
-  const result = await authService.resetPassword({
-    resetToken: req.body.reset_token,
-    newPassword: req.body.new_password,
-  });
-  successResponse(res, null, result.message);
-};
+  async initiateForgotPassword(req, res, next) {
+    try {
+      const result = await authService.initiateForgotPassword(req.body);
+      return sendSuccess(res, {
+        message: result.message,
+        data: {
+          maskedEmail: result.maskedEmail,
+          maskedMobile: result.maskedMobile,
+          expiresInSeconds: result.expiresInSeconds,
+          resendAfterSeconds: result.resendAfterSeconds,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 
-// POST /auth/refresh-token
-const refreshToken = async (req, res) => {
-  const result = await authService.refreshToken({
-    refreshToken: req.body.refresh_token,
-  });
-  successResponse(res, result, 'Token refreshed successfully');
-};
+  async verifyForgotPasswordOtp(req, res, next) {
+    try {
+      const result = await authService.verifyForgotPasswordOtp(req.body);
+      return sendSuccess(res, {
+        message: result.message,
+        data: {
+          resetToken: result.resetToken,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 
-// POST /auth/logout
-const logout = async (req, res) => {
-  const result = await authService.logout(req.token, req.user?.id);
-  successResponse(res, null, result.message);
-};
+  async resetPassword(req, res, next) {
+    try {
+      const result = await authService.resetPassword(req.body);
+      return sendSuccess(res, {
+        message: result.message,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 
-// GET /auth/me
-const getProfile = async (req, res) => {
-  const profile = await authService.getProfile(req.user.id);
-  successResponse(res, profile, 'Profile retrieved successfully');
-};
+  async resendForgotPasswordOtp(req, res, next) {
+    try {
+      const result = await authService.resendForgotPasswordOtp(req.body);
+      return sendSuccess(res, {
+        message: result.message,
+        data: {
+          maskedEmail: result.maskedEmail,
+          maskedMobile: result.maskedMobile,
+          expiresInSeconds: result.expiresInSeconds,
+          resendAfterSeconds: result.resendAfterSeconds,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 
-// POST /auth/change-password
-const changePassword = async (req, res) => {
-  const result = await authService.changePassword(req.user.id, {
-    currentPassword: req.body.current_password,
-    newPassword: req.body.new_password,
-  });
-  successResponse(res, null, result.message);
-};
+  // ─── Change Password (logged in) ──────────────────────────
 
-// POST /auth/request-email-change
-const requestEmailChange = async (req, res) => {
-  const result = await authService.requestEmailChange(req.user.id, req.body.new_email);
-  successResponse(res, null, result.message);
-};
+  async changePassword(req, res, next) {
+    try {
+      const result = await authService.changePassword({
+        userId: req.user.userId,
+        ...req.body,
+      });
+      return sendSuccess(res, {
+        message: result.message,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 
-// POST /auth/verify-email-change
-const verifyEmailChange = async (req, res) => {
-  const result = await authService.verifyEmailChange(req.user.id, req.body.otp);
-  successResponse(res, null, result.message);
-};
+  // ─── Change Email (logged in) ─────────────────────────────
 
-// POST /auth/request-mobile-change
-const requestMobileChange = async (req, res) => {
-  const result = await authService.requestMobileChange(req.user.id, req.body.new_mobile);
-  successResponse(res, null, result.message);
-};
+  async initiateChangeEmail(req, res, next) {
+    try {
+      const result = await authService.initiateChangeEmail({
+        userId: req.user.userId,
+        ...req.body,
+      });
+      return sendSuccess(res, {
+        message: result.message,
+        data: {
+          maskedEmail: result.maskedEmail,
+          expiresInSeconds: result.expiresInSeconds,
+          resendAfterSeconds: result.resendAfterSeconds,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 
-// POST /auth/verify-mobile-change
-const verifyMobileChange = async (req, res) => {
-  const result = await authService.verifyMobileChange(req.user.id, req.body.otp);
-  successResponse(res, null, result.message);
-};
+  async verifyChangeEmail(req, res, next) {
+    try {
+      const result = await authService.verifyChangeEmail({
+        userId: req.user.userId,
+        ...req.body,
+      });
+      return sendSuccess(res, {
+        message: result.message,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 
-module.exports = {
-  register,
-  verifyRegistrationEmail,
-  verifyRegistrationMobile,
-  resendRegistrationOtp,
-  login,
-  verifyEmailOtp,
-  verifyMobileOtp,
-  resendOtp,
-  forgotPassword,
-  verifyResetOtp,
-  resetPassword,
-  refreshToken,
-  logout,
-  getProfile,
-  changePassword,
-  requestEmailChange,
-  verifyEmailChange,
-  requestMobileChange,
-  verifyMobileChange,
-};
+  // ─── Change Mobile (logged in) ────────────────────────────
+
+  async initiateChangeMobile(req, res, next) {
+    try {
+      const result = await authService.initiateChangeMobile({
+        userId: req.user.userId,
+        ...req.body,
+      });
+      return sendSuccess(res, {
+        message: result.message,
+        data: {
+          maskedMobile: result.maskedMobile,
+          expiresInSeconds: result.expiresInSeconds,
+          resendAfterSeconds: result.resendAfterSeconds,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async verifyChangeMobile(req, res, next) {
+    try {
+      const result = await authService.verifyChangeMobile({
+        userId: req.user.userId,
+        ...req.body,
+      });
+      return sendSuccess(res, {
+        message: result.message,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // ─── Logout ────────────────────────────────────────────────
+
+  async logout(req, res, next) {
+    try {
+      const result = await authService.logout({
+        userId: req.user.userId,
+        sessionId: req.user.sessionId,
+      });
+      return sendSuccess(res, {
+        message: result.message,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // ─── Refresh Token ─────────────────────────────────────────
+
+  async refreshToken(req, res, next) {
+    try {
+      const result = await authService.refreshToken(req.body);
+      return sendSuccess(res, {
+        message: 'Token refreshed',
+        data: {
+          accessToken: result.accessToken,
+          expiresIn: result.expiresIn,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+}
+
+module.exports = new AuthController();

@@ -1,260 +1,110 @@
 /**
- * EMAIL SERVICE — Brevo (Sendinblue) Transactional Emails
- * Uses Handlebars templates with a beautiful light-blue theme
+ * ═══════════════════════════════════════════════════════════════
+ * EMAIL SERVICE — Brevo Transactional API
+ * ═══════════════════════════════════════════════════════════════
  */
 
-const { BrevoClient } = require('@getbrevo/brevo');
-const handlebars = require('handlebars');
-const fs = require('fs');
-const path = require('path');
-const config = require('../config/index');
+const axios = require('axios');
+const config = require('../config');
 const logger = require('../config/logger');
-const { ServiceUnavailableError } = require('../utils/errors');
+
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
 class EmailService {
   constructor() {
-    this.client = null;
-    this.templates = {};
-    this._initBrevo();
-    this._loadTemplates();
-  }
-
-  _initBrevo() {
-    if (!config.email.brevoApiKey) {
-      logger.warn('Brevo API key not configured. Emails will be logged only.');
-      return;
-    }
-
-    this.client = new BrevoClient({ apiKey: config.email.brevoApiKey });
-  }
-
-  _loadTemplates() {
-    const templateDir = path.join(__dirname, '../templates/email');
-    const templateFiles = [
-      'base',
-      'otp',
-      'welcome',
-      'password-reset',
-      'password-changed',
-      'admin-new-user',
-      'email-change',
-      'mobile-change',
-      'login-alert',
-    ];
-
-    // Register base as partial
-    try {
-      const basePath = path.join(templateDir, 'base.hbs');
-      if (fs.existsSync(basePath)) {
-        const baseTemplate = fs.readFileSync(basePath, 'utf8');
-        handlebars.registerPartial('base', baseTemplate);
-      }
-    } catch (err) {
-      logger.warn({ err }, 'Failed to load base email template');
-    }
-
-    // Load all templates
-    for (const name of templateFiles) {
-      try {
-        const filePath = path.join(templateDir, `${name}.hbs`);
-        if (fs.existsSync(filePath)) {
-          const source = fs.readFileSync(filePath, 'utf8');
-          this.templates[name] = handlebars.compile(source);
-        }
-      } catch (err) {
-        logger.warn({ err, template: name }, 'Failed to load email template');
-      }
-    }
-
-    logger.debug({ loaded: Object.keys(this.templates) }, 'Email templates loaded');
+    this.apiKey = config.email.brevoApiKey;
+    this.from = {
+      name: config.email.fromName,
+      email: config.email.from,
+    };
   }
 
   /**
-   * Render a template with data
+   * Send an email via Brevo API
+   * @param {Object} options
+   * @param {string} options.to - Recipient email
+   * @param {string} options.toName - Recipient name
+   * @param {string} options.subject - Email subject
+   * @param {string} options.htmlContent - HTML body
    */
-  _render(templateName, data) {
-    const template = this.templates[templateName];
-    if (!template) {
-      logger.warn({ templateName }, 'Email template not found, using fallback');
-      return `<p>${data.message || 'No content'}</p>`;
-    }
-    return template({
-      ...data,
-      appName: config.appName,
-      appUrl: config.appUrl,
-      year: new Date().getFullYear(),
-      supportEmail: config.email.from,
-    });
-  }
-
-  /**
-   * Send an email via Brevo
-   */
-  async send({ to, subject, templateName, data, toName = '' }) {
-    const html = this._render(templateName, data);
-
-    // In dev or if Brevo not configured, just log
-    if (!this.client) {
-      logger.info({
-        to,
-        subject,
-        templateName,
-        otp: data.otp || null,
-      }, 'EMAIL (not sent — Brevo not configured)');
-
-      if (config.isDev) {
-        logger.info(`\n📧 EMAIL PREVIEW:\n  To: ${to}\n  Subject: ${subject}\n  OTP: ${data.otp || 'N/A'}\n`);
-      }
-      return { success: true, preview: true };
-    }
-
+  async send({ to, toName, subject, htmlContent }) {
     try {
-      const result = await this.client.transactionalEmails.sendTransacEmail({
-        sender: {
-          name: config.email.fromName,
-          email: config.email.from,
-        },
+      const payload = {
+        sender: this.from,
         to: [{ email: to, name: toName || to }],
         subject,
-        htmlContent: html,
+        htmlContent,
+      };
+
+      const response = await axios.post(BREVO_API_URL, payload, {
+        headers: {
+          accept: 'application/json',
+          'content-type': 'application/json',
+          'api-key': this.apiKey,
+        },
+        timeout: 10000,
       });
 
-      logger.info({ to, subject, messageId: result.messageId }, 'Email sent successfully');
-      return { success: true, messageId: result.messageId };
-    } catch (err) {
-      logger.error({ err, to, subject }, 'Failed to send email');
-      // Don't throw — email failure shouldn't block the main flow
-      return { success: false, error: err.message };
+      logger.info(`Email sent to ${to} — messageId: ${response.data?.messageId}`);
+      return { success: true, messageId: response.data?.messageId };
+    } catch (error) {
+      logger.error({
+        message: `Failed to send email to ${to}`,
+        error: error.response?.data || error.message,
+      });
+      // Don't throw — email failure should NOT block the flow
+      return { success: false, error: error.response?.data || error.message };
     }
   }
 
-  // ─── Convenience Methods ─────────────────────────────────
-
-  async sendOtp({ to, toName, otp, purpose, expiryMinutes }) {
-    const purposeMap = {
-      register: 'Complete Your Registration',
-      verify_email: 'Verify Your Email Address',
-      verify_mobile: 'Verify Your Mobile Number',
-      reset_password: 'Reset Your Password',
-      change_email: 'Verify Your New Email Address',
-      change_mobile: 'Verify Your New Mobile Number',
-      login: 'Login Verification',
+  /**
+   * Send OTP email
+   */
+  async sendOtp({ to, toName, otp, purpose }) {
+    const purposeLabels = {
+      registration: 'Registration',
+      forgot_password: 'Password Reset',
+      change_email: 'Email Change Verification',
+      change_mobile: 'Mobile Change Verification',
     };
 
-    const subject = `${purposeMap[purpose] || 'Your OTP'} — ${config.appName}`;
+    const label = purposeLabels[purpose] || 'Verification';
+
+    const htmlContent = `
+      <div style="font-family:Arial,sans-serif; max-width:600px; margin:0 auto; padding:30px; background:#ffffff;">
+        <div style="text-align:center; padding:20px 0; border-bottom:2px solid #0b5ed7;">
+          <h1 style="color:#0b5ed7; margin:0;">Grow Up More</h1>
+          <p style="color:#666; margin:5px 0 0;">E-Learning Platform</p>
+        </div>
+        <div style="padding:30px 0;">
+          <h2 style="color:#333;">Your OTP for ${label}</h2>
+          <p style="color:#555; line-height:1.8;">
+            Dear ${toName || 'User'},
+          </p>
+          <div style="text-align:center; margin:25px 0;">
+            <div style="display:inline-block; background:#f0f7ff; border:2px dashed #0b5ed7; border-radius:12px; padding:20px 40px;">
+              <span style="font-size:36px; font-weight:bold; letter-spacing:8px; color:#0b5ed7;">${otp}</span>
+            </div>
+          </div>
+          <p style="color:#555; line-height:1.8;">
+            This OTP is valid for <strong>${config.otp.expiryMinutes} minutes</strong>.
+            Do not share this code with anyone.
+          </p>
+          <p style="color:#999; font-size:13px; margin-top:20px;">
+            If you did not request this OTP, please ignore this email.
+          </p>
+        </div>
+        <div style="text-align:center; padding:20px 0; border-top:1px solid #eee; color:#999; font-size:12px;">
+          &copy; ${new Date().getFullYear()} Grow Up More | GrowUpMore.com
+        </div>
+      </div>
+    `;
 
     return this.send({
       to,
       toName,
-      subject,
-      templateName: 'otp',
-      data: {
-        name: toName || to,
-        otp,
-        purpose,
-        purposeLabel: purposeMap[purpose] || 'Verification',
-        expiryMinutes: expiryMinutes || config.otp.expiryMinutes,
-      },
-    });
-  }
-
-  async sendWelcome({ to, toName }) {
-    return this.send({
-      to,
-      toName,
-      subject: `Welcome to ${config.appName}! 🎉`,
-      templateName: 'welcome',
-      data: { name: toName || to },
-    });
-  }
-
-  async sendPasswordResetOtp({ to, toName, otp }) {
-    return this.send({
-      to,
-      toName,
-      subject: `Password Reset — ${config.appName}`,
-      templateName: 'password-reset',
-      data: {
-        name: toName || to,
-        otp,
-        expiryMinutes: config.otp.expiryMinutes,
-      },
-    });
-  }
-
-  async sendPasswordChanged({ to, toName }) {
-    return this.send({
-      to,
-      toName,
-      subject: `Password Changed — ${config.appName}`,
-      templateName: 'password-changed',
-      data: { name: toName || to },
-    });
-  }
-
-  async sendAdminNewUserNotification({ user }) {
-    const adminEmail = config.email.adminNotify || config.email.admin;
-    return this.send({
-      to: adminEmail,
-      subject: `New User Registration — ${config.appName}`,
-      templateName: 'admin-new-user',
-      data: {
-        name: 'Admin',
-        user: {
-          id: user.id,
-          firstName: user.first_name,
-          lastName: user.last_name,
-          email: user.email,
-          mobile: user.mobile,
-          role: user.role,
-          registeredAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
-        },
-      },
-    });
-  }
-
-  async sendEmailChangeOtp({ to, toName, otp, newEmail }) {
-    return this.send({
-      to: newEmail,
-      toName,
-      subject: `Verify Your New Email — ${config.appName}`,
-      templateName: 'email-change',
-      data: {
-        name: toName || to,
-        otp,
-        newEmail,
-        expiryMinutes: config.otp.expiryMinutes,
-      },
-    });
-  }
-
-  async sendMobileChangeOtp({ to, toName, otp }) {
-    // This sends to the user's current email as notification
-    return this.send({
-      to,
-      toName,
-      subject: `Mobile Number Change Requested — ${config.appName}`,
-      templateName: 'mobile-change',
-      data: {
-        name: toName || to,
-        otp,
-        expiryMinutes: config.otp.expiryMinutes,
-      },
-    });
-  }
-
-  async sendLoginAlert({ to, toName, ip, userAgent, timestamp }) {
-    return this.send({
-      to,
-      toName,
-      subject: `New Login Detected — ${config.appName}`,
-      templateName: 'login-alert',
-      data: {
-        name: toName || to,
-        ip: ip || 'Unknown',
-        userAgent: userAgent || 'Unknown',
-        timestamp: timestamp || new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
-      },
+      subject: `${otp} is your ${label} OTP — Grow Up More`,
+      htmlContent,
     });
   }
 }

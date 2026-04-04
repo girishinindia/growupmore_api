@@ -1,26 +1,26 @@
 /**
- * Sanitize Middleware
- * Cleans XSS from string inputs in req.body, req.query, req.params
+ * ═══════════════════════════════════════════════════════════════
+ * MIDDLEWARE — Input Sanitization (XSS Cleanup)
+ * ═══════════════════════════════════════════════════════════════
  */
 
 const sanitizeHtml = require('sanitize-html');
-
-const sanitizeOptions = {
-  allowedTags: [],
-  allowedAttributes: {},
-  disallowedTagsMode: 'recursiveEscape',
-};
 
 /**
  * Recursively sanitize all string values in an object
  */
 const sanitizeObject = (obj) => {
   if (typeof obj === 'string') {
-    return sanitizeHtml(obj, sanitizeOptions).trim();
+    return sanitizeHtml(obj, {
+      allowedTags: [],
+      allowedAttributes: {},
+    }).trim();
   }
+
   if (Array.isArray(obj)) {
     return obj.map(sanitizeObject);
   }
+
   if (obj && typeof obj === 'object') {
     const sanitized = {};
     for (const [key, value] of Object.entries(obj)) {
@@ -28,6 +28,7 @@ const sanitizeObject = (obj) => {
     }
     return sanitized;
   }
+
   return obj;
 };
 

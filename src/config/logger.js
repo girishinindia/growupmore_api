@@ -2,9 +2,6 @@
  * ═══════════════════════════════════════════════════════════════
  * LOGGER — Winston Setup (Console + File Transports)
  * ═══════════════════════════════════════════════════════════════
- * - Console: colorized, human-readable in dev
- * - File: JSON format, daily rotation, separate error file
- * ═══════════════════════════════════════════════════════════════
  */
 
 const winston = require('winston');
@@ -51,7 +48,6 @@ transports.push(
 
 // File transports — only in non-test environments
 if (env !== 'test') {
-  // Combined log (all levels)
   transports.push(
     new DailyRotateFile({
       filename: path.join(logDir, 'combined-%DATE%.log'),
@@ -63,7 +59,6 @@ if (env !== 'test') {
     }),
   );
 
-  // Error log (error level only)
   transports.push(
     new DailyRotateFile({
       filename: path.join(logDir, 'error-%DATE%.log'),

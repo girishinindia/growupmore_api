@@ -1,762 +1,966 @@
 /**
- * AUTH SERVICE — Complete Authentication & Authorization
+ * ═══════════════════════════════════════════════════════════════
+ * AUTH SERVICE — Registration, Login, Forgot/Change Password,
+ *                Change Email/Mobile, Logout
+ * ═══════════════════════════════════════════════════════════════
+ *
+ * DATABASE LAYER:
+ *   All DB operations use ONLY the stored procedures/functions
+ *   defined in the SQL phases:
+ *     sp_users_insert  — creates user (hashes password via pgcrypto)
+ *     sp_users_update  — updates user (hashes password via pgcrypto)
+ *     sp_users_delete  — soft deletes user
+ *     udf_get_users    — reads users (returns uv_users view columns)
+ *
+ *   IMPORTANT: Passwords are hashed INSIDE the SPs using
+ *   crypt(p_password, gen_salt('bf')). The API sends RAW
+ *   plaintext passwords to the SPs — never pre-hash.
+ *
+ *   The uv_users view returns prefixed columns:
+ *     user_id, user_first_name, user_email, user_mobile,
+ *     user_role, user_is_active, etc.
+ *
+ * ═══════════════════════════════════════════════════════════════
  */
 
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const config = require('../config/index');
-const logger = require('../config/logger');
+const { v4: uuidv4 } = require('uuid');
+const config = require('../config');
 const redis = require('../config/redis');
 const userRepository = require('../repositories/user.repository');
 const otpService = require('./otp.service');
 const emailService = require('./email.service');
 const smsService = require('./sms.service');
-const { AuthenticationError, ValidationError, ConflictError, NotFoundError, ForbiddenError } = require('../utils/errors');
-const { formatIndianMobile, maskEmail, maskPhone } = require('../utils/helpers');
-
-// Redis key prefixes for pending registration
-const PENDING_REG_PREFIX = 'pending_reg';
-const PENDING_REG_TTL = 600; // 10 minutes to complete both OTP verifications
+const logger = require('../config/logger');
+const {
+  BadRequestError,
+  UnauthorizedError,
+  ConflictError,
+  NotFoundError,
+} = require('../utils/errors');
+const {
+  ROLES,
+  OTP_PURPOSES,
+  REDIS_PREFIXES,
+  DEFAULT_COUNTRY_ID,
+} = require('../utils/constants');
+const { normaliseEmail, normaliseMobile, maskEmail, maskMobile } = require('../utils/helpers');
 
 class AuthService {
-  // ─── REGISTER (Step 1 — Validate, store pending, send OTPs to both email & mobile) ──
-  async register(payload) {
-    const { first_name, last_name, email, mobile, password, country_id } = payload;
-    const formattedMobile = formatIndianMobile(mobile);
-    const lowerEmail = email.toLowerCase();
+  // ─────────────────────────────────────────────────────────────
+  //  REGISTRATION — Step 1: Initiate (send OTP to email or mobile)
+  // ─────────────────────────────────────────────────────────────
+  //  Flow when BOTH email & mobile provided:
+  //    register → verify-email → verify-mobile → user created
+  //  Flow when ONLY email provided:
+  //    register → verify-email → user created
+  //  Flow when ONLY mobile provided:
+  //    register → verify-mobile → user created
+  // ─────────────────────────────────────────────────────────────
+  async initiateRegistration({ firstName, lastName, email, mobile, password }) {
+    // Normalise
+    email = normaliseEmail(email);
+    mobile = normaliseMobile(mobile);
 
-    // Check existing email
-    const existingEmail = await userRepository.findByEmail(lowerEmail);
-    if (existingEmail) {
-      throw new ConflictError('An account with this email already exists.');
+    // Validate: at least one login method
+    if (!email && !mobile) {
+      throw new BadRequestError('Either email or mobile is required');
     }
 
-    // Check existing mobile
-    const existingMobile = await userRepository.findByMobile(formattedMobile);
-    if (existingMobile) {
-      throw new ConflictError('An account with this mobile number already exists.');
-    }
-
-    // Hash password upfront (store in pending data)
-    const hashedPassword = await bcrypt.hash(password, config.bcrypt.saltRounds);
-
-    // Create a unique registration token
-    const regToken = require('crypto').randomBytes(32).toString('hex');
-
-    // Store pending registration in Redis (NOT in the DB yet)
-    const pendingData = {
-      first_name,
-      last_name,
-      email: lowerEmail,
-      mobile: formattedMobile,
-      password: hashedPassword,
-      country_id: country_id || 1,
-      email_verified: false,
-      mobile_verified: false,
-      created_at: new Date().toISOString(),
-    };
-
-    await redis.set(
-      `${PENDING_REG_PREFIX}:${regToken}`,
-      JSON.stringify(pendingData),
-      'EX',
-      PENDING_REG_TTL
-    );
-
-    // Also index by email & mobile so we can look up the regToken
-    await redis.set(`${PENDING_REG_PREFIX}_email:${lowerEmail}`, regToken, 'EX', PENDING_REG_TTL);
-    await redis.set(`${PENDING_REG_PREFIX}_mobile:${formattedMobile}`, regToken, 'EX', PENDING_REG_TTL);
-
-    // Generate OTPs for both email and mobile
-    const emailOtp = await otpService.generate(lowerEmail, 'verify_email');
-    const mobileOtp = await otpService.generate(formattedMobile, 'verify_mobile');
-
-    // Send Email OTP via Brevo
-    await emailService.sendOtp({
-      to: lowerEmail,
-      toName: first_name,
-      otp: emailOtp,
-      purpose: 'verify_email',
-      expiryMinutes: config.otp.expiryMinutes,
-    });
-
-    // Send Mobile OTP via SMSGatewayHub
-    smsService.sendOtp({
-      mobile: formattedMobile,
-      name: first_name,
-      otp: mobileOtp,
-    }).catch(err => {
-      logger.warn({ err, mobile: formattedMobile }, 'Failed to send registration SMS OTP');
-    });
-
-    logger.info({ email: lowerEmail, mobile: formattedMobile }, 'Registration initiated — OTPs sent to email & mobile');
-
-    return {
-      registration_token: regToken,
-      message: `OTPs have been sent to ${maskEmail(lowerEmail)} and ${maskPhone(formattedMobile)}. Please verify both to complete registration.`,
-    };
-  }
-
-  // ─── VERIFY REGISTRATION EMAIL OTP (Step 2a) ──────────────
-  async verifyRegistrationEmailOtp({ registration_token, otp }) {
-    const pendingRaw = await redis.get(`${PENDING_REG_PREFIX}:${registration_token}`);
-    if (!pendingRaw) {
-      throw new ValidationError('Registration session expired or invalid. Please register again.');
-    }
-
-    const pending = JSON.parse(pendingRaw);
-
-    if (pending.email_verified) {
-      return {
-        registration_token,
-        email_verified: true,
-        mobile_verified: pending.mobile_verified,
-        message: 'Email is already verified.',
-      };
-    }
-
-    // Verify the OTP
-    await otpService.verify(pending.email, otp, 'verify_email');
-
-    // Mark email as verified in pending data
-    pending.email_verified = true;
-    const ttl = await redis.ttl(`${PENDING_REG_PREFIX}:${registration_token}`);
-    await redis.set(
-      `${PENDING_REG_PREFIX}:${registration_token}`,
-      JSON.stringify(pending),
-      'EX',
-      ttl > 0 ? ttl : PENDING_REG_TTL
-    );
-
-    logger.info({ email: pending.email }, 'Registration email OTP verified');
-
-    // If both verified, finalize registration
-    if (pending.email_verified && pending.mobile_verified) {
-      return this._finalizeRegistration(registration_token, pending);
-    }
-
-    return {
-      registration_token,
-      email_verified: true,
-      mobile_verified: pending.mobile_verified,
-      message: 'Email verified. Please verify your mobile number to complete registration.',
-    };
-  }
-
-  // ─── VERIFY REGISTRATION MOBILE OTP (Step 2b) ─────────────
-  async verifyRegistrationMobileOtp({ registration_token, otp }) {
-    const pendingRaw = await redis.get(`${PENDING_REG_PREFIX}:${registration_token}`);
-    if (!pendingRaw) {
-      throw new ValidationError('Registration session expired or invalid. Please register again.');
-    }
-
-    const pending = JSON.parse(pendingRaw);
-
-    if (pending.mobile_verified) {
-      return {
-        registration_token,
-        email_verified: pending.email_verified,
-        mobile_verified: true,
-        message: 'Mobile is already verified.',
-      };
-    }
-
-    // Verify the OTP
-    await otpService.verify(pending.mobile, otp, 'verify_mobile');
-
-    // Mark mobile as verified in pending data
-    pending.mobile_verified = true;
-    const ttl = await redis.ttl(`${PENDING_REG_PREFIX}:${registration_token}`);
-    await redis.set(
-      `${PENDING_REG_PREFIX}:${registration_token}`,
-      JSON.stringify(pending),
-      'EX',
-      ttl > 0 ? ttl : PENDING_REG_TTL
-    );
-
-    logger.info({ mobile: pending.mobile }, 'Registration mobile OTP verified');
-
-    // If both verified, finalize registration
-    if (pending.email_verified && pending.mobile_verified) {
-      return this._finalizeRegistration(registration_token, pending);
-    }
-
-    return {
-      registration_token,
-      email_verified: pending.email_verified,
-      mobile_verified: true,
-      message: 'Mobile verified. Please verify your email to complete registration.',
-    };
-  }
-
-  // ─── RESEND REGISTRATION OTP ───────────────────────────────
-  async resendRegistrationOtp({ registration_token, channel }) {
-    const pendingRaw = await redis.get(`${PENDING_REG_PREFIX}:${registration_token}`);
-    if (!pendingRaw) {
-      throw new ValidationError('Registration session expired or invalid. Please register again.');
-    }
-
-    const pending = JSON.parse(pendingRaw);
-
-    if (channel === 'email') {
-      if (pending.email_verified) {
-        return { message: 'Email is already verified.' };
+    // Check uniqueness via udf_get_users
+    if (email) {
+      const emailTaken = await userRepository.emailExists(email);
+      if (emailTaken) {
+        throw new ConflictError('Email is already registered');
       }
-      const otp = await otpService.generate(pending.email, 'verify_email');
+    }
+
+    if (mobile) {
+      const mobileTaken = await userRepository.mobileExists(mobile);
+      if (mobileTaken) {
+        throw new ConflictError('Mobile number is already registered');
+      }
+    }
+
+    // Determine first verification step
+    // If email exists → verify email first; else → verify mobile directly
+    const step = email ? 'email_pending' : 'mobile_pending';
+
+    // Store pending registration data in Redis (NOT in DB yet)
+    // Password stored as RAW plaintext — sp_users_insert will hash it
+    const otpIdentifier = email || mobile;
+    const pendingKey = `${REDIS_PREFIXES.PENDING_REGISTRATION}:${otpIdentifier}`;
+    const pendingData = JSON.stringify({
+      firstName,
+      lastName,
+      email,
+      mobile,
+      password, // RAW — sp_users_insert hashes via pgcrypto
+      role: ROLES.STUDENT,
+      countryId: DEFAULT_COUNTRY_ID,
+      step,
+    });
+
+    await redis.set(pendingKey, pendingData, 'EX', config.otp.expiryMinutes * 60);
+
+    // Send OTP based on which step we're starting with
+    if (step === 'email_pending') {
+      // Send OTP to email ONLY (mobile comes after email is verified)
+      const { otp, expiresInSeconds } = await otpService.generate(
+        OTP_PURPOSES.REGISTRATION,
+        email,
+      );
+
       await emailService.sendOtp({
-        to: pending.email,
-        toName: pending.first_name,
+        to: email,
+        toName: firstName,
         otp,
-        purpose: 'verify_email',
-        expiryMinutes: config.otp.expiryMinutes,
+        purpose: OTP_PURPOSES.REGISTRATION,
       });
-      return { message: `OTP resent to ${maskEmail(pending.email)}.` };
-    }
 
-    if (channel === 'mobile') {
-      if (pending.mobile_verified) {
-        return { message: 'Mobile is already verified.' };
-      }
-      const otp = await otpService.generate(pending.mobile, 'verify_mobile');
-      smsService.sendOtp({
-        mobile: pending.mobile,
-        name: pending.first_name,
-        otp,
-      }).catch(err => {
-        logger.warn({ err }, 'Failed to resend registration SMS OTP');
-      });
-      return { message: `OTP resent to ${maskPhone(pending.mobile)}.` };
-    }
-
-    throw new ValidationError('Invalid channel. Use "email" or "mobile".');
-  }
-
-  // ─── FINALIZE REGISTRATION (internal — both OTPs verified) ──
-  async _finalizeRegistration(regToken, pending) {
-    // Double-check no one registered with same email/mobile in the meantime
-    const existingEmail = await userRepository.findByEmail(pending.email);
-    if (existingEmail) {
-      await this._cleanupPendingRegistration(regToken, pending);
-      throw new ConflictError('An account with this email was created while you were verifying. Please try again.');
-    }
-
-    const existingMobile = await userRepository.findByMobile(pending.mobile);
-    if (existingMobile) {
-      await this._cleanupPendingRegistration(regToken, pending);
-      throw new ConflictError('An account with this mobile number was created while you were verifying. Please try again.');
-    }
-
-    // NOW create the user in the database (both OTPs verified)
-    const user = await userRepository.create({
-      first_name: pending.first_name,
-      last_name: pending.last_name,
-      email: pending.email,
-      mobile: pending.mobile,
-      password: pending.password,
-      role: 'student',
-      country_id: pending.country_id,
-    });
-
-    // Mark both as verified in DB
-    await userRepository.markEmailVerified(user.id);
-    await userRepository.markMobileVerified(user.id);
-
-    // Cleanup Redis pending data
-    await this._cleanupPendingRegistration(regToken, pending);
-
-    // Send welcome email (non-blocking)
-    emailService.sendWelcome({ to: pending.email, toName: pending.first_name }).catch(err => {
-      logger.warn({ err }, 'Failed to send welcome email');
-    });
-
-    // Notify admin (non-blocking)
-    emailService.sendAdminNewUserNotification({ user: { ...user, mobile: pending.mobile } }).catch(err => {
-      logger.warn({ err }, 'Failed to send admin notification');
-    });
-
-    // Generate tokens — user is fully verified
-    const tokens = this._generateTokens({ ...user, is_email_verified: true, is_mobile_verified: true });
-
-    logger.info({ userId: user.id, email: pending.email }, 'User registration completed — both OTPs verified');
-
-    return {
-      user: this._sanitizeUser({ ...user, is_email_verified: true, is_mobile_verified: true }),
-      tokens,
-      registration_complete: true,
-      message: 'Registration complete! Both email and mobile verified. Welcome to GrowUpMore!',
-    };
-  }
-
-  async _cleanupPendingRegistration(regToken, pending) {
-    await redis.del(`${PENDING_REG_PREFIX}:${regToken}`);
-    if (pending.email) await redis.del(`${PENDING_REG_PREFIX}_email:${pending.email}`);
-    if (pending.mobile) await redis.del(`${PENDING_REG_PREFIX}_mobile:${pending.mobile}`);
-  }
-
-  // ─── VERIFY EMAIL OTP (for existing users — e.g. login re-verification) ──
-  async verifyEmailOtp({ email, otp }) {
-    const user = await userRepository.findByEmail(email);
-    if (!user) throw new NotFoundError('User');
-
-    await otpService.verify(email.toLowerCase(), otp, 'verify_email');
-    await userRepository.markEmailVerified(user.id);
-
-    logger.info({ userId: user.id }, 'Email verified successfully');
-
-    // Check if both are now verified
-    const updatedUser = await userRepository.findById(user.id);
-    if (updatedUser.is_email_verified && updatedUser.is_mobile_verified) {
-      const tokens = this._generateTokens(updatedUser);
       return {
-        user: this._sanitizeUser(updatedUser),
-        tokens,
-        message: 'Email verified successfully.',
+        message: 'OTP sent to your email. Please verify your email first.',
+        identifier: otpIdentifier,
+        maskedEmail: maskEmail(email),
+        maskedMobile: mobile ? maskMobile(mobile) : null,
+        step: 'email_pending',
+        expiresInSeconds,
+        resendAfterSeconds: config.otp.resendCooldownSeconds,
       };
-    }
-
-    return {
-      message: 'Email verified successfully. Please also verify your mobile number.',
-      email_verified: true,
-      mobile_verified: updatedUser.is_mobile_verified,
-    };
-  }
-
-  // ─── VERIFY MOBILE OTP (for existing users) ───────────────
-  async verifyMobileOtp({ mobile, otp }) {
-    const formattedMobile = formatIndianMobile(mobile);
-    const user = await userRepository.findByMobile(formattedMobile);
-    if (!user) throw new NotFoundError('User');
-
-    await otpService.verify(formattedMobile, otp, 'verify_mobile');
-    await userRepository.markMobileVerified(user.id);
-
-    logger.info({ userId: user.id }, 'Mobile verified successfully');
-
-    // Check if both are now verified
-    const updatedUser = await userRepository.findById(user.id);
-    if (updatedUser.is_email_verified && updatedUser.is_mobile_verified) {
-      const tokens = this._generateTokens(updatedUser);
-      return {
-        user: this._sanitizeUser(updatedUser),
-        tokens,
-        message: 'Mobile verified successfully.',
-      };
-    }
-
-    return {
-      message: 'Mobile verified successfully. Please also verify your email.',
-      email_verified: updatedUser.is_email_verified,
-      mobile_verified: true,
-    };
-  }
-
-  // ─── RESEND OTP (for existing users) ───────────────────────
-  async resendOtp({ email, purpose }) {
-    const user = await userRepository.findByEmail(email);
-    if (!user) throw new NotFoundError('User');
-
-    const target = email.toLowerCase();
-
-    if (purpose === 'verify_mobile' && user.mobile) {
-      // Send mobile OTP via SMS
-      const otp = await otpService.generate(user.mobile, 'verify_mobile');
-      smsService.sendOtp({
-        mobile: user.mobile,
-        name: user.first_name,
-        otp,
-      }).catch(err => {
-        logger.warn({ err }, 'Failed to resend mobile OTP');
-      });
-      return { message: `OTP sent to ${maskPhone(user.mobile)}.` };
-    }
-
-    // Default: send email OTP
-    const otp = await otpService.generate(target, purpose || 'verify_email');
-    await emailService.sendOtp({
-      to: target,
-      toName: user.first_name,
-      otp,
-      purpose: purpose || 'verify_email',
-      expiryMinutes: config.otp.expiryMinutes,
-    });
-
-    return { message: `OTP sent to ${maskEmail(email)}.` };
-  }
-
-  // ─── LOGIN ──────────────────────────────────────────────
-  async login({ identifier, password, ip, userAgent }) {
-    // identifier can be email or mobile
-    let user;
-
-    if (identifier.includes('@')) {
-      user = await userRepository.findByEmail(identifier);
     } else {
-      const formatted = formatIndianMobile(identifier);
-      user = await userRepository.findByMobile(formatted);
+      // Only mobile provided → send OTP to mobile
+      const { otp, expiresInSeconds } = await otpService.generate(
+        OTP_PURPOSES.REGISTRATION_MOBILE,
+        mobile,
+      );
+
+      await smsService.sendOtp({
+        mobile,
+        name: firstName,
+        otp,
+      });
+
+      return {
+        message: 'OTP sent to your mobile. Please verify your mobile number.',
+        identifier: otpIdentifier,
+        maskedEmail: null,
+        maskedMobile: maskMobile(mobile),
+        step: 'mobile_pending',
+        expiresInSeconds,
+        resendAfterSeconds: config.otp.resendCooldownSeconds,
+      };
     }
+  }
 
-    if (!user) {
-      throw new AuthenticationError('Invalid credentials.');
-    }
+  // ─────────────────────────────────────────────────────────────
+  //  REGISTRATION — Step 2a: Verify Email OTP
+  //  If mobile exists → sends mobile OTP, returns mobile_pending
+  //  If no mobile    → creates user directly (email-only signup)
+  // ─────────────────────────────────────────────────────────────
+  async verifyRegistrationEmail({ identifier, otp }) {
+    identifier = normaliseEmail(identifier) || normaliseMobile(identifier);
 
-    if (!user.is_active) {
-      throw new AuthenticationError('Your account has been deactivated. Please contact support.');
-    }
+    // Verify email OTP
+    await otpService.verify(OTP_PURPOSES.REGISTRATION, identifier, otp);
 
-    if (user.is_deleted) {
-      throw new AuthenticationError('Invalid credentials.');
-    }
+    // Retrieve pending registration data
+    const pendingKey = `${REDIS_PREFIXES.PENDING_REGISTRATION}:${identifier}`;
+    const pendingData = await redis.get(pendingKey);
 
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      throw new AuthenticationError('Invalid credentials.');
-    }
-
-    // Check both email and mobile verification
-    if (!user.is_email_verified || !user.is_mobile_verified) {
-      const unverified = [];
-
-      if (!user.is_email_verified) {
-        const emailOtp = await otpService.generate(user.email, 'verify_email');
-        await emailService.sendOtp({
-          to: user.email,
-          toName: user.first_name,
-          otp: emailOtp,
-          purpose: 'verify_email',
-        });
-        unverified.push('email');
-      }
-
-      if (!user.is_mobile_verified && user.mobile) {
-        const mobileOtp = await otpService.generate(user.mobile, 'verify_mobile');
-        smsService.sendOtp({
-          mobile: user.mobile,
-          name: user.first_name,
-          otp: mobileOtp,
-        }).catch(err => {
-          logger.warn({ err }, 'Failed to send login mobile OTP');
-        });
-        unverified.push('mobile');
-      }
-
-      throw new AuthenticationError(
-        `${unverified.join(' and ')} not verified. New OTP(s) have been sent for verification.`
+    if (!pendingData) {
+      throw new BadRequestError(
+        'Registration session expired. Please start the registration again.',
       );
     }
 
-    // Generate tokens
-    const tokens = this._generateTokens(user);
+    const userData = JSON.parse(pendingData);
+
+    // If mobile exists → move to mobile verification step
+    if (userData.mobile) {
+      userData.step = 'mobile_pending';
+      // Refresh TTL for mobile verification step
+      await redis.set(pendingKey, JSON.stringify(userData), 'EX', config.otp.expiryMinutes * 60);
+
+      // Generate & send mobile OTP
+      const { otp: mobileOtp, expiresInSeconds } = await otpService.generate(
+        OTP_PURPOSES.REGISTRATION_MOBILE,
+        userData.mobile,
+      );
+
+      await smsService.sendOtp({
+        mobile: userData.mobile,
+        name: userData.firstName,
+        otp: mobileOtp,
+      });
+
+      logger.info(`Email verified for registration: ${identifier}. Mobile OTP sent.`);
+
+      return {
+        message: 'Email verified successfully. OTP sent to your mobile number.',
+        step: 'mobile_pending',
+        maskedMobile: maskMobile(userData.mobile),
+        expiresInSeconds,
+        resendAfterSeconds: config.otp.resendCooldownSeconds,
+      };
+    }
+
+    // No mobile → create user now (email-only registration)
+    // Race condition guard
+    const emailTaken = await userRepository.emailExists(userData.email);
+    if (emailTaken) {
+      await redis.del(pendingKey);
+      throw new ConflictError('Email was registered by another user. Please try again.');
+    }
+
+    // Save to DB via sp_users_insert (RAW password → SP hashes)
+    const user = await userRepository.create({
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      email: userData.email,
+      mobile: null,
+      password: userData.password,
+      role: userData.role,
+      countryId: userData.countryId,
+      isEmailVerified: true,
+      isMobileVerified: false,
+    });
+
+    await redis.del(pendingKey);
+    logger.info(`User registered (email only): ${user.user_id} (${user.user_email})`);
+
+    // Auto-login
+    const tokens = await this._createSession(user);
+
+    return {
+      message: 'Registration successful!',
+      step: 'complete',
+      user: this._sanitizeUser(user),
+      ...tokens,
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  REGISTRATION — Step 2b: Verify Mobile OTP & Create User
+  //  Called after email is verified (both channels) OR directly
+  //  when only mobile was provided.
+  // ─────────────────────────────────────────────────────────────
+  async verifyRegistrationMobile({ identifier, otp }) {
+    identifier = normaliseEmail(identifier) || normaliseMobile(identifier);
+
+    // Retrieve pending data to get mobile number
+    const pendingKey = `${REDIS_PREFIXES.PENDING_REGISTRATION}:${identifier}`;
+    const pendingData = await redis.get(pendingKey);
+
+    if (!pendingData) {
+      throw new BadRequestError(
+        'Registration session expired. Please start the registration again.',
+      );
+    }
+
+    const userData = JSON.parse(pendingData);
+
+    // Guard: must be in mobile_pending step
+    if (userData.step !== 'mobile_pending') {
+      throw new BadRequestError(
+        'Please verify your email first before verifying mobile.',
+      );
+    }
+
+    // Verify mobile OTP
+    await otpService.verify(OTP_PURPOSES.REGISTRATION_MOBILE, userData.mobile, otp);
+
+    // Final uniqueness check (race condition guard)
+    if (userData.email) {
+      const emailTaken = await userRepository.emailExists(userData.email);
+      if (emailTaken) {
+        await redis.del(pendingKey);
+        throw new ConflictError('Email was registered by another user. Please try again.');
+      }
+    }
+
+    const mobileTaken = await userRepository.mobileExists(userData.mobile);
+    if (mobileTaken) {
+      await redis.del(pendingKey);
+      throw new ConflictError('Mobile was registered by another user. Please try again.');
+    }
+
+    // NOW save to database via sp_users_insert
+    // Password is RAW — the SP hashes it via crypt(p_password, gen_salt('bf'))
+    const user = await userRepository.create({
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      email: userData.email,
+      mobile: userData.mobile,
+      password: userData.password, // RAW plaintext → SP hashes
+      role: userData.role,
+      countryId: userData.countryId,
+      isEmailVerified: !!userData.email,
+      isMobileVerified: true,
+    });
+
+    // Clean up pending data
+    await redis.del(pendingKey);
+
+    logger.info(`User registered: ${user.user_id} (${user.user_email || user.user_mobile})`);
+
+    // Auto-login after registration
+    const tokens = await this._createSession(user);
+
+    return {
+      message: 'Registration successful!',
+      step: 'complete',
+      user: this._sanitizeUser(user),
+      ...tokens,
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  REGISTRATION — Resend OTP (step-aware)
+  //  Resends to email if email_pending, to mobile if mobile_pending
+  // ─────────────────────────────────────────────────────────────
+  async resendRegistrationOtp({ identifier }) {
+    identifier = normaliseEmail(identifier) || normaliseMobile(identifier);
+
+    const pendingKey = `${REDIS_PREFIXES.PENDING_REGISTRATION}:${identifier}`;
+    const pendingData = await redis.get(pendingKey);
+
+    if (!pendingData) {
+      throw new BadRequestError('No pending registration found. Please register again.');
+    }
+
+    const userData = JSON.parse(pendingData);
+
+    if (userData.step === 'email_pending') {
+      // Resend email OTP
+      const { otp, expiresInSeconds } = await otpService.generate(
+        OTP_PURPOSES.REGISTRATION,
+        userData.email,
+      );
+
+      await emailService.sendOtp({
+        to: userData.email,
+        toName: userData.firstName,
+        otp,
+        purpose: OTP_PURPOSES.REGISTRATION,
+      });
+
+      return {
+        message: 'OTP resent to your email.',
+        step: 'email_pending',
+        maskedEmail: maskEmail(userData.email),
+        maskedMobile: userData.mobile ? maskMobile(userData.mobile) : null,
+        expiresInSeconds,
+        resendAfterSeconds: config.otp.resendCooldownSeconds,
+      };
+    } else if (userData.step === 'mobile_pending') {
+      // Resend mobile OTP
+      const { otp, expiresInSeconds } = await otpService.generate(
+        OTP_PURPOSES.REGISTRATION_MOBILE,
+        userData.mobile,
+      );
+
+      await smsService.sendOtp({
+        mobile: userData.mobile,
+        name: userData.firstName,
+        otp,
+      });
+
+      return {
+        message: 'OTP resent to your mobile.',
+        step: 'mobile_pending',
+        maskedEmail: userData.email ? maskEmail(userData.email) : null,
+        maskedMobile: maskMobile(userData.mobile),
+        expiresInSeconds,
+        resendAfterSeconds: config.otp.resendCooldownSeconds,
+      };
+    }
+
+    throw new BadRequestError('Invalid registration state. Please register again.');
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  LOGIN
+  // ─────────────────────────────────────────────────────────────
+  async login({ username, password }) {
+    const identifier = normaliseEmail(username) || normaliseMobile(username);
+
+    // Verify password in the database (pgcrypto crypt() comparison)
+    // This returns the user row if password matches, null otherwise
+    const user = await userRepository.verifyPassword(identifier, password);
+
+    if (!user) {
+      throw new UnauthorizedError('Invalid credentials');
+    }
+
+    // Check if account is active
+    if (!user.is_active) {
+      throw new UnauthorizedError('Your account has been deactivated. Please contact support.');
+    }
 
     // Update last login
-    userRepository.updateLastLogin(user.id).catch(() => {});
+    await userRepository.updateLastLogin(user.id);
 
-    // Store session in Redis
-    await this._storeSession(user.id, tokens.accessToken);
+    // Fetch full user data from udf_get_users (with country info)
+    const fullUser = await userRepository.findById(user.id);
 
-    // Send login alert (non-blocking)
-    emailService.sendLoginAlert({
-      to: user.email,
-      toName: user.first_name,
-      ip,
-      userAgent,
-      timestamp: new Date().toLocaleString('en-IN', { timeZone: config.timezone }),
-    }).catch(() => {});
+    // Create session & tokens
+    const tokens = await this._createSession(fullUser || user);
 
-    logger.info({ userId: user.id }, 'User logged in');
+    logger.info(`User logged in: ${user.id} (${user.email || user.mobile})`);
 
     return {
-      user: this._sanitizeUser(user),
-      tokens,
+      message: 'Login successful',
+      user: this._sanitizeUser(fullUser || user),
+      ...tokens,
     };
   }
 
-  // ─── FORGOT PASSWORD ───────────────────────────────────
-  async forgotPassword({ identifier }) {
-    let user;
+  // ─────────────────────────────────────────────────────────────
+  //  FORGOT PASSWORD — Step 1: Send OTP
+  // ─────────────────────────────────────────────────────────────
+  async initiateForgotPassword({ email, mobile }) {
+    email = normaliseEmail(email);
+    mobile = normaliseMobile(mobile);
 
-    if (identifier.includes('@')) {
-      user = await userRepository.findByEmail(identifier);
-    } else {
-      const formatted = formatIndianMobile(identifier);
-      user = await userRepository.findByMobile(formatted);
+    if (!email || !mobile) {
+      throw new BadRequestError('Both email and mobile are required for password reset');
     }
 
-    // Don't reveal if user exists
-    if (!user) {
-      return { message: 'If an account exists with this email/mobile, an OTP has been sent.' };
+    // Find user by email via udf_get_users
+    const userByEmail = await userRepository.findByEmail(email);
+    if (!userByEmail) {
+      throw new NotFoundError('No account found with this email');
     }
 
-    if (!user.email) {
-      throw new ValidationError('No email address associated with this account.');
+    // Verify mobile matches the same user
+    if (userByEmail.user_mobile !== mobile) {
+      throw new BadRequestError('Email and mobile do not match the same account');
     }
 
-    // Generate OTP for password reset
-    const otp = await otpService.generate(user.email, 'reset_password');
+    // Store pending data
+    const pendingKey = `${REDIS_PREFIXES.PENDING_FORGOT_PASSWORD}:${email}`;
+    await redis.set(
+      pendingKey,
+      JSON.stringify({ userId: userByEmail.user_id, email, mobile }),
+      'EX',
+      config.otp.expiryMinutes * 60,
+    );
 
-    await emailService.sendPasswordResetOtp({
-      to: user.email,
-      toName: user.first_name,
+    // Generate OTP
+    const { otp, expiresInSeconds } = await otpService.generate(
+      OTP_PURPOSES.FORGOT_PASSWORD,
+      email,
+    );
+
+    // Send OTP to both
+    await emailService.sendOtp({
+      to: email,
+      toName: userByEmail.user_first_name,
+      otp,
+      purpose: OTP_PURPOSES.FORGOT_PASSWORD,
+    });
+
+    await smsService.sendOtp({
+      mobile,
+      name: userByEmail.user_first_name,
       otp,
     });
 
-    logger.info({ userId: user.id }, 'Password reset OTP sent');
-
-    return { message: 'If an account exists with this email/mobile, an OTP has been sent.' };
-  }
-
-  // ─── VERIFY RESET OTP (Step 1 of password reset) ───────
-  async verifyResetOtp({ identifier, otp }) {
-    let user;
-
-    if (identifier.includes('@')) {
-      user = await userRepository.findByEmail(identifier);
-    } else {
-      const formatted = formatIndianMobile(identifier);
-      user = await userRepository.findByMobile(formatted);
-    }
-
-    if (!user) throw new AuthenticationError('Invalid request.');
-
-    await otpService.verify(user.email, otp, 'reset_password');
-
-    // Generate a temporary reset token (valid for 10 minutes)
-    const resetToken = require('crypto').randomBytes(32).toString('hex');
-    await redis.set(`reset_token:${resetToken}`, String(user.id), 'EX', 600);
-
     return {
-      resetToken,
-      message: 'OTP verified. You can now reset your password.',
+      message: 'OTP sent to your email and mobile.',
+      maskedEmail: maskEmail(email),
+      maskedMobile: maskMobile(mobile),
+      expiresInSeconds,
+      resendAfterSeconds: config.otp.resendCooldownSeconds,
     };
   }
 
-  // ─── RESET PASSWORD (Step 2 — uses reset token from above) ─
-  async resetPassword({ resetToken, newPassword }) {
-    const userId = await redis.get(`reset_token:${resetToken}`);
-    if (!userId) {
-      throw new AuthenticationError('Reset token is invalid or expired. Please request a new OTP.');
+  // ─────────────────────────────────────────────────────────────
+  //  FORGOT PASSWORD — Step 2: Verify OTP
+  // ─────────────────────────────────────────────────────────────
+  async verifyForgotPasswordOtp({ email, otp }) {
+    email = normaliseEmail(email);
+
+    await otpService.verify(OTP_PURPOSES.FORGOT_PASSWORD, email, otp);
+
+    const resetToken = uuidv4();
+    const pendingKey = `${REDIS_PREFIXES.PENDING_FORGOT_PASSWORD}:${email}`;
+    const pendingData = await redis.get(pendingKey);
+
+    if (!pendingData) {
+      throw new BadRequestError('Password reset session expired. Please try again.');
     }
 
-    const user = await userRepository.findById(parseInt(userId, 10));
-    if (!user) throw new NotFoundError('User');
+    const { userId } = JSON.parse(pendingData);
 
-    const hashedPassword = await bcrypt.hash(newPassword, config.bcrypt.saltRounds);
-    await userRepository.updatePassword(user.id, hashedPassword);
+    // Store reset token (valid for 5 minutes)
+    const resetKey = `password_reset:${resetToken}`;
+    await redis.set(resetKey, JSON.stringify({ userId, email }), 'EX', 300);
 
-    // Invalidate reset token
-    await redis.del(`reset_token:${resetToken}`);
+    await redis.del(pendingKey);
+
+    return {
+      message: 'OTP verified. Please set your new password.',
+      resetToken,
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  FORGOT PASSWORD — Step 3: Set New Password
+  // ─────────────────────────────────────────────────────────────
+  async resetPassword({ resetToken, newPassword }) {
+    const resetKey = `password_reset:${resetToken}`;
+    const resetData = await redis.get(resetKey);
+
+    if (!resetData) {
+      throw new BadRequestError('Reset token expired or invalid. Please start again.');
+    }
+
+    const { userId } = JSON.parse(resetData);
+
+    // Update password via sp_users_update (RAW password — SP hashes it)
+    await userRepository.updatePassword(userId, newPassword);
+
+    await redis.del(resetKey);
 
     // Invalidate all sessions
-    await this._invalidateAllSessions(user.id);
-
-    // Send confirmation email
-    emailService.sendPasswordChanged({ to: user.email, toName: user.first_name }).catch(() => {});
-
-    logger.info({ userId: user.id }, 'Password reset successful');
-
-    return { message: 'Password reset successful. Please login with your new password.' };
-  }
-
-  // ─── REFRESH TOKEN ──────────────────────────────────────
-  async refreshToken({ refreshToken }) {
-    try {
-      const decoded = jwt.verify(refreshToken, config.jwt.refreshSecret);
-
-      if (decoded.tokenType !== 'refresh') {
-        throw new AuthenticationError('Invalid refresh token.');
-      }
-
-      const user = await userRepository.findById(decoded.id);
-      if (!user || !user.is_active) {
-        throw new AuthenticationError('User not found or inactive.');
-      }
-
-      const tokens = this._generateTokens(user);
-      await this._storeSession(user.id, tokens.accessToken);
-
-      return { tokens, user: this._sanitizeUser(user) };
-    } catch (err) {
-      if (err instanceof AuthenticationError) throw err;
-      throw new AuthenticationError('Invalid or expired refresh token.');
-    }
-  }
-
-  // ─── LOGOUT ─────────────────────────────────────────────
-  async logout(token, userId) {
-    // Blacklist the token
-    try {
-      const decoded = jwt.decode(token);
-      const ttl = decoded.exp ? decoded.exp - Math.floor(Date.now() / 1000) : 900;
-      if (ttl > 0) {
-        await redis.set(`blacklist:${token}`, '1', 'EX', ttl);
-      }
-    } catch (_err) {
-      // Token already invalid, just continue
-    }
-
-    // Remove session
-    if (userId) {
-      await redis.del(`session:${userId}`);
-    }
-
-    return { message: 'Logged out successfully.' };
-  }
-
-  // ─── GET PROFILE ────────────────────────────────────────
-  async getProfile(userId) {
-    const user = await userRepository.findByIdOrFail(userId);
-    const permissions = await userRepository.getUserPermissions(userId);
-    return {
-      ...this._sanitizeUser(user),
-      permissions: permissions.map(p => p.permission_code),
-    };
-  }
-
-  // ─── REQUEST EMAIL CHANGE ──────────────────────────────
-  async requestEmailChange(userId, newEmail) {
-    const user = await userRepository.findByIdOrFail(userId);
-
-    // Check if new email already exists
-    const existing = await userRepository.findByEmail(newEmail);
-    if (existing) {
-      throw new ConflictError('This email is already in use.');
-    }
-
-    // Store pending change in Redis
-    await redis.set(`email_change:${userId}`, newEmail.toLowerCase(), 'EX', 600);
-
-    // Generate OTP and send to NEW email
-    const otp = await otpService.generate(newEmail.toLowerCase(), 'change_email');
-    await emailService.sendEmailChangeOtp({
-      to: user.email,
-      toName: user.first_name,
-      otp,
-      newEmail,
-    });
-
-    return { message: `An OTP has been sent to ${maskEmail(newEmail)} to verify the change.` };
-  }
-
-  // ─── VERIFY EMAIL CHANGE ──────────────────────────────
-  async verifyEmailChange(userId, otp) {
-    const newEmail = await redis.get(`email_change:${userId}`);
-    if (!newEmail) {
-      throw new ValidationError('No email change request found or it has expired.');
-    }
-
-    await otpService.verify(newEmail, otp, 'change_email');
-    await userRepository.updateEmail(userId, newEmail);
-    await userRepository.markEmailVerified(userId);
-    await redis.del(`email_change:${userId}`);
-
-    return { message: 'Email updated and verified successfully.' };
-  }
-
-  // ─── REQUEST MOBILE CHANGE ────────────────────────────
-  async requestMobileChange(userId, newMobile) {
-    const user = await userRepository.findByIdOrFail(userId);
-    const formattedMobile = formatIndianMobile(newMobile);
-
-    const existing = await userRepository.findByMobile(formattedMobile);
-    if (existing) {
-      throw new ConflictError('This mobile number is already in use.');
-    }
-
-    await redis.set(`mobile_change:${userId}`, formattedMobile, 'EX', 600);
-
-    const otp = await otpService.generate(formattedMobile, 'change_mobile');
-
-    // Send notification to current email
-    await emailService.sendMobileChangeOtp({
-      to: user.email,
-      toName: user.first_name,
-      otp,
-    });
-
-    return { message: `An OTP has been sent for mobile number verification.` };
-  }
-
-  // ─── VERIFY MOBILE CHANGE ────────────────────────────
-  async verifyMobileChange(userId, otp) {
-    const newMobile = await redis.get(`mobile_change:${userId}`);
-    if (!newMobile) {
-      throw new ValidationError('No mobile change request found or it has expired.');
-    }
-
-    await otpService.verify(newMobile, otp, 'change_mobile');
-    await userRepository.updateMobile(userId, newMobile);
-    await userRepository.markMobileVerified(userId);
-    await redis.del(`mobile_change:${userId}`);
-
-    return { message: 'Mobile number updated and verified successfully.' };
-  }
-
-  // ─── CHANGE PASSWORD (authenticated) ──────────────────
-  async changePassword(userId, { currentPassword, newPassword }) {
-    const user = await userRepository.findByIdOrFail(userId);
-
-    const isValid = await bcrypt.compare(currentPassword, user.password);
-    if (!isValid) {
-      throw new ValidationError('Current password is incorrect.');
-    }
-
-    const hashedPassword = await bcrypt.hash(newPassword, config.bcrypt.saltRounds);
-    await userRepository.updatePassword(userId, hashedPassword);
-
-    // Invalidate all sessions except current
     await this._invalidateAllSessions(userId);
 
-    emailService.sendPasswordChanged({ to: user.email, toName: user.first_name }).catch(() => {});
+    logger.info(`Password reset for user: ${userId}`);
 
-    return { message: 'Password changed successfully.' };
+    return {
+      message: 'Password changed successfully. Please login with your new password.',
+    };
   }
 
-  // ─── PRIVATE HELPERS ────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
+  //  FORGOT PASSWORD — Resend OTP
+  // ─────────────────────────────────────────────────────────────
+  async resendForgotPasswordOtp({ email }) {
+    email = normaliseEmail(email);
 
-  _generateTokens(user) {
-    const accessPayload = {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      tokenType: 'access',
+    const pendingKey = `${REDIS_PREFIXES.PENDING_FORGOT_PASSWORD}:${email}`;
+    const pendingData = await redis.get(pendingKey);
+
+    if (!pendingData) {
+      throw new BadRequestError('No pending password reset found. Please start again.');
+    }
+
+    const { userId, mobile } = JSON.parse(pendingData);
+    const user = await userRepository.findById(userId);
+
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    const { otp, expiresInSeconds } = await otpService.generate(
+      OTP_PURPOSES.FORGOT_PASSWORD,
+      email,
+    );
+
+    await emailService.sendOtp({
+      to: email,
+      toName: user.user_first_name,
+      otp,
+      purpose: OTP_PURPOSES.FORGOT_PASSWORD,
+    });
+
+    if (mobile) {
+      await smsService.sendOtp({
+        mobile,
+        name: user.user_first_name,
+        otp,
+      });
+    }
+
+    return {
+      message: 'OTP resent successfully.',
+      maskedEmail: maskEmail(email),
+      maskedMobile: mobile ? maskMobile(mobile) : null,
+      expiresInSeconds,
+      resendAfterSeconds: config.otp.resendCooldownSeconds,
     };
+  }
 
-    const refreshPayload = {
-      id: user.id,
-      tokenType: 'refresh',
+  // ─────────────────────────────────────────────────────────────
+  //  CHANGE PASSWORD (logged in)
+  // ─────────────────────────────────────────────────────────────
+  async changePassword({ userId, oldPassword, newPassword }) {
+    // Verify old password against DB using pgcrypto
+    // First get the user to know their identifier
+    const user = await userRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    const identifier = user.user_email || user.user_mobile;
+
+    // Verify old password in DB
+    const verified = await userRepository.verifyPassword(identifier, oldPassword);
+    if (!verified) {
+      throw new BadRequestError('Current password is incorrect');
+    }
+
+    // Update password via sp_users_update (RAW password — SP hashes it)
+    await userRepository.updatePassword(userId, newPassword);
+
+    // Invalidate all sessions → force logout everywhere
+    await this._invalidateAllSessions(userId);
+
+    logger.info(`Password changed for user: ${userId}`);
+
+    return {
+      message: 'Password changed successfully. You have been logged out from all devices. Please login again.',
     };
+  }
 
-    const accessToken = jwt.sign(accessPayload, config.jwt.accessSecret, {
+  // ─────────────────────────────────────────────────────────────
+  //  CHANGE EMAIL — Step 1: Send OTP to new email
+  // ─────────────────────────────────────────────────────────────
+  async initiateChangeEmail({ userId, newEmail }) {
+    newEmail = normaliseEmail(newEmail);
+
+    const user = await userRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    if (user.user_email && user.user_email.toLowerCase() === newEmail) {
+      throw new BadRequestError('New email is the same as your current email');
+    }
+
+    const emailTaken = await userRepository.emailExists(newEmail);
+    if (emailTaken) {
+      throw new ConflictError('This email is already registered to another account');
+    }
+
+    const pendingKey = `${REDIS_PREFIXES.PENDING_CHANGE_EMAIL}:${userId}`;
+    await redis.set(
+      pendingKey,
+      JSON.stringify({ userId, newEmail }),
+      'EX',
+      config.otp.expiryMinutes * 60,
+    );
+
+    const { otp, expiresInSeconds } = await otpService.generate(
+      OTP_PURPOSES.CHANGE_EMAIL,
+      newEmail,
+    );
+
+    await emailService.sendOtp({
+      to: newEmail,
+      toName: user.user_first_name,
+      otp,
+      purpose: OTP_PURPOSES.CHANGE_EMAIL,
+    });
+
+    return {
+      message: 'OTP sent to your new email address.',
+      maskedEmail: maskEmail(newEmail),
+      expiresInSeconds,
+      resendAfterSeconds: config.otp.resendCooldownSeconds,
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  CHANGE EMAIL — Step 2: Verify OTP & Update
+  // ─────────────────────────────────────────────────────────────
+  async verifyChangeEmail({ userId, otp }) {
+    const pendingKey = `${REDIS_PREFIXES.PENDING_CHANGE_EMAIL}:${userId}`;
+    const pendingData = await redis.get(pendingKey);
+
+    if (!pendingData) {
+      throw new BadRequestError('Email change session expired. Please start again.');
+    }
+
+    const { newEmail } = JSON.parse(pendingData);
+
+    await otpService.verify(OTP_PURPOSES.CHANGE_EMAIL, newEmail, otp);
+
+    const emailTaken = await userRepository.emailExists(newEmail);
+    if (emailTaken) {
+      await redis.del(pendingKey);
+      throw new ConflictError('This email was taken by another user. Please try a different one.');
+    }
+
+    // Update email via sp_users_update
+    await userRepository.updateEmail(userId, newEmail);
+
+    await redis.del(pendingKey);
+    await this._invalidateAllSessions(userId);
+
+    logger.info(`Email changed for user: ${userId} → ${maskEmail(newEmail)}`);
+
+    return {
+      message: 'Email updated successfully. You have been logged out. Please login again.',
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  CHANGE MOBILE — Step 1: Send OTP to new mobile
+  // ─────────────────────────────────────────────────────────────
+  async initiateChangeMobile({ userId, newMobile }) {
+    newMobile = normaliseMobile(newMobile);
+
+    const user = await userRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    if (user.user_mobile === newMobile) {
+      throw new BadRequestError('New mobile number is the same as your current number');
+    }
+
+    const mobileTaken = await userRepository.mobileExists(newMobile);
+    if (mobileTaken) {
+      throw new ConflictError('This mobile number is already registered to another account');
+    }
+
+    const pendingKey = `${REDIS_PREFIXES.PENDING_CHANGE_MOBILE}:${userId}`;
+    await redis.set(
+      pendingKey,
+      JSON.stringify({ userId, newMobile }),
+      'EX',
+      config.otp.expiryMinutes * 60,
+    );
+
+    const { otp, expiresInSeconds } = await otpService.generate(
+      OTP_PURPOSES.CHANGE_MOBILE,
+      newMobile,
+    );
+
+    await smsService.sendOtp({
+      mobile: newMobile,
+      name: user.user_first_name,
+      otp,
+    });
+
+    return {
+      message: 'OTP sent to your new mobile number.',
+      maskedMobile: maskMobile(newMobile),
+      expiresInSeconds,
+      resendAfterSeconds: config.otp.resendCooldownSeconds,
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  CHANGE MOBILE — Step 2: Verify OTP & Update
+  // ─────────────────────────────────────────────────────────────
+  async verifyChangeMobile({ userId, otp }) {
+    const pendingKey = `${REDIS_PREFIXES.PENDING_CHANGE_MOBILE}:${userId}`;
+    const pendingData = await redis.get(pendingKey);
+
+    if (!pendingData) {
+      throw new BadRequestError('Mobile change session expired. Please start again.');
+    }
+
+    const { newMobile } = JSON.parse(pendingData);
+
+    await otpService.verify(OTP_PURPOSES.CHANGE_MOBILE, newMobile, otp);
+
+    const mobileTaken = await userRepository.mobileExists(newMobile);
+    if (mobileTaken) {
+      await redis.del(pendingKey);
+      throw new ConflictError('This mobile number was taken. Please try a different one.');
+    }
+
+    // Update mobile via sp_users_update
+    await userRepository.updateMobile(userId, newMobile);
+
+    await redis.del(pendingKey);
+    await this._invalidateAllSessions(userId);
+
+    logger.info(`Mobile changed for user: ${userId} → ${maskMobile(newMobile)}`);
+
+    return {
+      message: 'Mobile number updated successfully. You have been logged out. Please login again.',
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  LOGOUT
+  // ─────────────────────────────────────────────────────────────
+  async logout({ userId, sessionId }) {
+    const sessionKey = `${REDIS_PREFIXES.SESSION}:${userId}:${sessionId}`;
+    await redis.del(sessionKey);
+
+    const refreshKey = `${REDIS_PREFIXES.REFRESH_TOKEN}:${userId}:${sessionId}`;
+    await redis.del(refreshKey);
+
+    logger.info(`User logged out: ${userId} (session: ${sessionId})`);
+
+    return { message: 'Logged out successfully' };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  REFRESH TOKEN
+  // ─────────────────────────────────────────────────────────────
+  async refreshToken({ refreshToken }) {
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, config.jwt.refreshSecret);
+    } catch (_err) {
+      throw new UnauthorizedError('Invalid or expired refresh token');
+    }
+
+    const refreshKey = `${REDIS_PREFIXES.REFRESH_TOKEN}:${decoded.userId}:${decoded.sessionId}`;
+    const storedToken = await redis.get(refreshKey);
+
+    if (!storedToken || storedToken !== refreshToken) {
+      throw new UnauthorizedError('Refresh token revoked or invalid');
+    }
+
+    const user = await userRepository.findById(decoded.userId);
+    if (!user || !user.user_is_active) {
+      throw new UnauthorizedError('User not found or deactivated');
+    }
+
+    const accessToken = this._generateAccessToken(user, decoded.sessionId);
+
+    return {
+      accessToken,
       expiresIn: config.jwt.accessExpiresIn,
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  PRIVATE HELPERS
+  // ═══════════════════════════════════════════════════════════
+
+  /**
+   * Create a new session in Redis and return JWT tokens.
+   * Accepts user data from uv_users (prefixed: user_id, user_email, etc.)
+   * OR from direct query (unprefixed: id, email, etc.)
+   */
+  async _createSession(user) {
+    const sessionId = uuidv4();
+
+    const accessToken = this._generateAccessToken(user, sessionId);
+    const refreshToken = this._generateRefreshToken(user, sessionId);
+
+    const userId = user.user_id || user.id;
+    const userEmail = user.user_email || user.email;
+    const userMobile = user.user_mobile || user.mobile;
+    const userRole = user.user_role || user.role;
+
+    // Store session in Redis
+    const sessionKey = `${REDIS_PREFIXES.SESSION}:${userId}:${sessionId}`;
+    const sessionData = JSON.stringify({
+      userId,
+      email: userEmail,
+      mobile: userMobile,
+      role: userRole,
+      createdAt: new Date().toISOString(),
     });
 
-    const refreshToken = jwt.sign(refreshPayload, config.jwt.refreshSecret, {
-      expiresIn: config.jwt.refreshExpiresIn,
-    });
+    await redis.set(sessionKey, sessionData, 'EX', config.redis.sessionTtl);
 
-    return { accessToken, refreshToken };
+    // Store refresh token
+    const refreshKey = `${REDIS_PREFIXES.REFRESH_TOKEN}:${userId}:${sessionId}`;
+    const refreshExpirySeconds = this._parseExpiryToSeconds(config.jwt.refreshExpiresIn);
+    await redis.set(refreshKey, refreshToken, 'EX', refreshExpirySeconds);
+
+    return {
+      accessToken,
+      refreshToken,
+      expiresIn: config.jwt.accessExpiresIn,
+    };
   }
 
-  _sanitizeUser(user) {
-    const { password, is_deleted, deleted_at, ...sanitized } = user;
-    return sanitized;
+  /**
+   * Generate access token.
+   * Handles both uv_users prefixed and direct query field names.
+   */
+  _generateAccessToken(user, sessionId) {
+    return jwt.sign(
+      {
+        userId: user.user_id || user.id,
+        email: user.user_email || user.email,
+        mobile: user.user_mobile || user.mobile,
+        role: user.user_role || user.role,
+        sessionId,
+      },
+      config.jwt.accessSecret,
+      { expiresIn: config.jwt.accessExpiresIn },
+    );
   }
 
-  async _storeSession(userId, token) {
-    try {
-      await redis.set(`session:${userId}`, token, 'EX', config.redis.sessionTtl);
-    } catch (_err) {
-      // Non-critical
-    }
+  _generateRefreshToken(user, sessionId) {
+    return jwt.sign(
+      {
+        userId: user.user_id || user.id,
+        sessionId,
+        type: 'refresh',
+      },
+      config.jwt.refreshSecret,
+      { expiresIn: config.jwt.refreshExpiresIn },
+    );
   }
 
+  /**
+   * Invalidate all sessions for a user (force logout everywhere)
+   */
   async _invalidateAllSessions(userId) {
-    try {
-      const keys = await redis.keys(`session:${userId}*`);
-      if (keys.length > 0) await redis.del(...keys);
-    } catch (_err) {
-      // Non-critical
+    const sessionPattern = `${REDIS_PREFIXES.SESSION}:${userId}:*`;
+    const refreshPattern = `${REDIS_PREFIXES.REFRESH_TOKEN}:${userId}:*`;
+
+    const sessionKeys = await redis.keys(sessionPattern);
+    const refreshKeys = await redis.keys(refreshPattern);
+
+    const allKeys = [...sessionKeys, ...refreshKeys];
+
+    if (allKeys.length > 0) {
+      for (const key of allKeys) {
+        await redis.del(key);
+      }
     }
+
+    logger.info(`All sessions invalidated for user: ${userId} (${allKeys.length} keys deleted)`);
+  }
+
+  /**
+   * Parse JWT expiry string (e.g. '7d', '15m', '1h') to seconds
+   */
+  _parseExpiryToSeconds(expiry) {
+    const match = expiry.match(/^(\d+)([smhd])$/);
+    if (!match) {
+      return 604800;
+    }
+    const value = parseInt(match[1], 10);
+    const unit = match[2];
+    const multipliers = { s: 1, m: 60, h: 3600, d: 86400 };
+    return value * (multipliers[unit] || 86400);
+  }
+
+  /**
+   * Remove sensitive fields and normalise to API response shape.
+   * Handles both uv_users (prefixed) and direct query (unprefixed) formats.
+   */
+  _sanitizeUser(user) {
+    return {
+      id: user.user_id || user.id,
+      firstName: user.user_first_name || user.first_name,
+      lastName: user.user_last_name || user.last_name,
+      email: user.user_email || user.email,
+      mobile: user.user_mobile || user.mobile,
+      role: user.user_role || user.role,
+      isActive: user.user_is_active ?? user.is_active,
+      isEmailVerified: user.user_is_email_verified ?? user.is_email_verified,
+      isMobileVerified: user.user_is_mobile_verified ?? user.is_mobile_verified,
+      lastLogin: user.user_last_login || user.last_login,
+      createdAt: user.user_created_at || user.created_at,
+      // Country info (from uv_users view)
+      country: user.country_name
+        ? {
+            name: user.country_name,
+            iso2: user.country_iso2,
+            phoneCode: user.country_phone_code,
+            currency: user.country_currency,
+            currencySymbol: user.country_currency_symbol,
+            flagImage: user.country_flag_image,
+          }
+        : undefined,
+    };
   }
 }
 

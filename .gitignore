@@ -50,3 +50,10 @@ ecosystem.config.js.bak
 
 # Docker
 .docker/
+
+
+api_project_ref/
+database files/
+tests/
+docs/
+logs/

@@ -1,187 +1,179 @@
 /**
- * AUTH ROUTES — All Authentication Endpoints
+ * ═══════════════════════════════════════════════════════════════
+ * AUTH ROUTES — /api/v1/auth
+ * ═══════════════════════════════════════════════════════════════
  *
- * Registration Flow (3-step — OTPs must be verified BEFORE user is created):
- *   POST /register                   — Step 1: Validate, send OTPs to email + mobile, return registration_token
- *   POST /verify-registration-email  — Step 2a: Verify email OTP (with registration_token)
- *   POST /verify-registration-mobile — Step 2b: Verify mobile OTP (with registration_token)
- *   POST /resend-registration-otp    — Resend OTP for pending registration (channel: email|mobile)
+ * PUBLIC routes (no auth):
+ *   POST /register              — Initiate registration (sends email OTP or mobile OTP)
+ *   POST /register/verify-email — Verify email OTP (if mobile exists → sends mobile OTP)
+ *   POST /register/verify-mobile — Verify mobile OTP → save user
+ *   POST /register/resend-otp   — Resend current step's OTP (email or mobile)
+ *   POST /login                 — Login with email/mobile + password
+ *   POST /forgot-password       — Initiate forgot password (sends OTP)
+ *   POST /forgot-password/verify — Verify forgot password OTP
+ *   POST /forgot-password/reset — Set new password with reset token
+ *   POST /forgot-password/resend-otp — Resend forgot password OTP
+ *   POST /refresh-token         — Get new access token
  *
- * Public (no auth):
- *   POST /login            — Login with email/mobile + password (requires both verified)
- *   POST /verify-email-otp — Verify email OTP (existing users)
- *   POST /verify-mobile-otp — Verify mobile OTP (existing users)
- *   POST /resend-otp       — Resend verification OTP (existing users)
- *   POST /forgot-password  — Request password reset OTP
- *   POST /verify-reset-otp — Verify reset OTP (returns resetToken)
- *   POST /reset-password   — Reset password with resetToken
- *   POST /refresh-token    — Refresh access token
+ * PROTECTED routes (auth required):
+ *   POST /change-password       — Change password (old + new)
+ *   POST /change-email          — Initiate email change (sends OTP)
+ *   POST /change-email/verify   — Verify OTP → update email
+ *   POST /change-mobile         — Initiate mobile change (sends OTP)
+ *   POST /change-mobile/verify  — Verify OTP → update mobile
+ *   POST /logout                — Logout (invalidate session)
  *
- * Protected (requires auth):
- *   POST /logout              — Logout (blacklist token)
- *   GET  /me                  — Get current user profile
- *   POST /change-password     — Change password (old + new)
- *   POST /request-email-change  — Request email change (sends OTP to new email)
- *   POST /verify-email-change   — Verify email change with OTP
- *   POST /request-mobile-change — Request mobile change (sends OTP)
- *   POST /verify-mobile-change  — Verify mobile change with OTP
+ * ═══════════════════════════════════════════════════════════════
  */
 
 const { Router } = require('express');
-const { asyncHandler } = require('../../../utils/helpers');
-const { auth } = require('../../../middleware/auth.middleware');
-const { authLimiter, strictLimiter } = require('../../../middleware/rateLimiter.middleware');
-const { verifyRecaptcha } = require('../../../middleware/recaptcha.middleware');
+const authController = require('../controllers/auth.controller');
 const validate = require('../../../middleware/validate.middleware');
-const controller = require('../controllers/auth.controller');
+const authenticate = require('../../../middleware/auth.middleware');
+const { authLimiter } = require('../../../middleware/rateLimiter.middleware');
 const {
-  registerSchema,
+  initiateRegistrationSchema,
   verifyRegistrationEmailSchema,
   verifyRegistrationMobileSchema,
-  resendRegistrationOtpSchema,
-  loginSchema,
-  verifyEmailOtpSchema,
-  verifyMobileOtpSchema,
   resendOtpSchema,
-  forgotPasswordSchema,
-  verifyResetOtpSchema,
+  loginSchema,
+  initiateForgotPasswordSchema,
+  verifyForgotPasswordSchema,
   resetPasswordSchema,
-  refreshTokenSchema,
   changePasswordSchema,
-  requestEmailChangeSchema,
-  verifyEmailChangeSchema,
-  requestMobileChangeSchema,
-  verifyMobileChangeSchema,
+  initiateChangeEmailSchema,
+  verifyChangeEmailSchema,
+  initiateChangeMobileSchema,
+  verifyChangeMobileSchema,
+  refreshTokenSchema,
 } = require('../validators/auth.validator');
 
 const router = Router();
 
-// ─── Public Routes ───────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+//  PUBLIC ROUTES
+// ═══════════════════════════════════════════════════════════════
 
+// Registration
 router.post(
   '/register',
   authLimiter,
-  verifyRecaptcha('register'),
-  validate(registerSchema),
-  asyncHandler(controller.register)
+  validate(initiateRegistrationSchema),
+  authController.initiateRegistration,
 );
 
 router.post(
-  '/verify-registration-email',
+  '/register/verify-email',
   authLimiter,
   validate(verifyRegistrationEmailSchema),
-  asyncHandler(controller.verifyRegistrationEmail)
+  authController.verifyRegistrationEmail,
 );
 
 router.post(
-  '/verify-registration-mobile',
+  '/register/verify-mobile',
   authLimiter,
   validate(verifyRegistrationMobileSchema),
-  asyncHandler(controller.verifyRegistrationMobile)
+  authController.verifyRegistrationMobile,
 );
 
 router.post(
-  '/resend-registration-otp',
-  strictLimiter,
-  validate(resendRegistrationOtpSchema),
-  asyncHandler(controller.resendRegistrationOtp)
+  '/register/resend-otp',
+  authLimiter,
+  validate(resendOtpSchema),
+  authController.resendRegistrationOtp,
 );
 
+// Login
 router.post(
   '/login',
   authLimiter,
-  verifyRecaptcha('login'),
   validate(loginSchema),
-  asyncHandler(controller.login)
+  authController.login,
 );
 
-router.post(
-  '/verify-email-otp',
-  authLimiter,
-  validate(verifyEmailOtpSchema),
-  asyncHandler(controller.verifyEmailOtp)
-);
-
-router.post(
-  '/verify-mobile-otp',
-  authLimiter,
-  validate(verifyMobileOtpSchema),
-  asyncHandler(controller.verifyMobileOtp)
-);
-
-router.post(
-  '/resend-otp',
-  strictLimiter,
-  validate(resendOtpSchema),
-  asyncHandler(controller.resendOtp)
-);
-
+// Forgot Password
 router.post(
   '/forgot-password',
   authLimiter,
-  verifyRecaptcha('forgot_password'),
-  validate(forgotPasswordSchema),
-  asyncHandler(controller.forgotPassword)
+  validate(initiateForgotPasswordSchema),
+  authController.initiateForgotPassword,
 );
 
 router.post(
-  '/verify-reset-otp',
+  '/forgot-password/verify',
   authLimiter,
-  validate(verifyResetOtpSchema),
-  asyncHandler(controller.verifyResetOtp)
+  validate(verifyForgotPasswordSchema),
+  authController.verifyForgotPasswordOtp,
 );
 
 router.post(
-  '/reset-password',
+  '/forgot-password/reset',
+  authLimiter,
   validate(resetPasswordSchema),
-  asyncHandler(controller.resetPassword)
+  authController.resetPassword,
 );
 
+router.post(
+  '/forgot-password/resend-otp',
+  authLimiter,
+  validate(resendOtpSchema),
+  authController.resendForgotPasswordOtp,
+);
+
+// Refresh Token
 router.post(
   '/refresh-token',
   validate(refreshTokenSchema),
-  asyncHandler(controller.refreshToken)
+  authController.refreshToken,
 );
 
-// ─── Protected Routes ────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+//  PROTECTED ROUTES (require login)
+// ═══════════════════════════════════════════════════════════════
 
-router.post('/logout', auth, asyncHandler(controller.logout));
-
-router.get('/me', auth, asyncHandler(controller.getProfile));
-
+// Change Password
 router.post(
   '/change-password',
-  auth,
+  authenticate,
   validate(changePasswordSchema),
-  asyncHandler(controller.changePassword)
+  authController.changePassword,
+);
+
+// Change Email
+router.post(
+  '/change-email',
+  authenticate,
+  validate(initiateChangeEmailSchema),
+  authController.initiateChangeEmail,
 );
 
 router.post(
-  '/request-email-change',
-  auth,
-  validate(requestEmailChangeSchema),
-  asyncHandler(controller.requestEmailChange)
+  '/change-email/verify',
+  authenticate,
+  validate(verifyChangeEmailSchema),
+  authController.verifyChangeEmail,
+);
+
+// Change Mobile
+router.post(
+  '/change-mobile',
+  authenticate,
+  validate(initiateChangeMobileSchema),
+  authController.initiateChangeMobile,
 );
 
 router.post(
-  '/verify-email-change',
-  auth,
-  validate(verifyEmailChangeSchema),
-  asyncHandler(controller.verifyEmailChange)
+  '/change-mobile/verify',
+  authenticate,
+  validate(verifyChangeMobileSchema),
+  authController.verifyChangeMobile,
 );
 
+// Logout
 router.post(
-  '/request-mobile-change',
-  auth,
-  validate(requestMobileChangeSchema),
-  asyncHandler(controller.requestMobileChange)
-);
-
-router.post(
-  '/verify-mobile-change',
-  auth,
-  validate(verifyMobileChangeSchema),
-  asyncHandler(controller.verifyMobileChange)
+  '/logout',
+  authenticate,
+  authController.logout,
 );
 
 module.exports = router;
