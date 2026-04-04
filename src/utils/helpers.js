@@ -47,14 +47,19 @@ const normaliseMobile = (mobile) => {
   if (!mobile) {
     return null;
   }
-  return mobile.replace(/[\s\-\+]/g, '');
+  const cleaned = mobile.replace(/[\s\-\+]/g, '');
+  // Must be exactly 10 digits — reject anything else (including 91-prefixed)
+  if (!/^\d{10}$/.test(cleaned)) {
+    return null;
+  }
+  return cleaned;
 };
 
 /**
  * Normalise email — lowercase, trim
  */
 const normaliseEmail = (email) => {
-  if (!email) {
+  if (!email || !email.includes('@')) {
     return null;
   }
   return email.toLowerCase().trim();

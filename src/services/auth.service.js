@@ -180,6 +180,11 @@ class AuthService {
   async verifyRegistrationMobile({ identifier, otp }) {
     identifier = normaliseEmail(identifier) || normaliseMobile(identifier);
 
+    // Defense-in-depth: identifier must be a valid 10-digit mobile at this stage
+    if (!identifier) {
+      throw new BadRequestError('Invalid identifier. Mobile number must be exactly 10 digits without country code.');
+    }
+
     // Retrieve pending data to get mobile number
     const pendingKey = `${REDIS_PREFIXES.PENDING_REGISTRATION}:${identifier}`;
     const pendingData = await redis.get(pendingKey);
@@ -253,6 +258,10 @@ class AuthService {
   // ─────────────────────────────────────────────────────────────
   async resendRegistrationOtp({ identifier }) {
     identifier = normaliseEmail(identifier) || normaliseMobile(identifier);
+
+    if (!identifier) {
+      throw new BadRequestError('Invalid identifier. Must be a valid email or exactly 10-digit mobile number.');
+    }
 
     const pendingKey = `${REDIS_PREFIXES.PENDING_REGISTRATION}:${identifier}`;
     const pendingData = await redis.get(pendingKey);

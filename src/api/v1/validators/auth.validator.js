@@ -52,7 +52,9 @@ const initiateRegistrationSchema = z.object({
 });
 
 const verifyRegistrationEmailSchema = z.object({
-  identifier: z.string().min(1, 'Identifier (email or mobile) is required'),
+  identifier: z
+    .string()
+    .email('Identifier must be a valid email address for email verification'),
   otp: otpField,
 });
 
@@ -62,7 +64,13 @@ const verifyRegistrationMobileSchema = z.object({
 });
 
 const resendOtpSchema = z.object({
-  identifier: z.string().min(1, 'Identifier (email or mobile) is required'),
+  identifier: z
+    .string()
+    .min(1, 'Identifier (email or mobile) is required')
+    .refine(
+      (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) || /^\d{10}$/.test(val),
+      'Identifier must be a valid email or exactly 10-digit mobile number (without country code)',
+    ),
 });
 
 // ═══════════════════════════════════════════════════════════════
@@ -70,7 +78,13 @@ const resendOtpSchema = z.object({
 // ═══════════════════════════════════════════════════════════════
 
 const loginSchema = z.object({
-  username: z.string().min(1, 'Email or mobile is required'),
+  username: z
+    .string()
+    .min(1, 'Email or mobile is required')
+    .refine(
+      (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) || /^\d{10}$/.test(val),
+      'Username must be a valid email or exactly 10-digit mobile number (without country code)',
+    ),
   password: z.string().min(1, 'Password is required'),
 });
 
