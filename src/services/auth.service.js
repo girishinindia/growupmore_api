@@ -248,6 +248,7 @@ class AuthService {
           userId: user.user_id || user.id,
           roleId: studentRole.role_id,
           reason: 'Auto-assigned on registration',
+          assignedBy: user.user_id || user.id,
         });
         logger.info(`Student role auto-assigned to user: ${user.user_id || user.id}`);
       }

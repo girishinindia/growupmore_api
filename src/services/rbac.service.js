@@ -45,13 +45,28 @@ class RbacService {
    */
   async getRoles(options = {}) {
     try {
-      const { filters, search, sort, pagination } = options;
-      const roles = await rbacRepository.getRoles({
-        filters,
-        search,
-        sort,
-        pagination
-      });
+      const { filters = {}, search, sort, pagination = {} } = options;
+
+      // Repository signature: getRoles({ isActive, filterLevel, filterParentRoleId, ... })
+      const repoOptions = {
+        isActive: filters.isActive !== undefined ? filters.isActive : true,
+        filterLevel: filters.level || null,
+        filterParentRoleId: filters.parentRoleId || null,
+        filterIsSystemRole: filters.isSystemRole !== undefined ? filters.isSystemRole : null,
+        sortColumn: sort?.field || 'role_name',
+        sortDirection: sort?.direction || 'ASC',
+        pageIndex: pagination.page || 1,
+        pageSize: pagination.limit || 50,
+      };
+
+      // If search term provided, use searchRoles instead
+      let roles;
+      if (search) {
+        roles = await rbacRepository.searchRoles(search, repoOptions);
+      } else {
+        roles = await rbacRepository.getRoles(repoOptions);
+      }
+
       return roles;
     } catch (error) {
       logger.error('Error fetching roles:', error);
@@ -119,7 +134,7 @@ class RbacService {
         createdBy: actingUserId
       });
 
-      logger.info(`Role created: ${createdRole.code}`, { createdBy: actingUserId });
+      logger.info(`Role created: ${createdRole.role_code}`, { createdBy: actingUserId });
       return createdRole;
     } catch (error) {
       logger.error('Error creating role:', error);
@@ -151,8 +166,8 @@ class RbacService {
         throw new NotFoundError(`Role with ID ${roleId} not found`);
       }
 
-      // Cannot change code of system roles
-      if (updates.code && updates.code !== role.code && RbacService.SYSTEM_ROLES.includes(role.code)) {
+      // Cannot change code of system roles (use role_code from view)
+      if (updates.code && updates.code !== role.role_code && RbacService.SYSTEM_ROLES.includes(role.role_code)) {
         throw new ForbiddenError('Cannot modify system role code');
       }
 
@@ -200,8 +215,8 @@ class RbacService {
         throw new NotFoundError(`Role with ID ${roleId} not found`);
       }
 
-      // Cannot delete system roles
-      if (RbacService.SYSTEM_ROLES.includes(role.code)) {
+      // Cannot delete system roles (use role_code from view)
+      if (RbacService.SYSTEM_ROLES.includes(role.role_code)) {
         throw new ForbiddenError('Cannot delete system roles');
       }
 
@@ -248,34 +263,29 @@ class RbacService {
    * @param {Object} options - Query options
    * @returns {Promise<Object>} Permissions with pagination metadata
    */
-  async getRolePermissions(options = {}) {
+  async getRolePermissions(roleId, options = {}) {
     try {
-      const { roleId, roleCode, filters, search, pagination } = options;
-
-      if (!roleId && !roleCode) {
-        throw new BadRequestError('Either roleId or roleCode is required');
+      if (!roleId) {
+        throw new BadRequestError('Role ID is required');
       }
 
-      let role;
-      if (roleId) {
-        role = await rbacRepository.findRoleById(roleId);
-        if (!role) {
-          throw new NotFoundError(`Role with ID ${roleId} not found`);
-        }
-      } else {
-        role = await rbacRepository.findRoleByCode(roleCode);
-        if (!role) {
-          throw new NotFoundError(`Role with code ${roleCode} not found`);
-        }
+      // Verify role exists — uses role_id from view
+      const role = await rbacRepository.findRoleById(roleId);
+      if (!role) {
+        throw new NotFoundError(`Role with ID ${roleId} not found`);
       }
 
-      const permissions = await rbacRepository.getRolePermissions({
-        roleId: role.id,
-        filters,
-        search,
-        pagination
-      });
+      const { search, sort, pagination = {} } = options;
 
+      // Repository signature: getRolePermissions(roleId, options)
+      const repoOptions = {
+        sortColumn: sort?.field || 'perm_name',
+        sortDirection: sort?.direction || 'ASC',
+        pageIndex: pagination.page || 1,
+        pageSize: pagination.limit || 50,
+      };
+
+      const permissions = await rbacRepository.getRolePermissions(roleId, repoOptions);
       return permissions;
     } catch (error) {
       logger.error('Error fetching role permissions:', error);
@@ -452,19 +462,30 @@ class RbacService {
    */
   async getUserRoleAssignments(options = {}) {
     try {
-      const { userId, roleId, filters, search, pagination } = options;
+      const { filters = {}, search, sort, pagination = {} } = options;
+      const { userId, roleId, roleCode, contextType } = filters;
 
       if (!userId && !roleId) {
         throw new BadRequestError('Either userId or roleId is required');
       }
 
-      const assignments = await rbacRepository.getUserRoleAssignments({
-        userId,
-        roleId,
-        filters,
-        search,
-        pagination
-      });
+      // Repository signature: getUserRoleAssignments(userId, options) or getRoleAssignments(roleId, options)
+      const repoOptions = {
+        isActive: filters.isActive !== undefined ? filters.isActive : true,
+        filterContextType: contextType || null,
+        filterRoleCode: roleCode || null,
+        sortColumn: sort?.field || 'ura_created_at',
+        sortDirection: sort?.direction || 'DESC',
+        pageIndex: pagination.page || 1,
+        pageSize: pagination.limit || 20,
+      };
+
+      let assignments;
+      if (userId) {
+        assignments = await rbacRepository.getUserRoleAssignments(userId, repoOptions);
+      } else {
+        assignments = await rbacRepository.getRoleAssignments(roleId, repoOptions);
+      }
 
       return assignments;
     } catch (error) {
@@ -509,7 +530,7 @@ class RbacService {
 
       const result = await rbacRepository.assignRoleToUser({
         ...assignmentData,
-        createdBy: actingUserId
+        assignedBy: actingUserId
       });
 
       logger.info(`Role assigned to user`, {
@@ -540,23 +561,22 @@ class RbacService {
         throw new BadRequestError('Acting user ID is required');
       }
 
-      const assignment = await rbacRepository.getUserRoleAssignments({
-        assignmentId,
-        pagination: { limit: 1 }
-      });
+      // Use findUserRoleAssignmentById — returns single object or null
+      const currentAssignment = await rbacRepository.findUserRoleAssignmentById(assignmentId);
 
-      if (!assignment || assignment.data.length === 0) {
+      if (!currentAssignment) {
         throw new NotFoundError(`Assignment with ID ${assignmentId} not found`);
       }
 
-      const currentAssignment = assignment.data[0];
+      // Use ura_role_id from the view columns
+      const currentRoleId = currentAssignment.ura_role_id;
 
       // If changing the role, enforce hierarchy on the new role
-      if (updates.roleId && updates.roleId !== currentAssignment.roleId) {
+      if (updates.roleId && updates.roleId !== currentRoleId) {
         await this._enforceHierarchy(actingUserId, updates.roleId, 'ASSIGN_ROLE');
       } else {
         // Even if not changing role, still check hierarchy on current role
-        await this._enforceHierarchy(actingUserId, currentAssignment.roleId, 'ASSIGN_ROLE');
+        await this._enforceHierarchy(actingUserId, currentRoleId, 'ASSIGN_ROLE');
       }
 
       const updatedAssignment = await rbacRepository.updateUserRoleAssignment(assignmentId, {
@@ -587,19 +607,15 @@ class RbacService {
         throw new BadRequestError('Acting user ID is required');
       }
 
-      const assignment = await rbacRepository.getUserRoleAssignments({
-        assignmentId,
-        pagination: { limit: 1 }
-      });
+      // Use findUserRoleAssignmentById — returns single object or null
+      const currentAssignment = await rbacRepository.findUserRoleAssignmentById(assignmentId);
 
-      if (!assignment || assignment.data.length === 0) {
+      if (!currentAssignment) {
         throw new NotFoundError(`Assignment with ID ${assignmentId} not found`);
       }
 
-      const currentAssignment = assignment.data[0];
-
-      // Enforce hierarchy on the role being revoked
-      await this._enforceHierarchy(actingUserId, currentAssignment.roleId, 'ASSIGN_ROLE');
+      // Enforce hierarchy on the role being revoked (use ura_role_id from view)
+      await this._enforceHierarchy(actingUserId, currentAssignment.ura_role_id, 'ASSIGN_ROLE');
 
       await rbacRepository.deleteUserRoleAssignment(assignmentId);
       logger.info(`User role assignment revoked: ${assignmentId}`, { revokedBy: actingUserId });
@@ -642,12 +658,17 @@ class RbacService {
    */
   async getPermissions(options = {}) {
     try {
-      const { filters, search, pagination } = options;
-      const permissions = await rbacRepository.getPermissions({
-        filters,
-        search,
-        pagination
-      });
+      const { search, sort, pagination = {} } = options;
+
+      // Repository signature: getPermissions({ isActive, filterModuleCode, sortColumn, ... })
+      const repoOptions = {
+        sortColumn: sort?.field || 'perm_name',
+        sortDirection: sort?.direction || 'ASC',
+        pageIndex: pagination.page || 1,
+        pageSize: pagination.limit || 50,
+      };
+
+      const permissions = await rbacRepository.getPermissions(repoOptions);
       return permissions;
     } catch (error) {
       logger.error('Error fetching permissions:', error);
@@ -685,12 +706,8 @@ class RbacService {
    */
   async getModules(options = {}) {
     try {
-      const { filters, search, pagination } = options;
-      const modules = await rbacRepository.getModules({
-        filters,
-        search,
-        pagination
-      });
+      // Repository signature: getModules({ isActive, sortColumn, sortDirection, pageIndex, pageSize })
+      const modules = await rbacRepository.getModules();
       return modules;
     } catch (error) {
       logger.error('Error fetching modules:', error);
@@ -751,12 +768,13 @@ class RbacService {
    */
   async _getActingUserHighestRole(userId) {
     try {
-      const assignments = await rbacRepository.getUserRoleAssignments({
-        userId,
-        pagination: { limit: 1000 }
+      // Repository signature: getUserRoleAssignments(userId, options)
+      // Returns flat array with ura_* prefixed columns from uv_user_role_assignments view
+      const assignments = await rbacRepository.getUserRoleAssignments(userId, {
+        pageSize: 1000,
       });
 
-      if (!assignments || assignments.data.length === 0) {
+      if (!assignments || assignments.length === 0) {
         return null;
       }
 
@@ -764,14 +782,19 @@ class RbacService {
       let highestRole = null;
       let lowestLevel = Number.MAX_SAFE_INTEGER;
 
-      for (const assignment of assignments.data) {
-        const roleLevel = RbacService.ROLE_LEVELS[assignment.role?.code];
+      for (const assignment of assignments) {
+        // Use ura_role_code and ura_role_level from the view columns
+        const roleCode = assignment.ura_role_code;
+        const roleLevel = assignment.ura_role_level !== undefined
+          ? assignment.ura_role_level
+          : RbacService.ROLE_LEVELS[roleCode];
+
         if (roleLevel !== undefined && roleLevel < lowestLevel) {
           lowestLevel = roleLevel;
           highestRole = {
-            roleCode: assignment.role?.code,
+            roleCode: roleCode,
             roleLevel: roleLevel,
-            roleId: assignment.roleId
+            roleId: assignment.ura_role_id
           };
         }
       }
@@ -841,17 +864,20 @@ class RbacService {
         return;
       }
 
-      // Get target role
+      // Get target role — udf_get_roles returns role_code, role_level, role_id etc.
       const targetRole = await rbacRepository.findRoleById(targetRoleId);
       if (!targetRole) {
         throw new NotFoundError(`Target role with ID ${targetRoleId} not found`);
       }
 
+      // Use role_code from the view columns
+      const targetRoleCode = targetRole.role_code;
+
       // Special rules for super_admin
       if (actingUserRole.roleCode === 'super_admin') {
         // Super admin can do anything except delete another super_admin
         if (action === 'DELETE_ROLE' || action === 'REVOKE_ROLE') {
-          if (targetRole.code === 'super_admin') {
+          if (targetRoleCode === 'super_admin') {
             throw new ForbiddenError('Super admin cannot delete/revoke another super_admin');
           }
         }
@@ -861,13 +887,13 @@ class RbacService {
       // Special rules for admin
       if (actingUserRole.roleCode === 'admin') {
         // Admin cannot create or act on super_admin or other admins
-        if (targetRole.code === 'super_admin' || targetRole.code === 'admin') {
+        if (targetRoleCode === 'super_admin' || targetRoleCode === 'admin') {
           throw new ForbiddenError(
-            `Admin cannot manage ${targetRole.code} roles`
+            `Admin cannot manage ${targetRoleCode} roles`
           );
         }
         // Admin can manage moderator and below
-        if (!this._canActOnRole(RbacService.ROLE_LEVELS.admin, targetRole.code)) {
+        if (!this._canActOnRole(RbacService.ROLE_LEVELS.admin, targetRoleCode)) {
           throw new ForbiddenError(
             `Admin can only manage roles with level ${RbacService.ROLE_LEVELS.admin} or higher`
           );
@@ -876,9 +902,9 @@ class RbacService {
       }
 
       // General hierarchy rule: can only manage users with higher level (numerically)
-      if (!this._canActOnRole(actingUserRole.roleLevel, RbacService.ROLE_LEVELS[targetRole.code])) {
+      if (!this._canActOnRole(actingUserRole.roleLevel, RbacService.ROLE_LEVELS[targetRoleCode])) {
         throw new ForbiddenError(
-          `User cannot manage role with level ${RbacService.ROLE_LEVELS[targetRole.code]}`
+          `User cannot manage role with level ${RbacService.ROLE_LEVELS[targetRoleCode]}`
         );
       }
     } catch (error) {
