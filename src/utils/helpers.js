@@ -39,13 +39,21 @@ const maskMobile = (mobile) => {
 };
 
 /**
- * Normalise mobile number — strip spaces, dashes, leading +
+ * Normalise mobile number — strip spaces/dashes/+, then prepend 91 country code
+ * User sends: 9662278990 (10 digits)
+ * Stored as:  919662278990 (with country code)
  */
 const normaliseMobile = (mobile) => {
   if (!mobile) {
     return null;
   }
-  return mobile.replace(/[\s\-\+]/g, '');
+  const cleaned = mobile.replace(/[\s\-\+]/g, '');
+  // If already has country code (more than 10 digits), return as-is
+  if (cleaned.length > 10) {
+    return cleaned;
+  }
+  // Prepend default country code 91 (India)
+  return `91${cleaned}`;
 };
 
 /**

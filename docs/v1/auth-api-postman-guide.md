@@ -223,10 +223,12 @@ POST http://localhost:5001/api/v1/auth/register
   "firstName": "Girish",
   "lastName": "Chaudhary",
   "email": "girish@example.com",
-  "mobile": "919662278990",
+  "mobile": "9662278990",
   "password": "Girish@123"
 }
 ```
+
+> **Note:** Mobile number must be exactly **10 digits without country code**. The system automatically prepends `91` (India) before storing.
 
 **Validation Rules:**
 
@@ -235,7 +237,7 @@ POST http://localhost:5001/api/v1/auth/register
 | firstName | string | Yes | 2-100 chars, letters/spaces/hyphens/apostrophes only |
 | lastName | string | Yes | 2-100 chars, letters/spaces/hyphens/apostrophes only |
 | email | string | Yes | Valid email, max 255 chars |
-| mobile | string | Yes | 10-15 digits only (no spaces, dashes, or +) |
+| mobile | string | Yes | Exactly 10 digits without country code (e.g. `9662278990`) |
 | password | string | Yes | Min 8 chars, 1 lowercase, 1 uppercase, 1 digit, 1 special char |
 
 **Response — 200 OK (email OTP sent):**
@@ -608,11 +610,11 @@ POST http://localhost:5001/api/v1/auth/login
 }
 ```
 
-**Request Body (with mobile):**
+**Request Body (with mobile — 10 digits, no country code):**
 
 ```json
 {
-  "username": "919662278990",
+  "username": "9662278990",
   "password": "Girish@123"
 }
 ```
@@ -970,7 +972,7 @@ POST http://localhost:5001/api/v1/auth/change-mobile
 
 ```json
 {
-  "newMobile": "919876543210"
+  "newMobile": "9876543210"
 }
 ```
 
@@ -978,7 +980,7 @@ POST http://localhost:5001/api/v1/auth/change-mobile
 
 | Field | Type | Required | Rules |
 |-------|------|----------|-------|
-| newMobile | string | Yes | 10-15 digits only |
+| newMobile | string | Yes | Exactly 10 digits (without country code) |
 
 **Response — 200 OK (OTP sent to NEW mobile):**
 
@@ -1086,7 +1088,7 @@ POST http://localhost:5001/api/v1/auth/forgot-password
 ```json
 {
   "email": "girish@example.com",
-  "mobile": "919662278990"
+  "mobile": "9662278990"
 }
 ```
 
@@ -1095,7 +1097,7 @@ POST http://localhost:5001/api/v1/auth/forgot-password
 | Field | Type | Required | Rules |
 |-------|------|----------|-------|
 | email | string | Yes | Valid email |
-| mobile | string | Yes | 10-15 digits |
+| mobile | string | Yes | Exactly 10 digits (without country code) |
 
 > Both email AND mobile are required. They must belong to the same user account. The same OTP is sent to both channels.
 

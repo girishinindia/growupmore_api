@@ -16,7 +16,7 @@ const emailField = z
 
 const mobileField = z
   .string()
-  .regex(/^\d{10,15}$/, 'Mobile must be 10-15 digits (no spaces, dashes, or +)')
+  .regex(/^\d{10}$/, 'Mobile must be exactly 10 digits (without country code)')
   .transform((v) => v.replace(/[\s\-\+]/g, ''));
 
 const passwordField = z
