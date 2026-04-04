@@ -102,6 +102,10 @@ const verifyForgotPasswordSchema = z.object({
   otp: otpField,
 });
 
+const resendForgotPasswordOtpSchema = z.object({
+  email: emailField,
+});
+
 const resetPasswordSchema = z.object({
   resetToken: z.string().uuid('Invalid reset token'),
   newPassword: passwordField,
@@ -161,6 +165,7 @@ module.exports = {
   loginSchema,
   initiateForgotPasswordSchema,
   verifyForgotPasswordSchema,
+  resendForgotPasswordOtpSchema,
   resetPasswordSchema,
   changePasswordSchema,
   initiateChangeEmailSchema,

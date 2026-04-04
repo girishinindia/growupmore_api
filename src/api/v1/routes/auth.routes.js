@@ -40,6 +40,7 @@ const {
   loginSchema,
   initiateForgotPasswordSchema,
   verifyForgotPasswordSchema,
+  resendForgotPasswordOtpSchema,
   resetPasswordSchema,
   changePasswordSchema,
   initiateChangeEmailSchema,
@@ -120,7 +121,7 @@ router.post(
 router.post(
   '/forgot-password/resend-otp',
   authLimiter,
-  validate(resendOtpSchema),
+  validate(resendForgotPasswordOtpSchema),
   authController.resendForgotPasswordOtp,
 );
 

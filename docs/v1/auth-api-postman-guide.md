@@ -143,7 +143,7 @@ sequenceDiagram
 
     Note over Client: If OTP not received after 60 sec
 
-    Client->>API: POST /forgot-password/resend-otp (identifier=email)
+    Client->>API: POST /forgot-password/resend-otp (email)
     API->>Brevo: Resend SAME OTP to email
     API->>SMS: Resend SAME OTP to mobile
     API-->>Client: 200 OK (resent to both)
@@ -1154,7 +1154,7 @@ POST http://localhost:5001/api/v1/auth/forgot-password/resend-otp
 
 ```json
 {
-  "identifier": "girish@example.com"
+  "email": "girish@example.com"
 }
 ```
 
@@ -1162,7 +1162,7 @@ POST http://localhost:5001/api/v1/auth/forgot-password/resend-otp
 
 | Field | Type | Required | Rules |
 |-------|------|----------|-------|
-| identifier | string | Yes | The email used in forgot-password initiation |
+| email | string | Yes | The email used in forgot-password initiation |
 
 **Response — 200 OK (OTP resent to both email and mobile):**
 
