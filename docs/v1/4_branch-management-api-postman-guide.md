@@ -51,17 +51,17 @@ graph TB
 | 1 | `POST /branches` | `branch.create` | Create a branch (needs existing country, state, city) |
 | 2 | `GET /branches` | `branch.read` | List all branches with filters |
 | 3 | `GET /branches/:id` | `branch.read` | Get a single branch by ID |
-| 4 | `PUT /branches/:id` | `branch.update` | Update branch details |
+| 4 | `PATCH/branches/:id` | `branch.update` | Update branch details |
 | 5 | `DELETE /branches/:id` | `branch.delete` | Soft-delete a branch |
 | 6 | `POST /departments` | `department.create` | Create a department |
 | 7 | `GET /departments` | `department.read` | List all departments with filters |
 | 8 | `GET /departments/:id` | `department.read` | Get a single department by ID |
-| 9 | `PUT /departments/:id` | `department.update` | Update department details |
+| 9 | `PATCH/departments/:id` | `department.update` | Update department details |
 | 10 | `DELETE /departments/:id` | `department.delete` | Soft-delete a department |
 | 11 | `POST /branch-departments` | `branch_department.create` | Link branch to department |
 | 12 | `GET /branch-departments` | `branch_department.read` | List all branch-department links |
 | 13 | `GET /branch-departments/:id` | `branch_department.read` | Get a single link by ID |
-| 14 | `PUT /branch-departments/:id` | `branch_department.update` | Update link details |
+| 14 | `PATCH/branch-departments/:id` | `branch_department.update` | Update link details |
 | 15 | `DELETE /branch-departments/:id` | `branch_department.delete` | Soft-delete a link |
 
 ---
@@ -242,7 +242,7 @@ Authorization: Bearer {{access_token}}
 
 ### 1.4 Update Branch
 
-**`PUT /api/v1/branch-management/branches/:id`**
+**`PATCH/api/v1/branch-management/branches/:id`**
 
 **Headers:**
 ```
@@ -437,7 +437,7 @@ Authorization: Bearer {{access_token}}
 
 ### 2.5 Update Department
 
-**`PUT /api/v1/branch-management/departments/:id`**
+**`PATCH/api/v1/branch-management/departments/:id`**
 
 **Headers:**
 ```
@@ -634,7 +634,7 @@ Authorization: Bearer {{access_token}}
 
 ### 3.4 Update Branch Department
 
-**`PUT /api/v1/branch-management/branch-departments/:id`**
+**`PATCH/api/v1/branch-management/branch-departments/:id`**
 
 **Headers:**
 ```

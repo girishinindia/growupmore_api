@@ -46,22 +46,22 @@ graph LR
 | 1.1 | POST | `/subjects` | `subject.create` | Create new subject |
 | 1.2 | GET | `/subjects` | `subject.read` | List all subjects |
 | 1.3 | GET | `/subjects/:id` | `subject.read` | Get subject by ID |
-| 1.4 | PUT | `/subjects/:id` | `subject.update` | Update subject |
+| 1.4 | PATCH | `/subjects/:id` | `subject.update` | Update subject |
 | 1.5 | DELETE | `/subjects/:id` | `subject.delete` | Delete subject |
 | 2.1 | POST | `/chapters` | `chapter.create` | Create new chapter |
 | 2.2 | GET | `/chapters` | `chapter.read` | List all chapters |
 | 2.3 | GET | `/chapters/:id` | `chapter.read` | Get chapter by ID |
-| 2.4 | PUT | `/chapters/:id` | `chapter.update` | Update chapter |
+| 2.4 | PATCH | `/chapters/:id` | `chapter.update` | Update chapter |
 | 2.5 | DELETE | `/chapters/:id` | `chapter.delete` | Delete chapter |
 | 3.1 | POST | `/topics` | `topic.create` | Create new topic |
 | 3.2 | GET | `/topics` | `topic.read` | List all topics |
 | 3.3 | GET | `/topics/:id` | `topic.read` | Get topic by ID |
-| 3.4 | PUT | `/topics/:id` | `topic.update` | Update topic |
+| 3.4 | PATCH | `/topics/:id` | `topic.update` | Update topic |
 | 3.5 | DELETE | `/topics/:id` | `topic.delete` | Delete topic |
 | 4.1 | POST | `/sub-topics` | `sub_topic.create` | Create new sub-topic |
 | 4.2 | GET | `/sub-topics` | `sub_topic.read` | List all sub-topics |
 | 4.3 | GET | `/sub-topics/:id` | `sub_topic.read` | Get sub-topic by ID |
-| 4.4 | PUT | `/sub-topics/:id` | `sub_topic.update` | Update sub-topic |
+| 4.4 | PATCH | `/sub-topics/:id` | `sub_topic.update` | Update sub-topic |
 | 4.5 | DELETE | `/sub-topics/:id` | `sub_topic.delete` | Delete sub-topic |
 
 ---
@@ -250,7 +250,7 @@ Content-Type: application/json
 
 **Request:**
 ```
-PUT /api/v1/material-management/subjects/550e8400-e29b-41d4-a716-446655440000
+PATCH /api/v1/material-management/subjects/550e8400-e29b-41d4-a716-446655440000
 ```
 
 **Headers:**
@@ -494,7 +494,7 @@ Content-Type: application/json
 
 **Request:**
 ```
-PUT /api/v1/material-management/chapters/660e8400-e29b-41d4-a716-446655440001
+PATCH /api/v1/material-management/chapters/660e8400-e29b-41d4-a716-446655440001
 ```
 
 **Headers:**
@@ -775,7 +775,7 @@ Content-Type: application/json
 
 **Request:**
 ```
-PUT /api/v1/material-management/topics/770e8400-e29b-41d4-a716-446655440002
+PATCH /api/v1/material-management/topics/770e8400-e29b-41d4-a716-446655440002
 ```
 
 **Headers:**
@@ -1078,7 +1078,7 @@ Content-Type: application/json
 
 **Request:**
 ```
-PUT /api/v1/material-management/sub-topics/880e8400-e29b-41d4-a716-446655440003
+PATCH /api/v1/material-management/sub-topics/880e8400-e29b-41d4-a716-446655440003
 ```
 
 **Headers:**
@@ -1193,7 +1193,7 @@ Content-Type: application/json
 4. **Create Topic** — POST `/topics` with `chapterId` reference
 5. **Create Sub-Topic** — POST `/sub-topics` with `topicId` reference
 6. **List Entities** — GET requests with various filters and pagination
-7. **Update Entities** — PUT requests to modify specific records
+7. **Update Entities** — PATCH requests to modify specific records
 8. **Delete Entities** — DELETE requests to soft-delete records
 
 ---

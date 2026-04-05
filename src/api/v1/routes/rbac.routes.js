@@ -33,7 +33,7 @@ router.use(authenticate);
 router.get('/roles', authorize('role.read'), validate(roleListQuerySchema, 'query'), rbacController.getRoles);
 router.get('/roles/:id', authorize('role.read'), validate(idParamSchema, 'params'), rbacController.getRoleById);
 router.post('/roles', authorize('role.create'), validate(createRoleSchema), rbacController.createRole);
-router.put('/roles/:id', authorize('role.update'), validate(idParamSchema, 'params'), validate(updateRoleSchema), rbacController.updateRole);
+router.patch('/roles/:id', authorize('role.update'), validate(idParamSchema, 'params'), validate(updateRoleSchema), rbacController.updateRole);
 router.delete('/roles/:id', authorize('role.delete'), validate(idParamSchema, 'params'), rbacController.deleteRole);
 router.post('/roles/:id/restore', authorize('role.update'), validate(idParamSchema, 'params'), validate(restoreRoleSchema), rbacController.restoreRole);
 
@@ -53,7 +53,7 @@ router.delete('/roles/:roleId/permissions', authorize('permission.manage'), vali
 
 router.get('/user-role-assignments', authorize('role.assign'), validate(assignmentListQuerySchema, 'query'), rbacController.getUserRoleAssignments);
 router.post('/user-role-assignments', authorize('role.assign'), validate(assignRoleToUserSchema), rbacController.assignRoleToUser);
-router.put('/user-role-assignments/:id', authorize('role.assign'), validate(idParamSchema, 'params'), validate(updateAssignmentSchema), rbacController.updateAssignment);
+router.patch('/user-role-assignments/:id', authorize('role.assign'), validate(idParamSchema, 'params'), validate(updateAssignmentSchema), rbacController.updateAssignment);
 router.delete('/user-role-assignments/:id', authorize('role.assign'), validate(idParamSchema, 'params'), rbacController.revokeAssignment);
 router.post('/user-role-assignments/:id/restore', authorize('role.assign'), validate(idParamSchema, 'params'), rbacController.restoreAssignment);
 

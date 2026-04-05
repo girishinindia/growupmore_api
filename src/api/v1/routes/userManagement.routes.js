@@ -75,7 +75,7 @@ router.post(
   ctrl.createUser
 );
 
-router.put(
+router.patch(
   '/users/:id',
   authorize('user.update'),
   validate(idParamSchema, 'params'),
@@ -115,7 +115,7 @@ router.post(
   ctrl.createUserProfile
 );
 
-router.put(
+router.patch(
   '/user-profiles/:id',
   authorize('user_profile.update'),
   validate(idParamSchema, 'params'),
@@ -156,7 +156,7 @@ router.post(
   ctrl.createUserEducation
 );
 
-router.put(
+router.patch(
   '/user-education/:id',
   authorize('user_education.update'),
   validate(idParamSchema, 'params'),
@@ -196,7 +196,7 @@ router.post(
   ctrl.createUserExperience
 );
 
-router.put(
+router.patch(
   '/user-experience/:id',
   authorize('user_experience.update'),
   validate(idParamSchema, 'params'),
@@ -235,7 +235,7 @@ router.post(
   ctrl.createUserSocialMedia
 );
 
-router.put(
+router.patch(
   '/user-social-medias/:id',
   authorize('user_social_media.update'),
   validate(idParamSchema, 'params'),
@@ -275,7 +275,7 @@ router.post(
   ctrl.createUserSkill
 );
 
-router.put(
+router.patch(
   '/user-skills/:id',
   authorize('user_skill.update'),
   validate(idParamSchema, 'params'),
@@ -315,7 +315,7 @@ router.post(
   ctrl.createUserLanguage
 );
 
-router.put(
+router.patch(
   '/user-languages/:id',
   authorize('user_language.update'),
   validate(idParamSchema, 'params'),
@@ -355,7 +355,7 @@ router.post(
   ctrl.createUserDocument
 );
 
-router.put(
+router.patch(
   '/user-documents/:id',
   authorize('user_document.update'),
   validate(idParamSchema, 'params'),
@@ -396,7 +396,7 @@ router.post(
   ctrl.createUserProject
 );
 
-router.put(
+router.patch(
   '/user-projects/:id',
   authorize('user_project.update'),
   validate(idParamSchema, 'params'),

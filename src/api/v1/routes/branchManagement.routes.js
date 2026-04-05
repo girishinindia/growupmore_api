@@ -35,7 +35,7 @@ router.use(authenticate);
 router.get('/branches', authorize('branch.read'), validate(branchListQuerySchema, 'query'), ctrl.getBranches);
 router.get('/branches/:id', authorize('branch.read'), validate(idParamSchema, 'params'), ctrl.getBranchById);
 router.post('/branches', authorize('branch.create'), validate(createBranchSchema), ctrl.createBranch);
-router.put('/branches/:id', authorize('branch.update'), validate(idParamSchema, 'params'), validate(updateBranchSchema), ctrl.updateBranch);
+router.patch('/branches/:id', authorize('branch.update'), validate(idParamSchema, 'params'), validate(updateBranchSchema), ctrl.updateBranch);
 router.delete('/branches/:id', authorize('branch.delete'), validate(idParamSchema, 'params'), ctrl.deleteBranch);
 
 // ============================================================================
@@ -45,7 +45,7 @@ router.delete('/branches/:id', authorize('branch.delete'), validate(idParamSchem
 router.get('/departments', authorize('department.read'), validate(departmentListQuerySchema, 'query'), ctrl.getDepartments);
 router.get('/departments/:id', authorize('department.read'), validate(idParamSchema, 'params'), ctrl.getDepartmentById);
 router.post('/departments', authorize('department.create'), validate(createDepartmentSchema), ctrl.createDepartment);
-router.put('/departments/:id', authorize('department.update'), validate(idParamSchema, 'params'), validate(updateDepartmentSchema), ctrl.updateDepartment);
+router.patch('/departments/:id', authorize('department.update'), validate(idParamSchema, 'params'), validate(updateDepartmentSchema), ctrl.updateDepartment);
 router.delete('/departments/:id', authorize('department.delete'), validate(idParamSchema, 'params'), ctrl.deleteDepartment);
 
 // ============================================================================
@@ -55,7 +55,7 @@ router.delete('/departments/:id', authorize('department.delete'), validate(idPar
 router.get('/branch-departments', authorize('branch_department.read'), validate(branchDepartmentListQuerySchema, 'query'), ctrl.getBranchDepartments);
 router.get('/branch-departments/:id', authorize('branch_department.read'), validate(idParamSchema, 'params'), ctrl.getBranchDepartmentById);
 router.post('/branch-departments', authorize('branch_department.create'), validate(createBranchDepartmentSchema), ctrl.createBranchDepartment);
-router.put('/branch-departments/:id', authorize('branch_department.update'), validate(idParamSchema, 'params'), validate(updateBranchDepartmentSchema), ctrl.updateBranchDepartment);
+router.patch('/branch-departments/:id', authorize('branch_department.update'), validate(idParamSchema, 'params'), validate(updateBranchDepartmentSchema), ctrl.updateBranchDepartment);
 router.delete('/branch-departments/:id', authorize('branch_department.delete'), validate(idParamSchema, 'params'), ctrl.deleteBranchDepartment);
 
 module.exports = router;

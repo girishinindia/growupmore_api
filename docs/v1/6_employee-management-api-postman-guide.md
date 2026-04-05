@@ -51,7 +51,7 @@ graph TB
 | 1 | `POST /employee-profiles` | `employee_profile.create` | Create an employee profile |
 | 2 | `GET /employee-profiles` | `employee_profile.read` | List all employees with filters |
 | 3 | `GET /employee-profiles/:id` | `employee_profile.read` | Get a single employee by ID |
-| 4 | `PUT /employee-profiles/:id` | `employee_profile.update` | Update employee details |
+| 4 | `PATCH/employee-profiles/:id` | `employee_profile.update` | Update employee details |
 | 5 | `DELETE /employee-profiles/:id` | `employee_profile.delete` | Soft-delete an employee |
 
 ---
@@ -328,7 +328,7 @@ Authorization: Bearer {{access_token}}
 
 ### 1.5 Update Employee Profile
 
-**`PUT /api/v1/employee-management/employee-profiles/:id`**
+**`PATCH/api/v1/employee-management/employee-profiles/:id`**
 
 **Headers:**
 ```
@@ -370,7 +370,7 @@ pm.test("Success is true", () => pm.expect(json.success).to.equal(true));
 
 ### 1.6 Update Employee to Inactive
 
-**`PUT /api/v1/employee-management/employee-profiles/:id`**
+**`PATCH/api/v1/employee-management/employee-profiles/:id`**
 
 **Body (JSON):**
 ```json

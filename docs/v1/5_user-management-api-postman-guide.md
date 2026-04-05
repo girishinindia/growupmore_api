@@ -52,47 +52,47 @@ graph TB
 | 1 | `POST /users` | `user.create` | Create a user (needs existing country) |
 | 2 | `GET /users` | `user.read` | List all users with filters |
 | 3 | `GET /users/:id` | `user.read` | Get a single user by ID |
-| 4 | `PUT /users/:id` | `user.update` | Update user details |
+| 4 | `PATCH/users/:id` | `user.update` | Update user details |
 | 5 | `DELETE /users/:id` | `user.delete` | Soft-delete a user |
 | 6 | `POST /user-profiles` | `user_profile.create` | Create user profile with photos |
 | 7 | `GET /user-profiles` | `user_profile.read` | List all profiles with filters |
 | 8 | `GET /user-profiles/:id` | `user_profile.read` | Get a single profile by ID |
-| 9 | `PUT /user-profiles/:id` | `user_profile.update` | Update profile details |
+| 9 | `PATCH/user-profiles/:id` | `user_profile.update` | Update profile details |
 | 10 | `DELETE /user-profiles/:id` | `user_profile.delete` | Soft-delete a profile |
 | 11 | `POST /user-education` | `user_education.create` | Create education record with certificate |
 | 12 | `GET /user-education` | `user_education.read` | List all education records with filters |
 | 13 | `GET /user-education/:id` | `user_education.read` | Get a single education record by ID |
-| 14 | `PUT /user-education/:id` | `user_education.update` | Update education details |
+| 14 | `PATCH/user-education/:id` | `user_education.update` | Update education details |
 | 15 | `DELETE /user-education/:id` | `user_education.delete` | Soft-delete education record |
 | 16 | `POST /user-experience` | `user_experience.create` | Create experience record |
 | 17 | `GET /user-experience` | `user_experience.read` | List all experience records with filters |
 | 18 | `GET /user-experience/:id` | `user_experience.read` | Get a single experience record by ID |
-| 19 | `PUT /user-experience/:id` | `user_experience.update` | Update experience details |
+| 19 | `PATCH/user-experience/:id` | `user_experience.update` | Update experience details |
 | 20 | `DELETE /user-experience/:id` | `user_experience.delete` | Soft-delete experience record |
 | 21 | `POST /user-social-medias` | `user_social_media.create` | Create social media record |
 | 22 | `GET /user-social-medias` | `user_social_media.read` | List all social media records with filters |
 | 23 | `GET /user-social-medias/:id` | `user_social_media.read` | Get a single social media record by ID |
-| 24 | `PUT /user-social-medias/:id` | `user_social_media.update` | Update social media details |
+| 24 | `PATCH/user-social-medias/:id` | `user_social_media.update` | Update social media details |
 | 25 | `DELETE /user-social-medias/:id` | `user_social_media.delete` | Soft-delete social media record |
 | 26 | `POST /user-skills` | `user_skill.create` | Create skill record with certificate |
 | 27 | `GET /user-skills` | `user_skill.read` | List all skill records with filters |
 | 28 | `GET /user-skills/:id` | `user_skill.read` | Get a single skill record by ID |
-| 29 | `PUT /user-skills/:id` | `user_skill.update` | Update skill details |
+| 29 | `PATCH/user-skills/:id` | `user_skill.update` | Update skill details |
 | 30 | `DELETE /user-skills/:id` | `user_skill.delete` | Soft-delete skill record |
 | 31 | `POST /user-languages` | `user_language.create` | Create language record |
 | 32 | `GET /user-languages` | `user_language.read` | List all language records with filters |
 | 33 | `GET /user-languages/:id` | `user_language.read` | Get a single language record by ID |
-| 34 | `PUT /user-languages/:id` | `user_language.update` | Update language details |
+| 34 | `PATCH/user-languages/:id` | `user_language.update` | Update language details |
 | 35 | `DELETE /user-languages/:id` | `user_language.delete` | Soft-delete language record |
 | 36 | `POST /user-documents` | `user_document.create` | Create document record with file |
 | 37 | `GET /user-documents` | `user_document.read` | List all document records with filters |
 | 38 | `GET /user-documents/:id` | `user_document.read` | Get a single document record by ID |
-| 39 | `PUT /user-documents/:id` | `user_document.update` | Update document details |
+| 39 | `PATCH/user-documents/:id` | `user_document.update` | Update document details |
 | 40 | `DELETE /user-documents/:id` | `user_document.delete` | Soft-delete document record |
 | 41 | `POST /user-projects` | `user_project.create` | Create project record with thumbnail |
 | 42 | `GET /user-projects` | `user_project.read` | List all project records with filters |
 | 43 | `GET /user-projects/:id` | `user_project.read` | Get a single project record by ID |
-| 44 | `PUT /user-projects/:id` | `user_project.update` | Update project details |
+| 44 | `PATCH/user-projects/:id` | `user_project.update` | Update project details |
 | 45 | `DELETE /user-projects/:id` | `user_project.delete` | Soft-delete project record |
 
 ---
@@ -264,7 +264,7 @@ Authorization: Bearer {{access_token}}
 
 ### 1.4 Update User
 
-**`PUT /api/v1/user-management/users/:id`**
+**`PATCH/api/v1/user-management/users/:id`**
 
 **Headers:**
 ```
@@ -545,7 +545,7 @@ Authorization: Bearer {{access_token}}
 
 ### 2.4 Update User Profile
 
-**`PUT /api/v1/user-management/user-profiles/:id`**
+**`PATCH/api/v1/user-management/user-profiles/:id`**
 
 **Headers:**
 ```
@@ -758,7 +758,7 @@ Authorization: Bearer {{access_token}}
 
 ### 3.4 Update User Education
 
-**`PUT /api/v1/user-management/user-education/:id`**
+**`PATCH/api/v1/user-management/user-education/:id`**
 
 **Headers:**
 ```
@@ -976,7 +976,7 @@ Authorization: Bearer {{access_token}}
 
 ### 4.4 Update User Experience
 
-**`PUT /api/v1/user-management/user-experience/:id`**
+**`PATCH/api/v1/user-management/user-experience/:id`**
 
 **Headers:**
 ```
@@ -1170,7 +1170,7 @@ Authorization: Bearer {{access_token}}
 
 ### 5.4 Update User Social Media
 
-**`PUT /api/v1/user-management/user-social-medias/:id`**
+**`PATCH/api/v1/user-management/user-social-medias/:id`**
 
 **Headers:**
 ```
@@ -1366,7 +1366,7 @@ Authorization: Bearer {{access_token}}
 
 ### 6.4 Update User Skill
 
-**`PUT /api/v1/user-management/user-skills/:id`**
+**`PATCH/api/v1/user-management/user-skills/:id`**
 
 **Headers:**
 ```
@@ -1564,7 +1564,7 @@ Authorization: Bearer {{access_token}}
 
 ### 7.4 Update User Language
 
-**`PUT /api/v1/user-management/user-languages/:id`**
+**`PATCH/api/v1/user-management/user-languages/:id`**
 
 **Headers:**
 ```
@@ -1771,7 +1771,7 @@ Authorization: Bearer {{access_token}}
 
 ### 8.4 Update User Document
 
-**`PUT /api/v1/user-management/user-documents/:id`**
+**`PATCH/api/v1/user-management/user-documents/:id`**
 
 **Headers:**
 ```
@@ -2046,7 +2046,7 @@ Authorization: Bearer {{access_token}}
 
 ### 9.4 Update User Project
 
-**`PUT /api/v1/user-management/user-projects/:id`**
+**`PATCH/api/v1/user-management/user-projects/:id`**
 
 **Headers:**
 ```

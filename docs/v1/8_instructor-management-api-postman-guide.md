@@ -51,7 +51,7 @@ graph TB
 | 1 | `POST /instructor-profiles` | `instructor_profile.create` | Create an instructor profile |
 | 2 | `GET /instructor-profiles` | `instructor_profile.read` | List all instructors with filters |
 | 3 | `GET /instructor-profiles/:id` | `instructor_profile.read` | Get a single instructor by ID |
-| 4 | `PUT /instructor-profiles/:id` | `instructor_profile.update` | Update instructor details |
+| 4 | `PATCH/instructor-profiles/:id` | `instructor_profile.update` | Update instructor details |
 | 5 | `DELETE /instructor-profiles/:id` | `instructor_profile.delete` | Soft-delete an instructor |
 
 ---
@@ -377,7 +377,7 @@ Authorization: Bearer {{access_token}}
 
 ### 1.6 Update Instructor Profile
 
-**`PUT /api/v1/instructor-management/instructor-profiles/:id`**
+**`PATCH/api/v1/instructor-management/instructor-profiles/:id`**
 
 **Headers:**
 ```
@@ -420,7 +420,7 @@ pm.test("Success is true", () => pm.expect(json.success).to.equal(true));
 
 ### 1.7 Update Instructor Availability
 
-**`PUT /api/v1/instructor-management/instructor-profiles/:id`**
+**`PATCH/api/v1/instructor-management/instructor-profiles/:id`**
 
 **Body (JSON):**
 ```json
@@ -434,7 +434,7 @@ pm.test("Success is true", () => pm.expect(json.success).to.equal(true));
 
 ### 1.8 Update Instructor Payment Model
 
-**`PUT /api/v1/instructor-management/instructor-profiles/:id`**
+**`PATCH/api/v1/instructor-management/instructor-profiles/:id`**
 
 **Body (JSON):**
 ```json
@@ -450,7 +450,7 @@ pm.test("Success is true", () => pm.expect(json.success).to.equal(true));
 
 ### 1.9 Update Instructor to Inactive
 
-**`PUT /api/v1/instructor-management/instructor-profiles/:id`**
+**`PATCH/api/v1/instructor-management/instructor-profiles/:id`**
 
 **Body (JSON):**
 ```json

@@ -19,7 +19,7 @@ graph TB
     end
     subgraph "Middleware Pipeline"
         M1[authenticate - JWT] --> M2[authorize - Permission Check]
-        M2 --> M3["uploadFlagImage - Multer (POST/PUT countries only)"]
+        M2 --> M3["uploadFlagImage - Multer (POST/PATCH countries only)"]
         M3 --> M4[validate - Zod Schema]
     end
     subgraph "Business Layer"
@@ -82,17 +82,17 @@ sequenceDiagram
 | 1 | `GET /api/v1/master-data/countries` | `country.read` | List all countries |
 | 2 | `GET /api/v1/master-data/countries/:id` | `country.read` | Get country by ID |
 | 3 | `POST /api/v1/master-data/countries` | `country.create` | Create country (with optional flag image upload) |
-| 4 | `PUT /api/v1/master-data/countries/:id` | `country.update` | Update country (with optional flag image upload) |
+| 4 | `PATCH/api/v1/master-data/countries/:id` | `country.update` | Update country (with optional flag image upload) |
 | 5 | `DELETE /api/v1/master-data/countries/:id` | `country.delete` | Soft-delete country (auto-cleans CDN image) |
 | 6 | `GET /api/v1/master-data/states` | `state.read` | List all states |
 | 7 | `GET /api/v1/master-data/states/:id` | `state.read` | Get state by ID |
 | 8 | `POST /api/v1/master-data/states` | `state.create` | Create state |
-| 9 | `PUT /api/v1/master-data/states/:id` | `state.update` | Update state |
+| 9 | `PATCH/api/v1/master-data/states/:id` | `state.update` | Update state |
 | 10 | `DELETE /api/v1/master-data/states/:id` | `state.delete` | Soft-delete state |
 | 11 | `GET /api/v1/master-data/cities` | `city.read` | List all cities |
 | 12 | `GET /api/v1/master-data/cities/:id` | `city.read` | Get city by ID |
 | 13 | `POST /api/v1/master-data/cities` | `city.create` | Create city |
-| 14 | `PUT /api/v1/master-data/cities/:id` | `city.update` | Update city |
+| 14 | `PATCH/api/v1/master-data/cities/:id` | `city.update` | Update city |
 | 15 | `DELETE /api/v1/master-data/cities/:id` | `city.delete` | Soft-delete city |
 
 ---
@@ -105,7 +105,7 @@ sequenceDiagram
 
 > **For JSON requests:** Add `Content-Type: application/json`
 >
-> **For image uploads (POST/PUT countries):** Use `Content-Type: multipart/form-data` (Postman sets this automatically when you select form-data)
+> **For image uploads (POST/PATCH countries):** Use `Content-Type: multipart/form-data` (Postman sets this automatically when you select form-data)
 >
 > **Note:** Get the `access_token` from the `/api/v1/auth/login` response. Super admin or admin token is required for write operations.
 
@@ -369,7 +369,7 @@ POST http://localhost:5001/api/v1/master-data/countries
 ## 4. Update Country
 
 ```
-PUT http://localhost:5001/api/v1/master-data/countries/1
+PATCH http://localhost:5001/api/v1/master-data/countries/1
 ```
 
 **Permission Required:** `country.update`
@@ -635,7 +635,7 @@ POST http://localhost:5001/api/v1/master-data/states
 ## 9. Update State
 
 ```
-PUT http://localhost:5001/api/v1/master-data/states/1
+PATCH http://localhost:5001/api/v1/master-data/states/1
 ```
 
 **Permission Required:** `state.update`
@@ -869,7 +869,7 @@ POST http://localhost:5001/api/v1/master-data/cities
 ## 14. Update City
 
 ```
-PUT http://localhost:5001/api/v1/master-data/cities/1
+PATCH http://localhost:5001/api/v1/master-data/cities/1
 ```
 
 **Permission Required:** `city.update`

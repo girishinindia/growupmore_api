@@ -47,7 +47,7 @@ router.post(
   ctrl.createEmployeeProfile
 );
 
-router.put(
+router.patch(
   '/:id',
   authorize('employee_profile.update'),
   validate(idParamSchema, 'params'),

@@ -52,7 +52,7 @@ graph TB
 | 1 | `POST /student-profiles` | `student_profile.create` | Create a student profile with optional resume |
 | 2 | `GET /student-profiles` | `student_profile.read` | List all students with filters |
 | 3 | `GET /student-profiles/:id` | `student_profile.read` | Get a single student by ID |
-| 4 | `PUT /student-profiles/:id` | `student_profile.update` | Update student details and resume |
+| 4 | `PATCH/student-profiles/:id` | `student_profile.update` | Update student details and resume |
 | 5 | `DELETE /student-profiles/:id` | `student_profile.delete` | Soft-delete a student |
 
 ---
@@ -350,7 +350,7 @@ Authorization: Bearer {{access_token}}
 
 ### 1.5 Update Student Profile
 
-**`PUT /api/v1/student-management/student-profiles/:id`**
+**`PATCH/api/v1/student-management/student-profiles/:id`**
 
 **Headers:**
 ```
@@ -393,7 +393,7 @@ pm.test("Success is true", () => pm.expect(json.success).to.equal(true));
 
 ### 1.6 Update Student Profile with Resume (Multipart)
 
-**`PUT /api/v1/student-management/student-profiles/:id`**
+**`PATCH/api/v1/student-management/student-profiles/:id`**
 
 **Headers:**
 ```
@@ -431,7 +431,7 @@ Value: [PDF/JPEG/PNG/WebP file - max 5MB: updated-resume.pdf]
 
 ### 1.7 Update Student to Inactive
 
-**`PUT /api/v1/student-management/student-profiles/:id`**
+**`PATCH/api/v1/student-management/student-profiles/:id`**
 
 **Body (JSON):**
 ```json

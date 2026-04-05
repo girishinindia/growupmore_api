@@ -30,7 +30,7 @@ graph TB
         V -->|Fail| ERR[404 Not Found]
     end
     subgraph "CDN Layer"
-        BS -->|"PUT /zone/path"| BUNNY["Bunny.net Storage"]
+        BS -->|"PATCH /zone/path"| BUNNY["Bunny.net Storage"]
         BUNNY --> CDN["Bunny CDN (cdn.growupmore.com)"]
     end
     subgraph "Data Layer"
@@ -50,17 +50,17 @@ graph TB
 
 | # | Entity | Endpoint | Method | Permission | Purpose |
 |---|--------|----------|--------|-----------|---------|
-| 1-5 | Skills | GET, GET/:id, POST, PUT/:id, DELETE/:id | — | skill.* | CRUD + icon upload |
-| 6-10 | Languages | GET, GET/:id, POST, PUT/:id, DELETE/:id | — | language.* | JSON CRUD |
-| 11-15 | Education Levels | GET, GET/:id, POST, PUT/:id, DELETE/:id | — | education_level.* | JSON CRUD |
-| 16-20 | Document Types | GET, GET/:id, POST, PUT/:id, DELETE/:id | — | document_type.* | JSON CRUD |
-| 21-25 | Documents | GET, GET/:id, POST, PUT/:id, DELETE/:id | — | document.* | JSON CRUD + parent validation |
-| 26-30 | Designations | GET, GET/:id, POST, PUT/:id, DELETE/:id | — | designation.* | JSON CRUD |
-| 31-35 | Specializations | GET, GET/:id, POST, PUT/:id, DELETE/:id | — | specialization.* | CRUD + icon upload |
-| 36-40 | Learning Goals | GET, GET/:id, POST, PUT/:id, DELETE/:id | — | learning_goal.* | CRUD + icon upload |
-| 41-45 | Social Medias | GET, GET/:id, POST, PUT/:id, DELETE/:id | — | social_media.* | CRUD + icon upload |
-| 46-50 | Categories | GET, GET/:id, POST, PUT/:id, DELETE/:id | — | category.* | CRUD + dual image upload |
-| 51-55 | Sub Categories | GET, GET/:id, POST, PUT/:id, DELETE/:id | — | sub_category.* | CRUD + dual image upload + parent validation |
+| 1-5 | Skills | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | skill.* | CRUD + icon upload |
+| 6-10 | Languages | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | language.* | JSON CRUD |
+| 11-15 | Education Levels | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | education_level.* | JSON CRUD |
+| 16-20 | Document Types | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | document_type.* | JSON CRUD |
+| 21-25 | Documents | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | document.* | JSON CRUD + parent validation |
+| 26-30 | Designations | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | designation.* | JSON CRUD |
+| 31-35 | Specializations | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | specialization.* | CRUD + icon upload |
+| 36-40 | Learning Goals | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | learning_goal.* | CRUD + icon upload |
+| 41-45 | Social Medias | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | social_media.* | CRUD + icon upload |
+| 46-50 | Categories | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | category.* | CRUD + dual image upload |
+| 51-55 | Sub Categories | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | sub_category.* | CRUD + dual image upload + parent validation |
 
 ---
 
@@ -82,7 +82,7 @@ graph TB
 
 ### Postman Setup for Multipart Form-Data
 
-1. Set method to **POST** or **PUT**, URL to endpoint
+1. Set method to **POST** or **PATCH**, URL to endpoint
 2. Go to **Body** tab → select **form-data**
 3. Add text fields for all JSON properties
 4. For icon/image fields: change type dropdown to **File** → select image file
@@ -264,7 +264,7 @@ POST http://localhost:5001/api/v1/master-data/skills
 ### 1.4 Update Skill
 
 ```
-PUT http://localhost:5001/api/v1/master-data/skills/1
+PATCH http://localhost:5001/api/v1/master-data/skills/1
 ```
 
 **Permission Required:** `skill.update`
@@ -451,7 +451,7 @@ POST http://localhost:5001/api/v1/master-data/languages
 ### 2.4 Update Language
 
 ```
-PUT http://localhost:5001/api/v1/master-data/languages/1
+PATCH http://localhost:5001/api/v1/master-data/languages/1
 ```
 
 **Permission Required:** `language.update`
@@ -633,7 +633,7 @@ POST http://localhost:5001/api/v1/master-data/education-levels
 ### 3.4 Update Education Level
 
 ```
-PUT http://localhost:5001/api/v1/master-data/education-levels/1
+PATCH http://localhost:5001/api/v1/master-data/education-levels/1
 ```
 
 **Permission Required:** `education_level.update`
@@ -796,7 +796,7 @@ POST http://localhost:5001/api/v1/master-data/document-types
 ### 4.4 Update Document Type
 
 ```
-PUT http://localhost:5001/api/v1/master-data/document-types/1
+PATCH http://localhost:5001/api/v1/master-data/document-types/1
 ```
 
 **Permission Required:** `document_type.update`
@@ -975,7 +975,7 @@ POST http://localhost:5001/api/v1/master-data/documents
 ### 5.4 Update Document
 
 ```
-PUT http://localhost:5001/api/v1/master-data/documents/1
+PATCH http://localhost:5001/api/v1/master-data/documents/1
 ```
 
 **Permission Required:** `document.update`
@@ -1152,7 +1152,7 @@ POST http://localhost:5001/api/v1/master-data/designations
 ### 6.4 Update Designation
 
 ```
-PUT http://localhost:5001/api/v1/master-data/designations/1
+PATCH http://localhost:5001/api/v1/master-data/designations/1
 ```
 
 **Permission Required:** `designation.update`
@@ -1337,7 +1337,7 @@ POST http://localhost:5001/api/v1/master-data/specializations
 ### 7.4 Update Specialization
 
 ```
-PUT http://localhost:5001/api/v1/master-data/specializations/1
+PATCH http://localhost:5001/api/v1/master-data/specializations/1
 ```
 
 **Permission Required:** `specialization.update`
@@ -1528,7 +1528,7 @@ POST http://localhost:5001/api/v1/master-data/learning-goals
 ### 8.4 Update Learning Goal
 
 ```
-PUT http://localhost:5001/api/v1/master-data/learning-goals/1
+PATCH http://localhost:5001/api/v1/master-data/learning-goals/1
 ```
 
 **Permission Required:** `learning_goal.update`
@@ -1736,7 +1736,7 @@ POST http://localhost:5001/api/v1/master-data/social-medias
 ### 9.4 Update Social Media
 
 ```
-PUT http://localhost:5001/api/v1/master-data/social-medias/1
+PATCH http://localhost:5001/api/v1/master-data/social-medias/1
 ```
 
 **Permission Required:** `social_media.update`
@@ -1938,7 +1938,7 @@ POST http://localhost:5001/api/v1/master-data/categories
 ### 10.4 Update Category
 
 ```
-PUT http://localhost:5001/api/v1/master-data/categories/1
+PATCH http://localhost:5001/api/v1/master-data/categories/1
 ```
 
 **Permission Required:** `category.update`
@@ -2151,7 +2151,7 @@ POST http://localhost:5001/api/v1/master-data/sub-categories
 ### 11.4 Update Sub Category
 
 ```
-PUT http://localhost:5001/api/v1/master-data/sub-categories/1
+PATCH http://localhost:5001/api/v1/master-data/sub-categories/1
 ```
 
 **Permission Required:** `sub_category.update`

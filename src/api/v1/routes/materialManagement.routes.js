@@ -46,7 +46,7 @@ router.post(
 );
 
 // PUT /subjects/:id — Update subject
-router.put(
+router.patch(
   '/subjects/:id',
   authorize('subject.update'),
   validate(idParamSchema, 'params'),
@@ -91,7 +91,7 @@ router.post(
 );
 
 // PUT /chapters/:id — Update chapter
-router.put(
+router.patch(
   '/chapters/:id',
   authorize('chapter.update'),
   validate(idParamSchema, 'params'),
@@ -136,7 +136,7 @@ router.post(
 );
 
 // PUT /topics/:id — Update topic
-router.put(
+router.patch(
   '/topics/:id',
   authorize('topic.update'),
   validate(idParamSchema, 'params'),
@@ -181,7 +181,7 @@ router.post(
 );
 
 // PUT /sub-topics/:id — Update sub-topic
-router.put(
+router.patch(
   '/sub-topics/:id',
   authorize('sub_topic.update'),
   validate(idParamSchema, 'params'),

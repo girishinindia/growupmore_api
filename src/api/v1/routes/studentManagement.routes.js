@@ -37,7 +37,7 @@ router.use(authenticate);
 router.get('/student-profiles', authorize('student_profile.read'), validate(studentProfileListQuerySchema, 'query'), ctrl.getStudentProfiles);
 router.get('/student-profiles/:id', authorize('student_profile.read'), validate(idParamSchema, 'params'), ctrl.getStudentProfileById);
 router.post('/student-profiles', authorize('student_profile.create'), validate(createStudentProfileSchema), ctrl.createStudentProfile);
-router.put('/student-profiles/:id', authorize('student_profile.update'), validate(idParamSchema, 'params'), validate(updateStudentProfileSchema), ctrl.updateStudentProfile);
+router.patch('/student-profiles/:id', authorize('student_profile.update'), validate(idParamSchema, 'params'), validate(updateStudentProfileSchema), ctrl.updateStudentProfile);
 router.delete('/student-profiles/:id', authorize('student_profile.delete'), validate(idParamSchema, 'params'), ctrl.deleteStudentProfile);
 
 // ============================================================================

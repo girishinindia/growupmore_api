@@ -92,7 +92,7 @@ graph TD
 | 1 | `GET /api/v1/rbac/roles` | `role.read` | List all roles |
 | 2 | `GET /api/v1/rbac/roles/:id` | `role.read` | Get role by ID |
 | 3 | `POST /api/v1/rbac/roles` | `role.create` | Create a new role |
-| 4 | `PUT /api/v1/rbac/roles/:id` | `role.update` | Update a role |
+| 4 | `PATCH/api/v1/rbac/roles/:id` | `role.update` | Update a role |
 | 5 | `DELETE /api/v1/rbac/roles/:id` | `role.delete` | Soft-delete a role |
 | 6 | `POST /api/v1/rbac/roles/:id/restore` | `role.update` | Restore a deleted role |
 | 7 | `GET /api/v1/rbac/roles/:roleId/permissions` | `permission.manage` | List role permissions |
@@ -102,7 +102,7 @@ graph TD
 | 11 | `DELETE /api/v1/rbac/roles/:roleId/permissions` | `permission.manage` | Remove all permissions from role |
 | 12 | `GET /api/v1/rbac/user-role-assignments` | `role.assign` | List user role assignments |
 | 13 | `POST /api/v1/rbac/user-role-assignments` | `role.assign` | Assign role to user |
-| 14 | `PUT /api/v1/rbac/user-role-assignments/:id` | `role.assign` | Update assignment |
+| 14 | `PATCH/api/v1/rbac/user-role-assignments/:id` | `role.assign` | Update assignment |
 | 15 | `DELETE /api/v1/rbac/user-role-assignments/:id` | `role.assign` | Revoke assignment (soft-delete) |
 | 16 | `POST /api/v1/rbac/user-role-assignments/:id/restore` | `role.assign` | Restore revoked assignment |
 | 17 | `GET /api/v1/rbac/permissions` | `permission.manage` | List all permissions |
@@ -322,7 +322,7 @@ POST http://localhost:5001/api/v1/rbac/roles
 ## 4. Update Role
 
 ```
-PUT http://localhost:5001/api/v1/rbac/roles/9
+PATCH http://localhost:5001/api/v1/rbac/roles/9
 ```
 
 **Permission Required:** `role.update` (only super_admin)
@@ -793,7 +793,7 @@ POST http://localhost:5001/api/v1/rbac/user-role-assignments
 ## 14. Update User Role Assignment
 
 ```
-PUT http://localhost:5001/api/v1/rbac/user-role-assignments/42
+PATCH http://localhost:5001/api/v1/rbac/user-role-assignments/42
 ```
 
 **Permission Required:** `role.assign` + hierarchy check
