@@ -44,23 +44,23 @@ graph TB
 
 ---
 
-## Complete Endpoint Reference (56 Routes)
+## Complete Endpoint Reference (66 Routes)
 
 ### Test Order
 
 | # | Entity | Endpoint | Method | Permission | Purpose |
 |---|--------|----------|--------|-----------|---------|
-| 1-5 | Skills | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | skill.* | CRUD + icon upload |
-| 6-10 | Languages | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | language.* | JSON CRUD |
-| 11-15 | Education Levels | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | education_level.* | JSON CRUD |
-| 16-20 | Document Types | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | document_type.* | JSON CRUD |
-| 21-25 | Documents | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | document.* | JSON CRUD + parent validation |
-| 26-30 | Designations | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | designation.* | JSON CRUD |
-| 31-35 | Specializations | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | specialization.* | CRUD + icon upload |
-| 36-40 | Learning Goals | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | learning_goal.* | CRUD + icon upload |
-| 41-45 | Social Medias | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | social_media.* | CRUD + icon upload |
-| 46-51 | Categories | GET, GET/:id, POST, PATCH/:id, DELETE/:id, POST/:id/restore | — | category.* | CRUD + dual image upload + restore |
-| 52-56 | Sub Categories | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | sub_category.* | CRUD + dual image upload + parent validation |
+| 1-6 | Skills | GET, GET/:id, POST, PATCH/:id, DELETE/:id, POST/:id/restore | — | skill.* | CRUD + icon upload + restore |
+| 7-12 | Languages | GET, GET/:id, POST, PATCH/:id, DELETE/:id, POST/:id/restore | — | language.* | JSON CRUD + restore |
+| 13-18 | Education Levels | GET, GET/:id, POST, PATCH/:id, DELETE/:id, POST/:id/restore | — | education_level.* | JSON CRUD + restore |
+| 19-24 | Document Types | GET, GET/:id, POST, PATCH/:id, DELETE/:id, POST/:id/restore | — | document_type.* | JSON CRUD + restore |
+| 25-30 | Documents | GET, GET/:id, POST, PATCH/:id, DELETE/:id, POST/:id/restore | — | document.* | JSON CRUD + parent validation + restore |
+| 31-36 | Designations | GET, GET/:id, POST, PATCH/:id, DELETE/:id, POST/:id/restore | — | designation.* | JSON CRUD + restore |
+| 37-42 | Specializations | GET, GET/:id, POST, PATCH/:id, DELETE/:id, POST/:id/restore | — | specialization.* | CRUD + icon upload + restore |
+| 43-48 | Learning Goals | GET, GET/:id, POST, PATCH/:id, DELETE/:id, POST/:id/restore | — | learning_goal.* | CRUD + icon upload + restore |
+| 49-54 | Social Medias | GET, GET/:id, POST, PATCH/:id, DELETE/:id, POST/:id/restore | — | social_media.* | CRUD + icon upload + restore |
+| 55-60 | Categories | GET, GET/:id, POST, PATCH/:id, DELETE/:id, POST/:id/restore | — | category.* | CRUD + dual image upload + restore |
+| 61-66 | Sub Categories | GET, GET/:id, POST, PATCH/:id, DELETE/:id, POST/:id/restore | — | sub_category.* | CRUD + dual image upload + parent validation + restore |
 
 ---
 
@@ -322,6 +322,30 @@ DELETE http://localhost:5001/api/v1/master-data/skills/1
 
 ---
 
+### 1.6 Restore Skill
+
+```
+POST http://localhost:5001/api/v1/master-data/skills/{id}/restore
+```
+
+**Permission Required:** `skill.update`
+
+**Response — 200 OK:**
+
+```json
+{
+  "success": true,
+  "message": "Skill restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** Restores a soft-deleted record. No request body required.
+
+---
+
 ## 2. Languages (JSON Only)
 
 All language endpoints follow the same JSON pattern. No file uploads required.
@@ -496,6 +520,30 @@ DELETE http://localhost:5001/api/v1/master-data/languages/1
   "message": "Language deleted successfully"
 }
 ```
+
+---
+
+### 2.6 Restore Language
+
+```
+POST http://localhost:5001/api/v1/master-data/languages/{id}/restore
+```
+
+**Permission Required:** `language.update`
+
+**Response — 200 OK:**
+
+```json
+{
+  "success": true,
+  "message": "Language restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** Restores a soft-deleted record. No request body required.
 
 ---
 
@@ -682,6 +730,30 @@ DELETE http://localhost:5001/api/v1/master-data/education-levels/1
 
 ---
 
+### 3.6 Restore Education Level
+
+```
+POST http://localhost:5001/api/v1/master-data/education-levels/{id}/restore
+```
+
+**Permission Required:** `education_level.update`
+
+**Response — 200 OK:**
+
+```json
+{
+  "success": true,
+  "message": "Education Level restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** Restores a soft-deleted record. No request body required.
+
+---
+
 ## 4. Document Types (JSON Only)
 
 ### 4.1 List Document Types
@@ -841,6 +913,30 @@ DELETE http://localhost:5001/api/v1/master-data/document-types/1
   "message": "Document type deleted successfully"
 }
 ```
+
+---
+
+### 4.6 Restore Document Type
+
+```
+POST http://localhost:5001/api/v1/master-data/document-types/{id}/restore
+```
+
+**Permission Required:** `document_type.update`
+
+**Response — 200 OK:**
+
+```json
+{
+  "success": true,
+  "message": "Document Type restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** Restores a soft-deleted record. No request body required.
 
 ---
 
@@ -1024,6 +1120,30 @@ DELETE http://localhost:5001/api/v1/master-data/documents/1
 
 ---
 
+### 5.6 Restore Document
+
+```
+POST http://localhost:5001/api/v1/master-data/documents/{id}/restore
+```
+
+**Permission Required:** `document.update`
+
+**Response — 200 OK:**
+
+```json
+{
+  "success": true,
+  "message": "Document restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** Restores a soft-deleted record. No request body required.
+
+---
+
 ## 6. Designations (JSON Only)
 
 ### 6.1 List Designations
@@ -1198,6 +1318,30 @@ DELETE http://localhost:5001/api/v1/master-data/designations/1
   "message": "Designation deleted successfully"
 }
 ```
+
+---
+
+### 6.6 Restore Designation
+
+```
+POST http://localhost:5001/api/v1/master-data/designations/{id}/restore
+```
+
+**Permission Required:** `designation.update`
+
+**Response — 200 OK:**
+
+```json
+{
+  "success": true,
+  "message": "Designation restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** Restores a soft-deleted record. No request body required.
 
 ---
 
@@ -1392,6 +1536,30 @@ DELETE http://localhost:5001/api/v1/master-data/specializations/1
 
 ---
 
+### 7.6 Restore Specialization
+
+```
+POST http://localhost:5001/api/v1/master-data/specializations/{id}/restore
+```
+
+**Permission Required:** `specialization.update`
+
+**Response — 200 OK:**
+
+```json
+{
+  "success": true,
+  "message": "Specialization restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** Restores a soft-deleted record. No request body required.
+
+---
+
 ## 8. Learning Goals (Icon Upload)
 
 Learning Goals follow the same icon upload pattern as Skills and Specializations.
@@ -1581,6 +1749,30 @@ DELETE http://localhost:5001/api/v1/master-data/learning-goals/1
   "message": "Learning goal deleted successfully"
 }
 ```
+
+---
+
+### 8.6 Restore Learning Goal
+
+```
+POST http://localhost:5001/api/v1/master-data/learning-goals/{id}/restore
+```
+
+**Permission Required:** `learning_goal.update`
+
+**Response — 200 OK:**
+
+```json
+{
+  "success": true,
+  "message": "Learning Goal restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** Restores a soft-deleted record. No request body required.
 
 ---
 
@@ -1789,6 +1981,30 @@ DELETE http://localhost:5001/api/v1/master-data/social-medias/1
   "message": "Social media deleted successfully"
 }
 ```
+
+---
+
+### 9.6 Restore Social Media
+
+```
+POST http://localhost:5001/api/v1/master-data/social-medias/{id}/restore
+```
+
+**Permission Required:** `social_media.update`
+
+**Response — 200 OK:**
+
+```json
+{
+  "success": true,
+  "message": "Social Media restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** Restores a soft-deleted record. No request body required.
 
 ---
 
@@ -2243,6 +2459,44 @@ DELETE http://localhost:5001/api/v1/master-data/sub-categories/1
   "message": "Sub category deleted successfully"
 }
 ```
+
+---
+
+### 11.6 Restore Sub Category
+
+```
+POST http://localhost:5001/api/v1/master-data/sub-categories/{id}/restore
+```
+
+**Permission Required:** `sub_category.update`
+
+**Body (optional):**
+
+```json
+{
+  "restoreTranslations": true
+}
+```
+
+**Field Descriptions:**
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| restoreTranslations | boolean | false | If `true`, also restores soft-deleted translations associated with this sub-category |
+
+**Response — 200 OK:**
+
+```json
+{
+  "success": true,
+  "message": "Sub-Category restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** You can send an empty body or omit the body entirely. The endpoint defaults `restoreTranslations` to `false`.
 
 ---
 

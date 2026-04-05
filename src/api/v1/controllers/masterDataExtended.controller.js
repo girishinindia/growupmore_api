@@ -1195,6 +1195,98 @@ class MasterDataExtendedController {
       next(error);
     }
   }
+
+  // ==================== RESTORE METHODS ====================
+
+  async restoreSkill(req, res, next) {
+    try {
+      const data = await masterDataExtendedService.restoreSkill(req.params.id);
+      sendSuccess(res, { message: 'Skill restored successfully', data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async restoreLanguage(req, res, next) {
+    try {
+      const data = await masterDataExtendedService.restoreLanguage(req.params.id);
+      sendSuccess(res, { message: 'Language restored successfully', data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async restoreEducationLevel(req, res, next) {
+    try {
+      const data = await masterDataExtendedService.restoreEducationLevel(req.params.id);
+      sendSuccess(res, { message: 'Education Level restored successfully', data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async restoreDocumentType(req, res, next) {
+    try {
+      const data = await masterDataExtendedService.restoreDocumentType(req.params.id);
+      sendSuccess(res, { message: 'Document Type restored successfully', data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async restoreDocument(req, res, next) {
+    try {
+      const data = await masterDataExtendedService.restoreDocument(req.params.id);
+      sendSuccess(res, { message: 'Document restored successfully', data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async restoreDesignation(req, res, next) {
+    try {
+      const data = await masterDataExtendedService.restoreDesignation(req.params.id);
+      sendSuccess(res, { message: 'Designation restored successfully', data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async restoreSpecialization(req, res, next) {
+    try {
+      const data = await masterDataExtendedService.restoreSpecialization(req.params.id);
+      sendSuccess(res, { message: 'Specialization restored successfully', data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async restoreLearningGoal(req, res, next) {
+    try {
+      const data = await masterDataExtendedService.restoreLearningGoal(req.params.id);
+      sendSuccess(res, { message: 'Learning Goal restored successfully', data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async restoreSocialMedia(req, res, next) {
+    try {
+      const data = await masterDataExtendedService.restoreSocialMedia(req.params.id);
+      sendSuccess(res, { message: 'Social Media restored successfully', data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async restoreSubCategory(req, res, next) {
+    try {
+      const data = await masterDataExtendedService.restoreSubCategory(req.params.id, req.body.restoreTranslations);
+      sendSuccess(res, { message: 'Sub-Category restored successfully', data });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new MasterDataExtendedController();

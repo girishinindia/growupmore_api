@@ -156,6 +156,14 @@ class UserManagementRepository {
     }
   }
 
+  async restoreUser(userId) {
+    const { error } = await supabase.rpc('sp_users_restore', { p_id: userId });
+    if (error) {
+      logger.error({ error }, 'UserManagementRepository.restoreUser failed');
+      throw error;
+    }
+  }
+
   // ============================================================================
   // USER PROFILES
   // ============================================================================

@@ -977,6 +977,68 @@ class MasterDataExtendedService {
       throw error;
     }
   }
+
+  // ========== RESTORE METHODS FOR ALL ENTITIES ==========
+
+  async restoreSkill(id) {
+    if (!id) throw new BadRequestError('Skill ID is required');
+    await masterDataExtendedRepository.restoreSkill(id);
+    return { id };
+  }
+
+  async restoreLanguage(id) {
+    if (!id) throw new BadRequestError('Language ID is required');
+    await masterDataExtendedRepository.restoreLanguage(id);
+    return { id };
+  }
+
+  async restoreEducationLevel(id) {
+    if (!id) throw new BadRequestError('Education Level ID is required');
+    await masterDataExtendedRepository.restoreEducationLevel(id);
+    return { id };
+  }
+
+  async restoreDocumentType(id) {
+    if (!id) throw new BadRequestError('Document Type ID is required');
+    await masterDataExtendedRepository.restoreDocumentType(id);
+    return { id };
+  }
+
+  async restoreDocument(id) {
+    if (!id) throw new BadRequestError('Document ID is required');
+    await masterDataExtendedRepository.restoreDocument(id);
+    return { id };
+  }
+
+  async restoreDesignation(id) {
+    if (!id) throw new BadRequestError('Designation ID is required');
+    await masterDataExtendedRepository.restoreDesignation(id);
+    return { id };
+  }
+
+  async restoreSpecialization(id) {
+    if (!id) throw new BadRequestError('Specialization ID is required');
+    await masterDataExtendedRepository.restoreSpecialization(id);
+    return { id };
+  }
+
+  async restoreLearningGoal(id) {
+    if (!id) throw new BadRequestError('Learning Goal ID is required');
+    await masterDataExtendedRepository.restoreLearningGoal(id);
+    return { id };
+  }
+
+  async restoreSocialMedia(id) {
+    if (!id) throw new BadRequestError('Social Media ID is required');
+    await masterDataExtendedRepository.restoreSocialMedia(id);
+    return { id };
+  }
+
+  async restoreSubCategory(id, restoreTranslations = false) {
+    if (!id) throw new BadRequestError('Sub-Category ID is required');
+    await masterDataExtendedRepository.restoreSubCategory(id, restoreTranslations);
+    return { id };
+  }
 }
 
 module.exports = new MasterDataExtendedService();

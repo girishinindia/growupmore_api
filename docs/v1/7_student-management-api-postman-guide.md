@@ -54,6 +54,7 @@ graph TB
 | 3 | `GET /student-profiles/:id` | `student_profile.read` | Get a single student by ID |
 | 4 | `PATCH/student-profiles/:id` | `student_profile.update` | Update student details and resume |
 | 5 | `DELETE /student-profiles/:id` | `student_profile.delete` | Soft-delete a student |
+| 6 | `POST /student-profiles/:id/restore` | `student_profile.update` | Restore a soft-deleted student |
 
 ---
 
@@ -466,6 +467,34 @@ pm.test("Status is 200", () => pm.response.to.have.status(200));
 const json = pm.response.json();
 pm.test("Success is true", () => pm.expect(json.success).to.equal(true));
 ```
+
+---
+
+### 1.9 Restore Student Profile
+
+**Request:**
+```
+POST /api/v1/student-management/student-profiles/{id}/restore
+```
+
+**Headers:**
+```
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Student profile restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** Restores a soft-deleted record. No request body required.
 
 ---
 

@@ -90,6 +90,13 @@ router.delete(
   ctrl.deleteUser
 );
 
+router.post(
+  '/users/:id/restore',
+  authorize('user.update'),
+  validate(idParamSchema, 'params'),
+  ctrl.restoreUser
+);
+
 // ============================================================================
 // USER PROFILES (5 routes - with image upload middleware)
 // ============================================================================

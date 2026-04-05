@@ -307,6 +307,18 @@ class BranchManagementService {
       throw error;
     }
   }
+
+  async restoreBranch(id) {
+    if (!id) throw new BadRequestError('Branch ID is required');
+    await branchManagementRepository.restoreBranch(id);
+    return { id };
+  }
+
+  async restoreDepartment(id) {
+    if (!id) throw new BadRequestError('Department ID is required');
+    await branchManagementRepository.restoreDepartment(id);
+    return { id };
+  }
 }
 
 module.exports = new BranchManagementService();

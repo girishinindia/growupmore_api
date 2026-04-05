@@ -219,6 +219,14 @@ class StudentManagementRepository {
       throw error;
     }
   }
+
+  async restoreStudentProfile(id) {
+    const { error } = await supabase.rpc('sp_student_profiles_restore', { p_id: id });
+    if (error) {
+      logger.error({ error }, 'StudentManagementRepository.restoreStudentProfile failed');
+      throw error;
+    }
+  }
 }
 
 module.exports = new StudentManagementRepository();

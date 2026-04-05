@@ -53,16 +53,18 @@ graph TB
 | 3 | `GET /branches/:id` | `branch.read` | Get a single branch by ID |
 | 4 | `PATCH/branches/:id` | `branch.update` | Update branch details |
 | 5 | `DELETE /branches/:id` | `branch.delete` | Soft-delete a branch |
-| 6 | `POST /departments` | `department.create` | Create a department |
-| 7 | `GET /departments` | `department.read` | List all departments with filters |
-| 8 | `GET /departments/:id` | `department.read` | Get a single department by ID |
-| 9 | `PATCH/departments/:id` | `department.update` | Update department details |
-| 10 | `DELETE /departments/:id` | `department.delete` | Soft-delete a department |
-| 11 | `POST /branch-departments` | `branch_department.create` | Link branch to department |
-| 12 | `GET /branch-departments` | `branch_department.read` | List all branch-department links |
-| 13 | `GET /branch-departments/:id` | `branch_department.read` | Get a single link by ID |
-| 14 | `PATCH/branch-departments/:id` | `branch_department.update` | Update link details |
-| 15 | `DELETE /branch-departments/:id` | `branch_department.delete` | Soft-delete a link |
+| 6 | `POST /branches/:id/restore` | `branch.update` | Restore a soft-deleted branch |
+| 7 | `POST /departments` | `department.create` | Create a department |
+| 8 | `GET /departments` | `department.read` | List all departments with filters |
+| 9 | `GET /departments/:id` | `department.read` | Get a single department by ID |
+| 10 | `PATCH/departments/:id` | `department.update` | Update department details |
+| 11 | `DELETE /departments/:id` | `department.delete` | Soft-delete a department |
+| 12 | `POST /departments/:id/restore` | `department.update` | Restore a soft-deleted department |
+| 13 | `POST /branch-departments` | `branch_department.create` | Link branch to department |
+| 14 | `GET /branch-departments` | `branch_department.read` | List all branch-department links |
+| 15 | `GET /branch-departments/:id` | `branch_department.read` | Get a single link by ID |
+| 16 | `PATCH/branch-departments/:id` | `branch_department.update` | Update link details |
+| 17 | `DELETE /branch-departments/:id` | `branch_department.delete` | Soft-delete a link |
 
 ---
 
@@ -292,6 +294,34 @@ Authorization: Bearer {{access_token}}
 
 ---
 
+### 1.6 Restore Branch
+
+**Request:**
+```
+POST /api/v1/branch-management/branches/{id}/restore
+```
+
+**Headers:**
+```
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Branch restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** Restores a soft-deleted branch. No request body required.
+
+---
+
 ## 2. DEPARTMENTS
 
 ### 2.1 Create Department
@@ -483,6 +513,34 @@ Authorization: Bearer {{access_token}}
   "message": "Department deleted successfully"
 }
 ```
+
+---
+
+### 2.7 Restore Department
+
+**Request:**
+```
+POST /api/v1/branch-management/departments/{id}/restore
+```
+
+**Headers:**
+```
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Department restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** Restores a soft-deleted department. No request body required.
 
 ---
 

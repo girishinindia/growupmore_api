@@ -53,6 +53,7 @@ graph TB
 | 3 | `GET /employee-profiles/:id` | `employee_profile.read` | Get a single employee by ID |
 | 4 | `PATCH/employee-profiles/:id` | `employee_profile.update` | Update employee details |
 | 5 | `DELETE /employee-profiles/:id` | `employee_profile.delete` | Soft-delete an employee |
+| 6 | `POST /employee-profiles/:id/restore` | `employee_profile.update` | Restore a soft-deleted employee |
 
 ---
 
@@ -405,6 +406,34 @@ pm.test("Status is 200", () => pm.response.to.have.status(200));
 const json = pm.response.json();
 pm.test("Success is true", () => pm.expect(json.success).to.equal(true));
 ```
+
+---
+
+### 1.8 Restore Employee Profile
+
+**Request:**
+```
+POST /api/v1/employee-management/employee-profiles/{id}/restore
+```
+
+**Headers:**
+```
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Employee profile restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** Restores a soft-deleted record. No request body required.
 
 ---
 

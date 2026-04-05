@@ -187,6 +187,15 @@ class StudentManagementController {
     }
   }
 
+  async restoreStudentProfile(req, res, next) {
+    try {
+      const data = await studentManagementService.restoreStudentProfile(req.params.id);
+      sendSuccess(res, { message: 'Student profile restored successfully', data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async uploadResume(req, res, next) {
     try {
       const data = await studentManagementService.handleResumeUpload(req.params.id, req.file, req.user.userId);

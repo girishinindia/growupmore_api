@@ -106,6 +106,15 @@ class InstructorManagementController {
       next(error);
     }
   }
+
+  async restoreInstructorProfile(req, res, next) {
+    try {
+      const data = await instructorManagementService.restoreInstructorProfile(req.params.id);
+      sendSuccess(res, { message: 'Instructor profile restored successfully', data });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new InstructorManagementController();

@@ -51,6 +51,7 @@ const {
   createSubCategorySchema,
   updateSubCategorySchema,
   subCategoryListQuerySchema,
+  restoreSubCategorySchema,
 } = require('../validators/masterDataExtended.validator');
 
 const router = Router();
@@ -76,6 +77,7 @@ router.get('/skills/:id', authorize('skill.read'), validate(idParamSchema, 'para
 router.post('/skills', authorize('skill.create'), uploadIcon, validate(createSkillSchema), ctrl.createSkill);
 router.patch('/skills/:id', authorize('skill.update'), validate(idParamSchema, 'params'), uploadIcon, validate(updateSkillSchema), ctrl.updateSkill);
 router.delete('/skills/:id', authorize('skill.delete'), validate(idParamSchema, 'params'), ctrl.deleteSkill);
+router.post('/skills/:id/restore', authorize('skill.update'), validate(idParamSchema, 'params'), ctrl.restoreSkill);
 
 // ============================================================================
 // LANGUAGES ROUTES (NO upload)
@@ -86,6 +88,7 @@ router.get('/languages/:id', authorize('language.read'), validate(idParamSchema,
 router.post('/languages', authorize('language.create'), validate(createLanguageSchema), ctrl.createLanguage);
 router.patch('/languages/:id', authorize('language.update'), validate(idParamSchema, 'params'), validate(updateLanguageSchema), ctrl.updateLanguage);
 router.delete('/languages/:id', authorize('language.delete'), validate(idParamSchema, 'params'), ctrl.deleteLanguage);
+router.post('/languages/:id/restore', authorize('language.update'), validate(idParamSchema, 'params'), ctrl.restoreLanguage);
 
 // ============================================================================
 // EDUCATION LEVELS ROUTES (NO upload)
@@ -96,6 +99,7 @@ router.get('/education-levels/:id', authorize('education_level.read'), validate(
 router.post('/education-levels', authorize('education_level.create'), validate(createEducationLevelSchema), ctrl.createEducationLevel);
 router.patch('/education-levels/:id', authorize('education_level.update'), validate(idParamSchema, 'params'), validate(updateEducationLevelSchema), ctrl.updateEducationLevel);
 router.delete('/education-levels/:id', authorize('education_level.delete'), validate(idParamSchema, 'params'), ctrl.deleteEducationLevel);
+router.post('/education-levels/:id/restore', authorize('education_level.update'), validate(idParamSchema, 'params'), ctrl.restoreEducationLevel);
 
 // ============================================================================
 // DOCUMENT TYPES ROUTES (NO upload)
@@ -106,6 +110,7 @@ router.get('/document-types/:id', authorize('document_type.read'), validate(idPa
 router.post('/document-types', authorize('document_type.create'), validate(createDocumentTypeSchema), ctrl.createDocumentType);
 router.patch('/document-types/:id', authorize('document_type.update'), validate(idParamSchema, 'params'), validate(updateDocumentTypeSchema), ctrl.updateDocumentType);
 router.delete('/document-types/:id', authorize('document_type.delete'), validate(idParamSchema, 'params'), ctrl.deleteDocumentType);
+router.post('/document-types/:id/restore', authorize('document_type.update'), validate(idParamSchema, 'params'), ctrl.restoreDocumentType);
 
 // ============================================================================
 // DOCUMENTS ROUTES (NO upload)
@@ -116,6 +121,7 @@ router.get('/documents/:id', authorize('document.read'), validate(idParamSchema,
 router.post('/documents', authorize('document.create'), validate(createDocumentSchema), ctrl.createDocument);
 router.patch('/documents/:id', authorize('document.update'), validate(idParamSchema, 'params'), validate(updateDocumentSchema), ctrl.updateDocument);
 router.delete('/documents/:id', authorize('document.delete'), validate(idParamSchema, 'params'), ctrl.deleteDocument);
+router.post('/documents/:id/restore', authorize('document.update'), validate(idParamSchema, 'params'), ctrl.restoreDocument);
 
 // ============================================================================
 // DESIGNATIONS ROUTES (NO upload)
@@ -126,6 +132,7 @@ router.get('/designations/:id', authorize('designation.read'), validate(idParamS
 router.post('/designations', authorize('designation.create'), validate(createDesignationSchema), ctrl.createDesignation);
 router.patch('/designations/:id', authorize('designation.update'), validate(idParamSchema, 'params'), validate(updateDesignationSchema), ctrl.updateDesignation);
 router.delete('/designations/:id', authorize('designation.delete'), validate(idParamSchema, 'params'), ctrl.deleteDesignation);
+router.post('/designations/:id/restore', authorize('designation.update'), validate(idParamSchema, 'params'), ctrl.restoreDesignation);
 
 // ============================================================================
 // SPECIALIZATIONS ROUTES (with icon upload)
@@ -136,6 +143,7 @@ router.get('/specializations/:id', authorize('specialization.read'), validate(id
 router.post('/specializations', authorize('specialization.create'), uploadIcon, validate(createSpecializationSchema), ctrl.createSpecialization);
 router.patch('/specializations/:id', authorize('specialization.update'), validate(idParamSchema, 'params'), uploadIcon, validate(updateSpecializationSchema), ctrl.updateSpecialization);
 router.delete('/specializations/:id', authorize('specialization.delete'), validate(idParamSchema, 'params'), ctrl.deleteSpecialization);
+router.post('/specializations/:id/restore', authorize('specialization.update'), validate(idParamSchema, 'params'), ctrl.restoreSpecialization);
 
 // ============================================================================
 // LEARNING GOALS ROUTES (with icon upload)
@@ -146,6 +154,7 @@ router.get('/learning-goals/:id', authorize('learning_goal.read'), validate(idPa
 router.post('/learning-goals', authorize('learning_goal.create'), uploadIcon, validate(createLearningGoalSchema), ctrl.createLearningGoal);
 router.patch('/learning-goals/:id', authorize('learning_goal.update'), validate(idParamSchema, 'params'), uploadIcon, validate(updateLearningGoalSchema), ctrl.updateLearningGoal);
 router.delete('/learning-goals/:id', authorize('learning_goal.delete'), validate(idParamSchema, 'params'), ctrl.deleteLearningGoal);
+router.post('/learning-goals/:id/restore', authorize('learning_goal.update'), validate(idParamSchema, 'params'), ctrl.restoreLearningGoal);
 
 // ============================================================================
 // SOCIAL MEDIAS ROUTES (with icon upload)
@@ -156,6 +165,7 @@ router.get('/social-medias/:id', authorize('social_media.read'), validate(idPara
 router.post('/social-medias', authorize('social_media.create'), uploadIcon, validate(createSocialMediaSchema), ctrl.createSocialMedia);
 router.patch('/social-medias/:id', authorize('social_media.update'), validate(idParamSchema, 'params'), uploadIcon, validate(updateSocialMediaSchema), ctrl.updateSocialMedia);
 router.delete('/social-medias/:id', authorize('social_media.delete'), validate(idParamSchema, 'params'), ctrl.deleteSocialMedia);
+router.post('/social-medias/:id/restore', authorize('social_media.update'), validate(idParamSchema, 'params'), ctrl.restoreSocialMedia);
 
 // ============================================================================
 // CATEGORIES ROUTES (with icon + cover image upload)
@@ -177,5 +187,6 @@ router.get('/sub-categories/:id', authorize('sub_category.read'), validate(idPar
 router.post('/sub-categories', authorize('sub_category.create'), uploadCategoryImages, validate(createSubCategorySchema), ctrl.createSubCategory);
 router.patch('/sub-categories/:id', authorize('sub_category.update'), validate(idParamSchema, 'params'), uploadCategoryImages, validate(updateSubCategorySchema), ctrl.updateSubCategory);
 router.delete('/sub-categories/:id', authorize('sub_category.delete'), validate(idParamSchema, 'params'), ctrl.deleteSubCategory);
+router.post('/sub-categories/:id/restore', authorize('sub_category.update'), validate(idParamSchema, 'params'), validate(restoreSubCategorySchema, 'body'), ctrl.restoreSubCategory);
 
 module.exports = router;

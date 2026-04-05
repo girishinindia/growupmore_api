@@ -116,6 +116,12 @@ class EmployeeManagementService {
       throw error;
     }
   }
+
+  async restoreEmployeeProfile(id) {
+    if (!id) throw new BadRequestError('Employee Profile ID is required');
+    await employeeManagementRepository.restoreEmployeeProfile(id);
+    return { id };
+  }
 }
 
 module.exports = new EmployeeManagementService();

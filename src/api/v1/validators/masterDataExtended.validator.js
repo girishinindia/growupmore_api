@@ -352,6 +352,13 @@ const subCategoryListQuerySchema = listQuerySchema.extend({
   isNew: z.enum(['true', 'false']).transform(v => v === 'true').optional(),
 });
 
+const restoreSubCategorySchema = z.preprocess(
+  (val) => (val === undefined || val === null ? {} : val),
+  z.object({
+    restoreTranslations: z.boolean().optional().default(false),
+  })
+);
+
 // ============================================================================
 // EXPORTS
 // ============================================================================
@@ -416,4 +423,5 @@ module.exports = {
   createSubCategorySchema,
   updateSubCategorySchema,
   subCategoryListQuerySchema,
+  restoreSubCategorySchema,
 };

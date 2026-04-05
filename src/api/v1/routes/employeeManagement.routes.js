@@ -27,28 +27,28 @@ router.use(authenticate);
 // ============================================================================
 
 router.get(
-  '/',
+  '/employee-profiles',
   authorize('employee_profile.read'),
   validate(employeeProfileListQuerySchema, 'query'),
   ctrl.getEmployeeProfiles
 );
 
 router.get(
-  '/:id',
+  '/employee-profiles/:id',
   authorize('employee_profile.read'),
   validate(idParamSchema, 'params'),
   ctrl.getEmployeeProfileById
 );
 
 router.post(
-  '/',
+  '/employee-profiles',
   authorize('employee_profile.create'),
   validate(createEmployeeProfileSchema),
   ctrl.createEmployeeProfile
 );
 
 router.patch(
-  '/:id',
+  '/employee-profiles/:id',
   authorize('employee_profile.update'),
   validate(idParamSchema, 'params'),
   validate(updateEmployeeProfileSchema),
@@ -56,10 +56,12 @@ router.patch(
 );
 
 router.delete(
-  '/:id',
+  '/employee-profiles/:id',
   authorize('employee_profile.delete'),
   validate(idParamSchema, 'params'),
   ctrl.deleteEmployeeProfile
 );
+
+router.post('/employee-profiles/:id/restore', authorize('employee_profile.update'), validate(idParamSchema, 'params'), ctrl.restoreEmployeeProfile);
 
 module.exports = router;

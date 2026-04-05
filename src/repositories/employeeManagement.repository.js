@@ -220,6 +220,14 @@ class EmployeeManagementRepository {
       throw error;
     }
   }
+
+  async restoreEmployeeProfile(id) {
+    const { error } = await supabase.rpc('sp_employee_profiles_restore', { p_id: id });
+    if (error) {
+      logger.error({ error }, 'EmployeeManagementRepository.restoreEmployeeProfile failed');
+      throw error;
+    }
+  }
 }
 
 module.exports = new EmployeeManagementRepository();

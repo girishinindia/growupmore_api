@@ -126,6 +126,12 @@ class StudentManagementService {
     }
   }
 
+  async restoreStudentProfile(id) {
+    if (!id) throw new BadRequestError('Student Profile ID is required');
+    await studentManagementRepository.restoreStudentProfile(id);
+    return { id };
+  }
+
   async handleResumeUpload(studentProfileId, file, actingUserId) {
     try {
       if (!studentProfileId) throw new BadRequestError('Student Profile ID is required');

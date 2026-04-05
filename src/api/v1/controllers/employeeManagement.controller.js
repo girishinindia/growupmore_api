@@ -98,6 +98,15 @@ class EmployeeManagementController {
       next(error);
     }
   }
+
+  async restoreEmployeeProfile(req, res, next) {
+    try {
+      const data = await employeeManagementService.restoreEmployeeProfile(req.params.id);
+      sendSuccess(res, { message: 'Employee profile restored successfully', data });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new EmployeeManagementController();

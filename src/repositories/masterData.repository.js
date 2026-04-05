@@ -387,6 +387,51 @@ class MasterDataRepository {
       throw error;
     }
   }
+
+  // ─────────────────────────────────────────────────────────────
+  //  COUNTRIES — RESTORE
+  // ─────────────────────────────────────────────────────────────
+
+  async restoreCountry(countryId) {
+    const { error } = await supabase.rpc('sp_countries_restore', {
+      p_id: countryId,
+    });
+
+    if (error) {
+      logger.error({ error }, 'MasterDataRepository.restoreCountry failed');
+      throw error;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  STATES — RESTORE
+  // ─────────────────────────────────────────────────────────────
+
+  async restoreState(stateId) {
+    const { error } = await supabase.rpc('sp_states_restore', {
+      p_id: stateId,
+    });
+
+    if (error) {
+      logger.error({ error }, 'MasterDataRepository.restoreState failed');
+      throw error;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  CITIES — RESTORE
+  // ─────────────────────────────────────────────────────────────
+
+  async restoreCity(cityId) {
+    const { error } = await supabase.rpc('sp_cities_restore', {
+      p_id: cityId,
+    });
+
+    if (error) {
+      logger.error({ error }, 'MasterDataRepository.restoreCity failed');
+      throw error;
+    }
+  }
 }
 
 module.exports = new MasterDataRepository();

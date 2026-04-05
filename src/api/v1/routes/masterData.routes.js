@@ -42,6 +42,14 @@ router.patch('/countries/:id', authorize('country.update'), validate(idParamSche
 
 router.delete('/countries/:id', authorize('country.delete'), validate(idParamSchema, 'params'), masterDataController.deleteCountry);
 
+// POST /countries/:id/restore — Restore country
+router.post(
+  '/countries/:id/restore',
+  authorize('country.update'),
+  validate(idParamSchema, 'params'),
+  masterDataController.restoreCountry
+);
+
 // ============================================================================
 // STATES ROUTES
 // ============================================================================
@@ -52,6 +60,14 @@ router.post('/states', authorize('state.create'), validate(createStateSchema), m
 router.patch('/states/:id', authorize('state.update'), validate(idParamSchema, 'params'), validate(updateStateSchema), masterDataController.updateState);
 router.delete('/states/:id', authorize('state.delete'), validate(idParamSchema, 'params'), masterDataController.deleteState);
 
+// POST /states/:id/restore — Restore state
+router.post(
+  '/states/:id/restore',
+  authorize('state.update'),
+  validate(idParamSchema, 'params'),
+  masterDataController.restoreState
+);
+
 // ============================================================================
 // CITIES ROUTES
 // ============================================================================
@@ -61,5 +77,13 @@ router.get('/cities/:id', authorize('city.read'), validate(idParamSchema, 'param
 router.post('/cities', authorize('city.create'), validate(createCitySchema), masterDataController.createCity);
 router.patch('/cities/:id', authorize('city.update'), validate(idParamSchema, 'params'), validate(updateCitySchema), masterDataController.updateCity);
 router.delete('/cities/:id', authorize('city.delete'), validate(idParamSchema, 'params'), masterDataController.deleteCity);
+
+// POST /cities/:id/restore — Restore city
+router.post(
+  '/cities/:id/restore',
+  authorize('city.update'),
+  validate(idParamSchema, 'params'),
+  masterDataController.restoreCity
+);
 
 module.exports = router;

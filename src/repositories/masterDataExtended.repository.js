@@ -1147,6 +1147,93 @@ class MasterDataExtendedRepository {
       throw error;
     }
   }
+
+  // ─────────────────────────────────────────────────────────────
+  //  RESTORE METHODS FOR ALL ENTITIES
+  // ─────────────────────────────────────────────────────────────
+
+  async restoreSkill(id) {
+    const { error } = await supabase.rpc('sp_skills_restore', { p_id: id });
+    if (error) {
+      logger.error({ error }, 'MasterDataExtendedRepository.restoreSkill failed');
+      throw error;
+    }
+  }
+
+  async restoreLanguage(id) {
+    const { error } = await supabase.rpc('sp_languages_restore', { p_id: id });
+    if (error) {
+      logger.error({ error }, 'MasterDataExtendedRepository.restoreLanguage failed');
+      throw error;
+    }
+  }
+
+  async restoreEducationLevel(id) {
+    const { error } = await supabase.rpc('sp_education_levels_restore', { p_id: id });
+    if (error) {
+      logger.error({ error }, 'MasterDataExtendedRepository.restoreEducationLevel failed');
+      throw error;
+    }
+  }
+
+  async restoreDocumentType(id) {
+    const { error } = await supabase.rpc('sp_document_types_restore', { p_id: id });
+    if (error) {
+      logger.error({ error }, 'MasterDataExtendedRepository.restoreDocumentType failed');
+      throw error;
+    }
+  }
+
+  async restoreDocument(id) {
+    const { error } = await supabase.rpc('sp_documents_restore', { p_id: id });
+    if (error) {
+      logger.error({ error }, 'MasterDataExtendedRepository.restoreDocument failed');
+      throw error;
+    }
+  }
+
+  async restoreDesignation(id) {
+    const { error } = await supabase.rpc('sp_designations_restore', { p_id: id });
+    if (error) {
+      logger.error({ error }, 'MasterDataExtendedRepository.restoreDesignation failed');
+      throw error;
+    }
+  }
+
+  async restoreSpecialization(id) {
+    const { error } = await supabase.rpc('sp_specializations_restore', { p_id: id });
+    if (error) {
+      logger.error({ error }, 'MasterDataExtendedRepository.restoreSpecialization failed');
+      throw error;
+    }
+  }
+
+  async restoreLearningGoal(id) {
+    const { error } = await supabase.rpc('sp_learning_goals_restore', { p_id: id });
+    if (error) {
+      logger.error({ error }, 'MasterDataExtendedRepository.restoreLearningGoal failed');
+      throw error;
+    }
+  }
+
+  async restoreSocialMedia(id) {
+    const { error } = await supabase.rpc('sp_social_medias_restore', { p_id: id });
+    if (error) {
+      logger.error({ error }, 'MasterDataExtendedRepository.restoreSocialMedia failed');
+      throw error;
+    }
+  }
+
+  async restoreSubCategory(id, restoreTranslations = false) {
+    const { error } = await supabase.rpc('sp_sub_categories_restore', {
+      p_id: id,
+      p_restore_translations: restoreTranslations,
+    });
+    if (error) {
+      logger.error({ error }, 'MasterDataExtendedRepository.restoreSubCategory failed');
+      throw error;
+    }
+  }
 }
 
 module.exports = new MasterDataExtendedRepository();

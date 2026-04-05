@@ -31,5 +31,6 @@ router.get('/instructor-profiles/:id', authorize('instructor_profile.read'), val
 router.post('/instructor-profiles', authorize('instructor_profile.create'), validate(createInstructorProfileSchema), ctrl.createInstructorProfile);
 router.patch('/instructor-profiles/:id', authorize('instructor_profile.update'), validate(idParamSchema, 'params'), validate(updateInstructorProfileSchema), ctrl.updateInstructorProfile);
 router.delete('/instructor-profiles/:id', authorize('instructor_profile.delete'), validate(idParamSchema, 'params'), ctrl.deleteInstructorProfile);
+router.post('/instructor-profiles/:id/restore', authorize('instructor_profile.update'), validate(idParamSchema, 'params'), ctrl.restoreInstructorProfile);
 
 module.exports = router;

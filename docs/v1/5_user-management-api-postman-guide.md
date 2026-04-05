@@ -54,46 +54,47 @@ graph TB
 | 3 | `GET /users/:id` | `user.read` | Get a single user by ID |
 | 4 | `PATCH/users/:id` | `user.update` | Update user details |
 | 5 | `DELETE /users/:id` | `user.delete` | Soft-delete a user |
-| 6 | `POST /user-profiles` | `user_profile.create` | Create user profile with photos |
-| 7 | `GET /user-profiles` | `user_profile.read` | List all profiles with filters |
-| 8 | `GET /user-profiles/:id` | `user_profile.read` | Get a single profile by ID |
-| 9 | `PATCH/user-profiles/:id` | `user_profile.update` | Update profile details |
-| 10 | `DELETE /user-profiles/:id` | `user_profile.delete` | Soft-delete a profile |
-| 11 | `POST /user-education` | `user_education.create` | Create education record with certificate |
-| 12 | `GET /user-education` | `user_education.read` | List all education records with filters |
-| 13 | `GET /user-education/:id` | `user_education.read` | Get a single education record by ID |
-| 14 | `PATCH/user-education/:id` | `user_education.update` | Update education details |
-| 15 | `DELETE /user-education/:id` | `user_education.delete` | Soft-delete education record |
-| 16 | `POST /user-experience` | `user_experience.create` | Create experience record |
-| 17 | `GET /user-experience` | `user_experience.read` | List all experience records with filters |
-| 18 | `GET /user-experience/:id` | `user_experience.read` | Get a single experience record by ID |
-| 19 | `PATCH/user-experience/:id` | `user_experience.update` | Update experience details |
-| 20 | `DELETE /user-experience/:id` | `user_experience.delete` | Soft-delete experience record |
-| 21 | `POST /user-social-medias` | `user_social_media.create` | Create social media record |
-| 22 | `GET /user-social-medias` | `user_social_media.read` | List all social media records with filters |
-| 23 | `GET /user-social-medias/:id` | `user_social_media.read` | Get a single social media record by ID |
-| 24 | `PATCH/user-social-medias/:id` | `user_social_media.update` | Update social media details |
-| 25 | `DELETE /user-social-medias/:id` | `user_social_media.delete` | Soft-delete social media record |
-| 26 | `POST /user-skills` | `user_skill.create` | Create skill record with certificate |
-| 27 | `GET /user-skills` | `user_skill.read` | List all skill records with filters |
-| 28 | `GET /user-skills/:id` | `user_skill.read` | Get a single skill record by ID |
-| 29 | `PATCH/user-skills/:id` | `user_skill.update` | Update skill details |
-| 30 | `DELETE /user-skills/:id` | `user_skill.delete` | Soft-delete skill record |
-| 31 | `POST /user-languages` | `user_language.create` | Create language record |
-| 32 | `GET /user-languages` | `user_language.read` | List all language records with filters |
-| 33 | `GET /user-languages/:id` | `user_language.read` | Get a single language record by ID |
-| 34 | `PATCH/user-languages/:id` | `user_language.update` | Update language details |
-| 35 | `DELETE /user-languages/:id` | `user_language.delete` | Soft-delete language record |
-| 36 | `POST /user-documents` | `user_document.create` | Create document record with file |
-| 37 | `GET /user-documents` | `user_document.read` | List all document records with filters |
-| 38 | `GET /user-documents/:id` | `user_document.read` | Get a single document record by ID |
-| 39 | `PATCH/user-documents/:id` | `user_document.update` | Update document details |
-| 40 | `DELETE /user-documents/:id` | `user_document.delete` | Soft-delete document record |
-| 41 | `POST /user-projects` | `user_project.create` | Create project record with thumbnail |
-| 42 | `GET /user-projects` | `user_project.read` | List all project records with filters |
-| 43 | `GET /user-projects/:id` | `user_project.read` | Get a single project record by ID |
-| 44 | `PATCH/user-projects/:id` | `user_project.update` | Update project details |
-| 45 | `DELETE /user-projects/:id` | `user_project.delete` | Soft-delete project record |
+| 6 | `POST /users/:id/restore` | `user.update` | Restore a soft-deleted user |
+| 7 | `POST /user-profiles` | `user_profile.create` | Create user profile with photos |
+| 8 | `GET /user-profiles` | `user_profile.read` | List all profiles with filters |
+| 9 | `GET /user-profiles/:id` | `user_profile.read` | Get a single profile by ID |
+| 10 | `PATCH/user-profiles/:id` | `user_profile.update` | Update profile details |
+| 11 | `DELETE /user-profiles/:id` | `user_profile.delete` | Soft-delete a profile |
+| 12 | `POST /user-education` | `user_education.create` | Create education record with certificate |
+| 13 | `GET /user-education` | `user_education.read` | List all education records with filters |
+| 14 | `GET /user-education/:id` | `user_education.read` | Get a single education record by ID |
+| 15 | `PATCH/user-education/:id` | `user_education.update` | Update education details |
+| 16 | `DELETE /user-education/:id` | `user_education.delete` | Soft-delete education record |
+| 17 | `POST /user-experience` | `user_experience.create` | Create experience record |
+| 18 | `GET /user-experience` | `user_experience.read` | List all experience records with filters |
+| 19 | `GET /user-experience/:id` | `user_experience.read` | Get a single experience record by ID |
+| 20 | `PATCH/user-experience/:id` | `user_experience.update` | Update experience details |
+| 21 | `DELETE /user-experience/:id` | `user_experience.delete` | Soft-delete experience record |
+| 22 | `POST /user-social-medias` | `user_social_media.create` | Create social media record |
+| 23 | `GET /user-social-medias` | `user_social_media.read` | List all social media records with filters |
+| 24 | `GET /user-social-medias/:id` | `user_social_media.read` | Get a single social media record by ID |
+| 25 | `PATCH/user-social-medias/:id` | `user_social_media.update` | Update social media details |
+| 26 | `DELETE /user-social-medias/:id` | `user_social_media.delete` | Soft-delete social media record |
+| 27 | `POST /user-skills` | `user_skill.create` | Create skill record with certificate |
+| 28 | `GET /user-skills` | `user_skill.read` | List all skill records with filters |
+| 29 | `GET /user-skills/:id` | `user_skill.read` | Get a single skill record by ID |
+| 30 | `PATCH/user-skills/:id` | `user_skill.update` | Update skill details |
+| 31 | `DELETE /user-skills/:id` | `user_skill.delete` | Soft-delete skill record |
+| 32 | `POST /user-languages` | `user_language.create` | Create language record |
+| 33 | `GET /user-languages` | `user_language.read` | List all language records with filters |
+| 34 | `GET /user-languages/:id` | `user_language.read` | Get a single language record by ID |
+| 35 | `PATCH/user-languages/:id` | `user_language.update` | Update language details |
+| 36 | `DELETE /user-languages/:id` | `user_language.delete` | Soft-delete language record |
+| 37 | `POST /user-documents` | `user_document.create` | Create document record with file |
+| 38 | `GET /user-documents` | `user_document.read` | List all document records with filters |
+| 39 | `GET /user-documents/:id` | `user_document.read` | Get a single document record by ID |
+| 40 | `PATCH/user-documents/:id` | `user_document.update` | Update document details |
+| 41 | `DELETE /user-documents/:id` | `user_document.delete` | Soft-delete document record |
+| 42 | `POST /user-projects` | `user_project.create` | Create project record with thumbnail |
+| 43 | `GET /user-projects` | `user_project.read` | List all project records with filters |
+| 44 | `GET /user-projects/:id` | `user_project.read` | Get a single project record by ID |
+| 45 | `PATCH/user-projects/:id` | `user_project.update` | Update project details |
+| 46 | `DELETE /user-projects/:id` | `user_project.delete` | Soft-delete project record |
 
 ---
 
@@ -312,6 +313,34 @@ Authorization: Bearer {{access_token}}
   "message": "User deleted successfully"
 }
 ```
+
+---
+
+### 1.6 Restore User
+
+**Request:**
+```
+POST /api/v1/user-management/users/{id}/restore
+```
+
+**Headers:**
+```
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "User restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** Restores a soft-deleted user. No request body required.
 
 ---
 

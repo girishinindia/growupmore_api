@@ -218,6 +218,14 @@ class InstructorManagementRepository {
       throw error;
     }
   }
+
+  async restoreInstructorProfile(id) {
+    const { error } = await supabase.rpc('sp_instructor_profiles_restore', { p_id: id });
+    if (error) {
+      logger.error({ error }, 'InstructorManagementRepository.restoreInstructorProfile failed');
+      throw error;
+    }
+  }
 }
 
 module.exports = new InstructorManagementRepository();

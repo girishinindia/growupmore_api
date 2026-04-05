@@ -280,6 +280,33 @@ class MasterDataController {
       next(error);
     }
   }
+
+  async restoreCountry(req, res, next) {
+    try {
+      const data = await masterDataService.restoreCountry(req.params.id);
+      sendSuccess(res, { message: 'Country restored successfully', data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async restoreState(req, res, next) {
+    try {
+      const data = await masterDataService.restoreState(req.params.id);
+      sendSuccess(res, { message: 'State restored successfully', data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async restoreCity(req, res, next) {
+    try {
+      const data = await masterDataService.restoreCity(req.params.id);
+      sendSuccess(res, { message: 'City restored successfully', data });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new MasterDataController();

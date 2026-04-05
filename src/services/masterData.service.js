@@ -305,6 +305,30 @@ class MasterDataService {
       throw error;
     }
   }
+
+  // ─── COUNTRIES — RESTORE ──────────────────────────────────────
+
+  async restoreCountry(id) {
+    if (!id) throw new BadRequestError('Country ID is required');
+    await masterDataRepository.restoreCountry(id);
+    return { id };
+  }
+
+  // ─── STATES — RESTORE ────────────────────────────────────────
+
+  async restoreState(id) {
+    if (!id) throw new BadRequestError('State ID is required');
+    await masterDataRepository.restoreState(id);
+    return { id };
+  }
+
+  // ─── CITIES — RESTORE ────────────────────────────────────────
+
+  async restoreCity(id) {
+    if (!id) throw new BadRequestError('City ID is required');
+    await masterDataRepository.restoreCity(id);
+    return { id };
+  }
 }
 
 module.exports = new MasterDataService();

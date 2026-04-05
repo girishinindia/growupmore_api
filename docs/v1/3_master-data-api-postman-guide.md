@@ -84,16 +84,19 @@ sequenceDiagram
 | 3 | `POST /api/v1/master-data/countries` | `country.create` | Create country (with optional flag image upload) |
 | 4 | `PATCH/api/v1/master-data/countries/:id` | `country.update` | Update country (with optional flag image upload) |
 | 5 | `DELETE /api/v1/master-data/countries/:id` | `country.delete` | Soft-delete country (auto-cleans CDN image) |
-| 6 | `GET /api/v1/master-data/states` | `state.read` | List all states |
-| 7 | `GET /api/v1/master-data/states/:id` | `state.read` | Get state by ID |
-| 8 | `POST /api/v1/master-data/states` | `state.create` | Create state |
-| 9 | `PATCH/api/v1/master-data/states/:id` | `state.update` | Update state |
-| 10 | `DELETE /api/v1/master-data/states/:id` | `state.delete` | Soft-delete state |
-| 11 | `GET /api/v1/master-data/cities` | `city.read` | List all cities |
-| 12 | `GET /api/v1/master-data/cities/:id` | `city.read` | Get city by ID |
-| 13 | `POST /api/v1/master-data/cities` | `city.create` | Create city |
-| 14 | `PATCH/api/v1/master-data/cities/:id` | `city.update` | Update city |
-| 15 | `DELETE /api/v1/master-data/cities/:id` | `city.delete` | Soft-delete city |
+| 6 | `POST /api/v1/master-data/countries/:id/restore` | `country.update` | Restore deleted country |
+| 7 | `GET /api/v1/master-data/states` | `state.read` | List all states |
+| 8 | `GET /api/v1/master-data/states/:id` | `state.read` | Get state by ID |
+| 9 | `POST /api/v1/master-data/states` | `state.create` | Create state |
+| 10 | `PATCH/api/v1/master-data/states/:id` | `state.update` | Update state |
+| 11 | `DELETE /api/v1/master-data/states/:id` | `state.delete` | Soft-delete state |
+| 12 | `POST /api/v1/master-data/states/:id/restore` | `state.update` | Restore deleted state |
+| 13 | `GET /api/v1/master-data/cities` | `city.read` | List all cities |
+| 14 | `GET /api/v1/master-data/cities/:id` | `city.read` | Get city by ID |
+| 15 | `POST /api/v1/master-data/cities` | `city.create` | Create city |
+| 16 | `PATCH/api/v1/master-data/cities/:id` | `city.update` | Update city |
+| 17 | `DELETE /api/v1/master-data/cities/:id` | `city.delete` | Soft-delete city |
+| 18 | `POST /api/v1/master-data/cities/:id/restore` | `city.update` | Restore deleted city |
 
 ---
 
@@ -472,6 +475,39 @@ DELETE http://localhost:5001/api/v1/master-data/countries/1
 
 ---
 
+## 6. Restore Country
+
+```
+POST http://localhost:5001/api/v1/master-data/countries/1/restore
+```
+
+**Permission Required:** `country.update`
+
+> **Note:** Restores a soft-deleted country record. No request body required.
+
+**Response — 200 OK:**
+
+```json
+{
+  "success": true,
+  "message": "Country restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+**Response — 404 Not Found:**
+
+```json
+{
+  "success": false,
+  "message": "Country with ID 999 not found"
+}
+```
+
+---
+
 ## 6. List States
 
 ```
@@ -696,7 +732,40 @@ DELETE http://localhost:5001/api/v1/master-data/states/1
 
 ---
 
-## 11. List Cities
+## 11. Restore State
+
+```
+POST http://localhost:5001/api/v1/master-data/states/1/restore
+```
+
+**Permission Required:** `state.update`
+
+> **Note:** Restores a soft-deleted state record. No request body required.
+
+**Response — 200 OK:**
+
+```json
+{
+  "success": true,
+  "message": "State restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+**Response — 404 Not Found:**
+
+```json
+{
+  "success": false,
+  "message": "State with ID 999 not found"
+}
+```
+
+---
+
+## 12. List Cities
 
 ```
 GET http://localhost:5001/api/v1/master-data/cities
@@ -757,7 +826,7 @@ GET http://localhost:5001/api/v1/master-data/cities?cityTimezone=Asia/Kolkata&pa
 
 ---
 
-## 12. Get City by ID
+## 13. Get City by ID
 
 ```
 GET http://localhost:5001/api/v1/master-data/cities/1
@@ -803,7 +872,7 @@ GET http://localhost:5001/api/v1/master-data/cities/1
 
 ---
 
-## 13. Create City
+## 14. Create City
 
 ```
 POST http://localhost:5001/api/v1/master-data/cities
@@ -866,7 +935,7 @@ POST http://localhost:5001/api/v1/master-data/cities
 
 ---
 
-## 14. Update City
+## 15. Update City
 
 ```
 PATCH http://localhost:5001/api/v1/master-data/cities/1
@@ -912,7 +981,7 @@ PATCH http://localhost:5001/api/v1/master-data/cities/1
 
 ---
 
-## 15. Delete City (Soft-Delete)
+## 16. Delete City (Soft-Delete)
 
 ```
 DELETE http://localhost:5001/api/v1/master-data/cities/1
@@ -926,6 +995,39 @@ DELETE http://localhost:5001/api/v1/master-data/cities/1
 {
   "success": true,
   "message": "City deleted successfully"
+}
+```
+
+---
+
+## 17. Restore City
+
+```
+POST http://localhost:5001/api/v1/master-data/cities/1/restore
+```
+
+**Permission Required:** `city.update`
+
+> **Note:** Restores a soft-deleted city record. No request body required.
+
+**Response — 200 OK:**
+
+```json
+{
+  "success": true,
+  "message": "City restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+**Response — 404 Not Found:**
+
+```json
+{
+  "success": false,
+  "message": "City with ID 999 not found"
 }
 ```
 
@@ -985,6 +1087,39 @@ Flag images are stored on **Bunny.net Storage** and served via **Bunny CDN**.
 | `city.delete` | Delete City | city | delete | global |
 
 > All permissions are auto-assigned to `super_admin` and `admin` roles via `phase02_master_data_permissions_seed.sql`.
+
+---
+
+## Testing Workflow
+
+Follow this step-by-step workflow to test the complete master data API:
+
+### Countries Test Flow
+
+1. **List Countries** (GET /countries) - Verify permissions
+2. **Create Country** (POST /countries) - Add test data with flag image
+3. **Get Country by ID** (GET /countries/{id}) - Retrieve created country
+4. **Update Country** (PATCH /countries/{id}) - Modify country details
+5. **Delete Country** (DELETE /countries/{id}) - Soft-delete the country
+6. **Restore Country** (POST /countries/{id}/restore) - Restore the deleted country
+
+### States Test Flow
+
+1. **List States** (GET /states) - Filter by country
+2. **Create State** (POST /states) - Add state for test country
+3. **Get State by ID** (GET /states/{id}) - Retrieve created state
+4. **Update State** (PATCH /states/{id}) - Modify state details
+5. **Delete State** (DELETE /states/{id}) - Soft-delete the state
+6. **Restore State** (POST /states/{id}/restore) - Restore the deleted state
+
+### Cities Test Flow
+
+1. **List Cities** (GET /cities) - Filter by state/country
+2. **Create City** (POST /cities) - Add city for test state
+3. **Get City by ID** (GET /cities/{id}) - Retrieve created city
+4. **Update City** (PATCH /cities/{id}) - Modify city details
+5. **Delete City** (DELETE /cities/{id}) - Soft-delete the city
+6. **Restore City** (POST /cities/{id}/restore) - Restore the deleted city
 
 ---
 

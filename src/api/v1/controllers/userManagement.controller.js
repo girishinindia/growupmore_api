@@ -79,6 +79,15 @@ class UserManagementController {
     }
   }
 
+  async restoreUser(req, res, next) {
+    try {
+      const data = await userManagementService.restoreUser(req.params.id);
+      sendSuccess(res, { message: 'User restored successfully', data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   // ============ USER PROFILES ============
   async getUserProfiles(req, res, next) {
     try {

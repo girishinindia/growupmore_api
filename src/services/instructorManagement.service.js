@@ -112,6 +112,12 @@ class InstructorManagementService {
       throw error;
     }
   }
+
+  async restoreInstructorProfile(id) {
+    if (!id) throw new BadRequestError('Instructor Profile ID is required');
+    await instructorManagementRepository.restoreInstructorProfile(id);
+    return { id };
+  }
 }
 
 module.exports = new InstructorManagementService();

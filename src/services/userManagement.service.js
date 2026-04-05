@@ -158,6 +158,12 @@ class UserManagementService {
     }
   }
 
+  async restoreUser(id) {
+    if (!id) throw new BadRequestError('User ID is required');
+    await userManagementRepository.restoreUser(id);
+    return { id };
+  }
+
   // ============================================================================
   // USER PROFILES ENTITY
   // ============================================================================

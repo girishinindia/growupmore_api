@@ -53,6 +53,7 @@ graph TB
 | 3 | `GET /instructor-profiles/:id` | `instructor_profile.read` | Get a single instructor by ID |
 | 4 | `PATCH/instructor-profiles/:id` | `instructor_profile.update` | Update instructor details |
 | 5 | `DELETE /instructor-profiles/:id` | `instructor_profile.delete` | Soft-delete an instructor |
+| 6 | `POST /instructor-profiles/:id/restore` | `instructor_profile.update` | Restore a soft-deleted instructor |
 
 ---
 
@@ -485,6 +486,34 @@ pm.test("Status is 200", () => pm.response.to.have.status(200));
 const json = pm.response.json();
 pm.test("Success is true", () => pm.expect(json.success).to.equal(true));
 ```
+
+---
+
+### 1.11 Restore Instructor Profile
+
+**Request:**
+```
+POST /api/v1/instructor-management/instructor-profiles/{id}/restore
+```
+
+**Headers:**
+```
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Instructor profile restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** Restores a soft-deleted record. No request body required.
 
 ---
 
