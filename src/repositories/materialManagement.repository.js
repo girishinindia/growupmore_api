@@ -722,6 +722,90 @@ class MaterialManagementRepository {
       throw err;
     }
   }
+
+  // ─────────────────────────────────────────────────────────────
+  // RESTORE METHODS
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * restoreSubject
+   * Restores a soft-deleted subject and returns the restored record
+   */
+  async restoreSubject(subjectId, restoreTranslations = false) {
+    try {
+      const { error } = await supabase.rpc('sp_subjects_restore', {
+        p_id: subjectId,
+        p_restore_translations: restoreTranslations,
+      });
+
+      if (error) throw error;
+
+      return await this.findSubjectById(subjectId);
+    } catch (err) {
+      logger.error(`Error restoring subject: ${err.message}`);
+      throw err;
+    }
+  }
+
+  /**
+   * restoreChapter
+   * Restores a soft-deleted chapter and returns the restored record
+   */
+  async restoreChapter(chapterId, restoreTranslations = false) {
+    try {
+      const { error } = await supabase.rpc('sp_chapters_restore', {
+        p_id: chapterId,
+        p_restore_translations: restoreTranslations,
+      });
+
+      if (error) throw error;
+
+      return await this.findChapterById(chapterId);
+    } catch (err) {
+      logger.error(`Error restoring chapter: ${err.message}`);
+      throw err;
+    }
+  }
+
+  /**
+   * restoreTopic
+   * Restores a soft-deleted topic and returns the restored record
+   */
+  async restoreTopic(topicId, restoreTranslations = false) {
+    try {
+      const { error } = await supabase.rpc('sp_topics_restore', {
+        p_id: topicId,
+        p_restore_translations: restoreTranslations,
+      });
+
+      if (error) throw error;
+
+      return await this.findTopicById(topicId);
+    } catch (err) {
+      logger.error(`Error restoring topic: ${err.message}`);
+      throw err;
+    }
+  }
+
+  /**
+   * restoreSubTopic
+   * Restores a soft-deleted sub-topic and returns the restored record
+   */
+  async restoreSubTopic(subTopicId, restoreTranslations = false) {
+    try {
+      const { error } = await supabase.rpc('sp_sub_topics_restore', {
+        p_id: subTopicId,
+        p_restore_translations: restoreTranslations,
+      });
+
+      if (error) throw error;
+
+      return await this.findSubTopicById(subTopicId);
+    } catch (err) {
+      logger.error(`Error restoring sub-topic: ${err.message}`);
+      throw err;
+    }
+  }
 }
 
 module.exports = new MaterialManagementRepository();

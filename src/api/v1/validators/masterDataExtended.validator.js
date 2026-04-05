@@ -304,6 +304,11 @@ const categoryListQuerySchema = listQuerySchema.extend({
   isNew: z.enum(['true', 'false']).transform(v => v === 'true').optional(),
 });
 
+const restoreCategorySchema = z
+  .preprocess((val) => (val === undefined || val === null ? {} : val), z.object({
+    restoreTranslations: z.boolean().optional().default(false),
+  }));
+
 // ============================================================================
 // SUB CATEGORIES SCHEMAS
 // ============================================================================
@@ -405,6 +410,7 @@ module.exports = {
   createCategorySchema,
   updateCategorySchema,
   categoryListQuerySchema,
+  restoreCategorySchema,
 
   // Sub Categories
   createSubCategorySchema,

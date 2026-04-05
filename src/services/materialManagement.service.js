@@ -320,6 +320,62 @@ class MaterialManagementService {
       throw error;
     }
   }
+
+  // ─────────────────────────────────────────────────────────────
+  // RESTORE METHODS
+  // ─────────────────────────────────────────────────────────────
+
+  async restoreSubject(subjectId, restoreTranslations, actingUserId) {
+    try {
+      if (!subjectId) throw new BadRequestError('Subject ID is required');
+      if (!actingUserId) throw new BadRequestError('Acting user ID is required');
+      const restored = await materialManagementRepository.restoreSubject(subjectId, restoreTranslations);
+      logger.info(`Subject restored: ${subjectId}`, { restoredBy: actingUserId });
+      return restored;
+    } catch (error) {
+      logger.error(`Error restoring subject ${subjectId}:`, error);
+      throw error;
+    }
+  }
+
+  async restoreChapter(chapterId, restoreTranslations, actingUserId) {
+    try {
+      if (!chapterId) throw new BadRequestError('Chapter ID is required');
+      if (!actingUserId) throw new BadRequestError('Acting user ID is required');
+      const restored = await materialManagementRepository.restoreChapter(chapterId, restoreTranslations);
+      logger.info(`Chapter restored: ${chapterId}`, { restoredBy: actingUserId });
+      return restored;
+    } catch (error) {
+      logger.error(`Error restoring chapter ${chapterId}:`, error);
+      throw error;
+    }
+  }
+
+  async restoreTopic(topicId, restoreTranslations, actingUserId) {
+    try {
+      if (!topicId) throw new BadRequestError('Topic ID is required');
+      if (!actingUserId) throw new BadRequestError('Acting user ID is required');
+      const restored = await materialManagementRepository.restoreTopic(topicId, restoreTranslations);
+      logger.info(`Topic restored: ${topicId}`, { restoredBy: actingUserId });
+      return restored;
+    } catch (error) {
+      logger.error(`Error restoring topic ${topicId}:`, error);
+      throw error;
+    }
+  }
+
+  async restoreSubTopic(subTopicId, restoreTranslations, actingUserId) {
+    try {
+      if (!subTopicId) throw new BadRequestError('Sub-Topic ID is required');
+      if (!actingUserId) throw new BadRequestError('Acting user ID is required');
+      const restored = await materialManagementRepository.restoreSubTopic(subTopicId, restoreTranslations);
+      logger.info(`Sub-Topic restored: ${subTopicId}`, { restoredBy: actingUserId });
+      return restored;
+    } catch (error) {
+      logger.error(`Error restoring sub-topic ${subTopicId}:`, error);
+      throw error;
+    }
+  }
 }
 
 module.exports = new MaterialManagementService();

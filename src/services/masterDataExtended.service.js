@@ -868,6 +868,20 @@ class MasterDataExtendedService {
     }
   }
 
+  async restoreCategory(categoryId, restoreTranslations, actingUserId) {
+    try {
+      if (!categoryId) throw new BadRequestError('Category ID is required');
+      if (!actingUserId) throw new BadRequestError('Acting user ID is required');
+
+      const restored = await masterDataExtendedRepository.restoreCategory(categoryId, restoreTranslations);
+      logger.info(`Category restored: ${categoryId}`, { restoredBy: actingUserId });
+      return restored;
+    } catch (error) {
+      logger.error(`Error restoring category ${categoryId}:`, error);
+      throw error;
+    }
+  }
+
   // ========== SUB CATEGORIES ==========
 
   async getSubCategories(options = {}) {

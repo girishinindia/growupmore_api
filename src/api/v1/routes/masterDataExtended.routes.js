@@ -47,6 +47,7 @@ const {
   createCategorySchema,
   updateCategorySchema,
   categoryListQuerySchema,
+  restoreCategorySchema,
   createSubCategorySchema,
   updateSubCategorySchema,
   subCategoryListQuerySchema,
@@ -165,6 +166,7 @@ router.get('/categories/:id', authorize('category.read'), validate(idParamSchema
 router.post('/categories', authorize('category.create'), uploadCategoryImages, validate(createCategorySchema), ctrl.createCategory);
 router.patch('/categories/:id', authorize('category.update'), validate(idParamSchema, 'params'), uploadCategoryImages, validate(updateCategorySchema), ctrl.updateCategory);
 router.delete('/categories/:id', authorize('category.delete'), validate(idParamSchema, 'params'), ctrl.deleteCategory);
+router.post('/categories/:id/restore', authorize('category.update'), validate(idParamSchema, 'params'), validate(restoreCategorySchema), ctrl.restoreCategory);
 
 // ============================================================================
 // SUB CATEGORIES ROUTES (with icon + cover image upload)

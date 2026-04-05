@@ -256,6 +256,44 @@ class MaterialManagementController {
       next(error);
     }
   }
+
+  // ============ RESTORE METHODS ============
+
+  async restoreSubject(req, res, next) {
+    try {
+      const data = await materialManagementService.restoreSubject(req.params.id, req.body.restoreTranslations, req.user.userId);
+      sendSuccess(res, { data, message: 'Subject restored successfully' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async restoreChapter(req, res, next) {
+    try {
+      const data = await materialManagementService.restoreChapter(req.params.id, req.body.restoreTranslations, req.user.userId);
+      sendSuccess(res, { data, message: 'Chapter restored successfully' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async restoreTopic(req, res, next) {
+    try {
+      const data = await materialManagementService.restoreTopic(req.params.id, req.body.restoreTranslations, req.user.userId);
+      sendSuccess(res, { data, message: 'Topic restored successfully' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async restoreSubTopic(req, res, next) {
+    try {
+      const data = await materialManagementService.restoreSubTopic(req.params.id, req.body.restoreTranslations, req.user.userId);
+      sendSuccess(res, { data, message: 'Sub-Topic restored successfully' });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new MaterialManagementController();

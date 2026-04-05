@@ -48,21 +48,25 @@ graph LR
 | 1.3 | GET | `/subjects/:id` | `subject.read` | Get subject by ID |
 | 1.4 | PATCH | `/subjects/:id` | `subject.update` | Update subject |
 | 1.5 | DELETE | `/subjects/:id` | `subject.delete` | Delete subject |
+| 1.6 | POST | `/subjects/:id/restore` | `subject.update` | Restore deleted subject |
 | 2.1 | POST | `/chapters` | `chapter.create` | Create new chapter |
 | 2.2 | GET | `/chapters` | `chapter.read` | List all chapters |
 | 2.3 | GET | `/chapters/:id` | `chapter.read` | Get chapter by ID |
 | 2.4 | PATCH | `/chapters/:id` | `chapter.update` | Update chapter |
 | 2.5 | DELETE | `/chapters/:id` | `chapter.delete` | Delete chapter |
+| 2.6 | POST | `/chapters/:id/restore` | `chapter.update` | Restore deleted chapter |
 | 3.1 | POST | `/topics` | `topic.create` | Create new topic |
 | 3.2 | GET | `/topics` | `topic.read` | List all topics |
 | 3.3 | GET | `/topics/:id` | `topic.read` | Get topic by ID |
 | 3.4 | PATCH | `/topics/:id` | `topic.update` | Update topic |
 | 3.5 | DELETE | `/topics/:id` | `topic.delete` | Delete topic |
+| 3.6 | POST | `/topics/:id/restore` | `topic.update` | Restore deleted topic |
 | 4.1 | POST | `/sub-topics` | `sub_topic.create` | Create new sub-topic |
 | 4.2 | GET | `/sub-topics` | `sub_topic.read` | List all sub-topics |
 | 4.3 | GET | `/sub-topics/:id` | `sub_topic.read` | Get sub-topic by ID |
 | 4.4 | PATCH | `/sub-topics/:id` | `sub_topic.update` | Update sub-topic |
 | 4.5 | DELETE | `/sub-topics/:id` | `sub_topic.delete` | Delete sub-topic |
+| 4.6 | POST | `/sub-topics/:id/restore` | `sub_topic.update` | Restore deleted sub-topic |
 
 ---
 
@@ -321,6 +325,46 @@ Content-Type: application/json
 
 ---
 
+### 1.6 Restore Subject
+
+Restores a soft-deleted subject. Optionally restores associated translations.
+
+**Request:**
+```
+POST /api/v1/material-management/subjects/550e8400-e29b-41d4-a716-446655440000/restore
+```
+
+**Headers:**
+```
+Authorization: Bearer <JWT_TOKEN>
+Content-Type: application/json
+```
+
+**Body (optional):**
+```json
+{
+  "restoreTranslations": true
+}
+```
+
+**Field Descriptions:**
+- `restoreTranslations` (boolean, optional, default: false): If `true`, also restores soft-deleted translations associated with this subject
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Subject restored successfully",
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000"
+  }
+}
+```
+
+> **Note:** You can send an empty body or omit the body entirely. The endpoint defaults `restoreTranslations` to `false`.
+
+---
+
 ## 2. CHAPTERS
 
 Chapters are subdivisions of subjects that organize content hierarchically (e.g., Chapter 1: Algebra Basics).
@@ -567,6 +611,46 @@ Content-Type: application/json
   }
 }
 ```
+
+---
+
+### 2.6 Restore Chapter
+
+Restores a soft-deleted chapter. Optionally restores associated translations.
+
+**Request:**
+```
+POST /api/v1/material-management/chapters/660e8400-e29b-41d4-a716-446655440001/restore
+```
+
+**Headers:**
+```
+Authorization: Bearer <JWT_TOKEN>
+Content-Type: application/json
+```
+
+**Body (optional):**
+```json
+{
+  "restoreTranslations": true
+}
+```
+
+**Field Descriptions:**
+- `restoreTranslations` (boolean, optional, default: false): If `true`, also restores soft-deleted translations associated with this chapter
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Chapter restored successfully",
+  "data": {
+    "id": "660e8400-e29b-41d4-a716-446655440001"
+  }
+}
+```
+
+> **Note:** You can send an empty body or omit the body entirely. The endpoint defaults `restoreTranslations` to `false`.
 
 ---
 
@@ -861,6 +945,46 @@ Content-Type: application/json
   }
 }
 ```
+
+---
+
+### 3.6 Restore Topic
+
+Restores a soft-deleted topic. Optionally restores associated translations.
+
+**Request:**
+```
+POST /api/v1/material-management/topics/770e8400-e29b-41d4-a716-446655440002/restore
+```
+
+**Headers:**
+```
+Authorization: Bearer <JWT_TOKEN>
+Content-Type: application/json
+```
+
+**Body (optional):**
+```json
+{
+  "restoreTranslations": true
+}
+```
+
+**Field Descriptions:**
+- `restoreTranslations` (boolean, optional, default: false): If `true`, also restores soft-deleted translations associated with this topic
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Topic restored successfully",
+  "data": {
+    "id": "770e8400-e29b-41d4-a716-446655440002"
+  }
+}
+```
+
+> **Note:** You can send an empty body or omit the body entirely. The endpoint defaults `restoreTranslations` to `false`.
 
 ---
 
@@ -1172,6 +1296,46 @@ Content-Type: application/json
 
 ---
 
+### 4.6 Restore Sub-Topic
+
+Restores a soft-deleted sub-topic. Optionally restores associated translations.
+
+**Request:**
+```
+POST /api/v1/material-management/sub-topics/880e8400-e29b-41d4-a716-446655440003/restore
+```
+
+**Headers:**
+```
+Authorization: Bearer <JWT_TOKEN>
+Content-Type: application/json
+```
+
+**Body (optional):**
+```json
+{
+  "restoreTranslations": true
+}
+```
+
+**Field Descriptions:**
+- `restoreTranslations` (boolean, optional, default: false): If `true`, also restores soft-deleted translations associated with this sub-topic
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Sub-Topic restored successfully",
+  "data": {
+    "id": "880e8400-e29b-41d4-a716-446655440003"
+  }
+}
+```
+
+> **Note:** You can send an empty body or omit the body entirely. The endpoint defaults `restoreTranslations` to `false`.
+
+---
+
 ## Common Errors
 
 | Status | Error Code | Message | Solution |
@@ -1195,6 +1359,7 @@ Content-Type: application/json
 6. **List Entities** — GET requests with various filters and pagination
 7. **Update Entities** — PATCH requests to modify specific records
 8. **Delete Entities** — DELETE requests to soft-delete records
+9. **Restore Entities** — POST `/:id/restore` to restore soft-deleted records
 
 ---
 

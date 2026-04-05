@@ -1025,6 +1025,20 @@ class MasterDataExtendedRepository {
     }
   }
 
+  async restoreCategory(categoryId, restoreTranslations = false) {
+    const { error } = await supabase.rpc('sp_categories_restore', {
+      p_id: categoryId,
+      p_restore_translations: restoreTranslations,
+    });
+
+    if (error) {
+      logger.error({ error }, 'MasterDataExtendedRepository.restoreCategory failed');
+      throw error;
+    }
+
+    return this.findCategoryById(categoryId);
+  }
+
   // ─────────────────────────────────────────────────────────────
   //  SUB CATEGORIES — READ
   // ─────────────────────────────────────────────────────────────

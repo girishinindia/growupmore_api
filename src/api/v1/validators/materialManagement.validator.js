@@ -218,6 +218,19 @@ const subTopicListQuerySchema = listQuerySchema.extend({
 });
 
 // ============================================================================
+// RESTORE SCHEMAS
+// ============================================================================
+
+/**
+ * Schema for restoring soft-deleted entities
+ * restoreTranslations: optional flag to restore translations as well
+ */
+const restoreSchema = z
+  .preprocess((val) => (val === undefined || val === null ? {} : val), z.object({
+    restoreTranslations: z.boolean().optional().default(false),
+  }));
+
+// ============================================================================
 // EXPORTS
 // ============================================================================
 
@@ -241,4 +254,6 @@ module.exports = {
   createSubTopicSchema,
   updateSubTopicSchema,
   subTopicListQuerySchema,
+  // Restore
+  restoreSchema,
 };

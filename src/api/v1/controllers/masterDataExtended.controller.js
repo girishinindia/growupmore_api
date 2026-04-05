@@ -687,6 +687,15 @@ class MasterDataExtendedController {
     }
   }
 
+  async restoreCategory(req, res, next) {
+    try {
+      const data = await masterDataExtendedService.restoreCategory(req.params.id, req.body.restoreTranslations, req.user.userId);
+      sendSuccess(res, { data, message: 'Category restored successfully' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   // ==================== SUB CATEGORIES ====================
 
   async getSubCategories(req, res, next) {

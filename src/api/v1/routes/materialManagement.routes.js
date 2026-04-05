@@ -10,6 +10,7 @@ const {
   createChapterSchema, updateChapterSchema, chapterListQuerySchema,
   createTopicSchema, updateTopicSchema, topicListQuerySchema,
   createSubTopicSchema, updateSubTopicSchema, subTopicListQuerySchema,
+  restoreSchema,
 } = require('../validators/materialManagement.validator');
 
 const router = Router();
@@ -62,6 +63,15 @@ router.delete(
   ctrl.deleteSubject
 );
 
+// POST /subjects/:id/restore — Restore subject
+router.post(
+  '/subjects/:id/restore',
+  authorize('subject.update'),
+  validate(idParamSchema, 'params'),
+  validate(restoreSchema),
+  ctrl.restoreSubject
+);
+
 // ============================================================================
 // CHAPTERS ROUTES (/chapters)
 // ============================================================================
@@ -105,6 +115,15 @@ router.delete(
   authorize('chapter.delete'),
   validate(idParamSchema, 'params'),
   ctrl.deleteChapter
+);
+
+// POST /chapters/:id/restore — Restore chapter
+router.post(
+  '/chapters/:id/restore',
+  authorize('chapter.update'),
+  validate(idParamSchema, 'params'),
+  validate(restoreSchema),
+  ctrl.restoreChapter
 );
 
 // ============================================================================
@@ -152,6 +171,15 @@ router.delete(
   ctrl.deleteTopic
 );
 
+// POST /topics/:id/restore — Restore topic
+router.post(
+  '/topics/:id/restore',
+  authorize('topic.update'),
+  validate(idParamSchema, 'params'),
+  validate(restoreSchema),
+  ctrl.restoreTopic
+);
+
 // ============================================================================
 // SUB-TOPICS ROUTES (/sub-topics)
 // ============================================================================
@@ -195,6 +223,15 @@ router.delete(
   authorize('sub_topic.delete'),
   validate(idParamSchema, 'params'),
   ctrl.deleteSubTopic
+);
+
+// POST /sub-topics/:id/restore — Restore sub-topic
+router.post(
+  '/sub-topics/:id/restore',
+  authorize('sub_topic.update'),
+  validate(idParamSchema, 'params'),
+  validate(restoreSchema),
+  ctrl.restoreSubTopic
 );
 
 module.exports = router;

@@ -44,7 +44,7 @@ graph TB
 
 ---
 
-## Complete Endpoint Reference (55 Routes)
+## Complete Endpoint Reference (56 Routes)
 
 ### Test Order
 
@@ -59,8 +59,8 @@ graph TB
 | 31-35 | Specializations | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | specialization.* | CRUD + icon upload |
 | 36-40 | Learning Goals | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | learning_goal.* | CRUD + icon upload |
 | 41-45 | Social Medias | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | social_media.* | CRUD + icon upload |
-| 46-50 | Categories | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | category.* | CRUD + dual image upload |
-| 51-55 | Sub Categories | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | sub_category.* | CRUD + dual image upload + parent validation |
+| 46-51 | Categories | GET, GET/:id, POST, PATCH/:id, DELETE/:id, POST/:id/restore | — | category.* | CRUD + dual image upload + restore |
+| 52-56 | Sub Categories | GET, GET/:id, POST, PATCH/:id, DELETE/:id | — | sub_category.* | CRUD + dual image upload + parent validation |
 
 ---
 
@@ -1987,6 +1987,46 @@ DELETE http://localhost:5001/api/v1/master-data/categories/1
   "message": "Category deleted successfully"
 }
 ```
+
+---
+
+### 10.6 Restore Category
+
+Restores a soft-deleted category. Optionally restores associated translations.
+
+```
+POST http://localhost:5001/api/v1/master-data/categories/1/restore
+```
+
+**Permission Required:** `category.update`
+
+**Body (optional):**
+
+```json
+{
+  "restoreTranslations": true
+}
+```
+
+**Field Descriptions:**
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| restoreTranslations | boolean | false | If `true`, also restores soft-deleted translations associated with this category |
+
+**Response — 200 OK:**
+
+```json
+{
+  "success": true,
+  "message": "Category restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** You can send an empty body or omit the body entirely. The endpoint defaults `restoreTranslations` to `false`.
 
 ---
 
