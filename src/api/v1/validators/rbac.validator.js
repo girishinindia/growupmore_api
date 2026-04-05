@@ -117,9 +117,10 @@ const assignmentListQuerySchema = listQuerySchema.extend({
 // RESTORE SCHEMA
 // ============================================================================
 
-const restoreRoleSchema = z.object({
-  restorePermissions: z.boolean().optional().default(false),
-});
+const restoreRoleSchema = z
+  .preprocess((val) => (val === undefined || val === null ? {} : val), z.object({
+    restorePermissions: z.boolean().optional().default(false),
+  }));
 
 // ============================================================================
 // EXPORTS
