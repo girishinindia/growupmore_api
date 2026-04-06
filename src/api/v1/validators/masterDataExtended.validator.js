@@ -9,6 +9,7 @@
  */
 
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -109,7 +110,7 @@ const languageListQuerySchema = listQuerySchema.extend({
 
 const createEducationLevelSchema = z.object({
   name: z.string().min(1).max(200).trim(),
-  levelOrder: z.number().int().positive('Level order must be a positive integer'),
+  levelOrder: coercePositiveInt,
   levelCategory: z.string().optional().default('other'),
   abbreviation: z.string().max(20).optional().nullable(),
   description: z.string().optional().nullable(),
@@ -120,7 +121,7 @@ const createEducationLevelSchema = z.object({
 
 const updateEducationLevelSchema = z.object({
   name: z.string().min(1).max(200).trim().optional(),
-  levelOrder: z.number().int().positive().optional(),
+  levelOrder: coercePositiveInt.optional(),
   levelCategory: z.string().optional(),
   abbreviation: z.string().max(20).optional().nullable(),
   description: z.string().optional().nullable(),
@@ -156,14 +157,14 @@ const documentTypeListQuerySchema = listQuerySchema;
 // ============================================================================
 
 const createDocumentSchema = z.object({
-  documentTypeId: z.number().int().positive('Document Type ID is required'),
+  documentTypeId: coercePositiveInt,
   name: z.string().min(1).max(200).trim(),
   description: z.string().optional().nullable(),
   isActive: coerceBoolean.optional().default(true),
 });
 
 const updateDocumentSchema = z.object({
-  documentTypeId: z.number().int().positive().optional(),
+  documentTypeId: coercePositiveInt.optional(),
   name: z.string().min(1).max(200).trim().optional(),
   description: z.string().optional().nullable(),
   isActive: coerceBoolean.optional(),
@@ -322,7 +323,7 @@ const createSubCategorySchema = z.object({
       if (typeof val === 'string' && /^\d+$/.test(val)) return Number(val);
       return val;
     },
-    z.number().int().positive('Category ID is required')
+    coercePositiveInt
   ),
   code: z.string().min(2).max(100).trim(),
   slug: z.string().optional().nullable(),
@@ -337,7 +338,7 @@ const updateSubCategorySchema = z.object({
       if (typeof val === 'string' && /^\d+$/.test(val)) return Number(val);
       return val;
     },
-    z.number().int().positive()
+    coercePositiveInt
   ).optional(),
   code: z.string().min(2).max(100).trim().optional(),
   slug: z.string().optional().nullable(),

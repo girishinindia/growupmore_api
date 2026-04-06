@@ -1,4 +1,5 @@
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -20,14 +21,14 @@ const listQuerySchema = z.object({
 // ============================================================================
 
 const createCourseBatchSchema = z.object({
-  courseId: z.number().int().positive(),
+  courseId: coercePositiveInt,
   batchOwner: z.string().max(255).optional().default('system'),
-  instructorId: z.number().int().positive().optional().nullable(),
+  instructorId: coercePositiveInt.optional().nullable(),
   code: z.string().max(255).trim().optional().nullable(),
   isFree: z.boolean().optional().default(false),
   price: z.number().nonnegative().optional().default(0),
   includesCourseAccess: z.boolean().optional().default(false),
-  maxStudents: z.number().int().positive().optional().nullable(),
+  maxStudents: coercePositiveInt.optional().nullable(),
   startsAt: z.string().datetime().optional().nullable(),
   endsAt: z.string().datetime().optional().nullable(),
   schedule: z.any().optional().nullable(),
@@ -41,7 +42,7 @@ const updateCourseBatchSchema = z.object({
   isFree: z.boolean().optional(),
   price: z.number().nonnegative().optional(),
   includesCourseAccess: z.boolean().optional(),
-  maxStudents: z.number().int().positive().optional().nullable(),
+  maxStudents: coercePositiveInt.optional().nullable(),
   startsAt: z.string().datetime().optional().nullable(),
   endsAt: z.string().datetime().optional().nullable(),
   schedule: z.any().optional().nullable(),
@@ -64,8 +65,8 @@ const courseBatchListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createBatchTranslationSchema = z.object({
-  batchId: z.number().int().positive(),
-  languageId: z.number().int().positive(),
+  batchId: coercePositiveInt,
+  languageId: coercePositiveInt,
   title: z.string().min(1).max(500).trim(),
   description: z.string().max(5000).optional().nullable(),
   shortDescription: z.string().max(1000).optional().nullable(),
@@ -102,11 +103,11 @@ const updateBatchTranslationSchema = z.object({
 // ============================================================================
 
 const createBatchSessionSchema = z.object({
-  batchId: z.number().int().positive(),
-  sessionNumber: z.number().int().positive(),
+  batchId: coercePositiveInt,
+  sessionNumber: coercePositiveInt,
   sessionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
   scheduledAt: z.string().datetime().optional().nullable(),
-  durationMinutes: z.number().int().positive().optional().nullable(),
+  durationMinutes: coercePositiveInt.optional().nullable(),
   meetingUrl: z.string().url().optional().nullable(),
   meetingId: z.string().max(255).optional().nullable(),
   recordingUrl: z.string().url().optional().nullable(),
@@ -117,7 +118,7 @@ const createBatchSessionSchema = z.object({
 const updateBatchSessionSchema = z.object({
   sessionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
   scheduledAt: z.string().datetime().optional().nullable(),
-  durationMinutes: z.number().int().positive().optional().nullable(),
+  durationMinutes: coercePositiveInt.optional().nullable(),
   meetingUrl: z.string().url().optional().nullable(),
   meetingId: z.string().max(255).optional().nullable(),
   recordingUrl: z.string().url().optional().nullable(),
@@ -135,8 +136,8 @@ const batchSessionListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createBatchSessionTranslationSchema = z.object({
-  batchSessionId: z.number().int().positive(),
-  languageId: z.number().int().positive(),
+  batchSessionId: coercePositiveInt,
+  languageId: coercePositiveInt,
   title: z.string().min(1).max(500).trim(),
   description: z.string().max(5000).optional().nullable(),
 }).strict();

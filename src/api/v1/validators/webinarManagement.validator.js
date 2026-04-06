@@ -7,6 +7,7 @@
  */
 
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -30,16 +31,16 @@ const listQuerySchema = z.object({
 
 const createWebinarSchema = z.object({
   webinarOwner: z.string().max(100).optional().default('system'),
-  instructorId: z.number().int().positive().optional().nullable(),
-  courseId: z.number().int().positive().optional().nullable(),
-  chapterId: z.number().int().positive().optional().nullable(),
+  instructorId: coercePositiveInt.optional().nullable(),
+  courseId: coercePositiveInt.optional().nullable(),
+  chapterId: coercePositiveInt.optional().nullable(),
   code: z.string().min(1).max(100).trim().optional().nullable(),
   slug: z.string().min(1).max(200).trim().optional().nullable(),
   isFree: z.boolean().optional().default(false),
   price: z.number().nonnegative().optional().default(0.00),
   scheduledAt: z.string().datetime().optional().nullable(),
   durationMinutes: z.number().int().nonnegative().optional().nullable(),
-  maxAttendees: z.number().int().positive().optional().nullable(),
+  maxAttendees: coercePositiveInt.optional().nullable(),
   registeredCount: z.number().int().nonnegative().optional().default(0),
   meetingPlatform: z.string().max(50).optional().default('zoom'),
   meetingUrl: z.string().max(500).url().optional().nullable(),
@@ -53,16 +54,16 @@ const createWebinarSchema = z.object({
 
 const updateWebinarSchema = z.object({
   webinarOwner: z.string().max(100).optional(),
-  instructorId: z.number().int().positive().optional().nullable(),
-  courseId: z.number().int().positive().optional().nullable(),
-  chapterId: z.number().int().positive().optional().nullable(),
+  instructorId: coercePositiveInt.optional().nullable(),
+  courseId: coercePositiveInt.optional().nullable(),
+  chapterId: coercePositiveInt.optional().nullable(),
   code: z.string().min(1).max(100).trim().optional().nullable(),
   slug: z.string().min(1).max(200).trim().optional().nullable(),
   isFree: z.boolean().optional(),
   price: z.number().nonnegative().optional(),
   scheduledAt: z.string().datetime().optional().nullable(),
   durationMinutes: z.number().int().nonnegative().optional().nullable(),
-  maxAttendees: z.number().int().positive().optional().nullable(),
+  maxAttendees: coercePositiveInt.optional().nullable(),
   registeredCount: z.number().int().nonnegative().optional(),
   meetingPlatform: z.string().max(50).optional(),
   meetingUrl: z.string().max(500).url().optional().nullable(),

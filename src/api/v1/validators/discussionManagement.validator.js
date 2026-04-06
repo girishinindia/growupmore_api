@@ -1,4 +1,5 @@
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -39,8 +40,8 @@ const listQuerySchema = z.object({
 
 const createDiscussionSchema = z
   .object({
-    courseId: z.number().int().positive(),
-    chapterId: z.number().int().positive().optional().nullable(),
+    courseId: coercePositiveInt,
+    chapterId: coercePositiveInt.optional().nullable(),
     discussionType: z.enum(['question', 'discussion']).optional().default('question'),
     title: z.string().min(1, 'Title is required').max(1000).trim(),
     body: z.string().min(1, 'Body is required').max(50000).trim(),
@@ -53,7 +54,7 @@ const updateDiscussionSchema = z
   .object({
     title: z.string().min(1).max(1000).trim().optional().nullable(),
     body: z.string().min(1).max(50000).trim().optional().nullable(),
-    chapterId: z.number().int().positive().optional().nullable(),
+    chapterId: coercePositiveInt.optional().nullable(),
     discussionType: z.enum(['question', 'discussion']).optional().nullable(),
     isPinned: z.boolean().optional().nullable(),
     isResolved: z.boolean().optional().nullable(),
@@ -91,7 +92,7 @@ const discussionListQuerySchema = listQuerySchema.extend({
 const createDiscussionReplySchema = z
   .object({
     body: z.string().min(1, 'Body is required').max(50000).trim(),
-    parentReplyId: z.number().int().positive().optional().nullable(),
+    parentReplyId: coercePositiveInt.optional().nullable(),
     isAcceptedAnswer: z.boolean().optional().default(false),
   })
   .strict();
@@ -99,7 +100,7 @@ const createDiscussionReplySchema = z
 const updateDiscussionReplySchema = z
   .object({
     body: z.string().min(1).max(50000).trim().optional().nullable(),
-    parentReplyId: z.number().int().positive().optional().nullable(),
+    parentReplyId: coercePositiveInt.optional().nullable(),
     isAcceptedAnswer: z.boolean().optional().nullable(),
     upvoteCount: z.number().int().nonnegative().optional().nullable(),
   })
@@ -125,8 +126,8 @@ const createDiscussionVoteSchema = z
   .object({
     voteableType: z.enum(['discussion', 'reply']),
     voteType: z.enum(['upvote', 'downvote']),
-    discussionId: z.number().int().positive().optional().nullable(),
-    replyId: z.number().int().positive().optional().nullable(),
+    discussionId: coercePositiveInt.optional().nullable(),
+    replyId: coercePositiveInt.optional().nullable(),
   })
   .strict()
   .refine(

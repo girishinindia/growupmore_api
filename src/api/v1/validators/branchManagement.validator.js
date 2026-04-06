@@ -7,6 +7,7 @@
  */
 
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -29,9 +30,9 @@ const listQuerySchema = z.object({
 // ============================================================================
 
 const createBranchSchema = z.object({
-  countryId: z.number().int().positive('Country ID is required'),
-  stateId: z.number().int().positive('State ID is required'),
-  cityId: z.number().int().positive('City ID is required'),
+  countryId: coercePositiveInt,
+  stateId: coercePositiveInt,
+  cityId: coercePositiveInt,
   name: z.string().min(1).max(200).trim(),
   code: z.string().max(50).optional().nullable(),
   branchType: z.string().max(50).optional().default('office'),
@@ -47,9 +48,9 @@ const createBranchSchema = z.object({
 });
 
 const updateBranchSchema = z.object({
-  countryId: z.number().int().positive().optional(),
-  stateId: z.number().int().positive().optional(),
-  cityId: z.number().int().positive().optional(),
+  countryId: coercePositiveInt.optional(),
+  stateId: coercePositiveInt.optional(),
+  cityId: coercePositiveInt.optional(),
   name: z.string().min(1).max(200).trim().optional(),
   code: z.string().max(50).optional().nullable(),
   branchType: z.string().max(50).optional().nullable(),
@@ -61,7 +62,7 @@ const updateBranchSchema = z.object({
   website: z.string().max(500).url().optional().nullable(),
   googleMapsUrl: z.string().max(500).url().optional().nullable(),
   timezone: z.string().max(50).optional().nullable(),
-  branchManagerId: z.number().int().positive().optional().nullable(),
+  branchManagerId: coercePositiveInt.optional().nullable(),
   isActive: z.boolean().optional(),
 });
 
@@ -81,7 +82,7 @@ const createDepartmentSchema = z.object({
   name: z.string().min(1).max(200).trim(),
   code: z.string().max(50).optional().nullable(),
   description: z.string().max(1000).optional().nullable(),
-  parentDepartmentId: z.number().int().positive().optional().nullable(),
+  parentDepartmentId: coercePositiveInt.optional().nullable(),
   isActive: z.boolean().optional().default(true),
 });
 
@@ -89,8 +90,8 @@ const updateDepartmentSchema = z.object({
   name: z.string().min(1).max(200).trim().optional(),
   code: z.string().max(50).optional().nullable(),
   description: z.string().max(1000).optional().nullable(),
-  parentDepartmentId: z.number().int().positive().optional().nullable(),
-  headUserId: z.number().int().positive().optional().nullable(),
+  parentDepartmentId: coercePositiveInt.optional().nullable(),
+  headUserId: coercePositiveInt.optional().nullable(),
   isActive: z.boolean().optional(),
 });
 
@@ -106,36 +107,36 @@ const departmentListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createBranchDepartmentSchema = z.object({
-  branchId: z.number().int().positive('Branch ID is required'),
-  departmentId: z.number().int().positive('Department ID is required'),
-  localHeadUserId: z.number().int().positive().optional().nullable(),
-  employeeCapacity: z.number().int().positive().optional().nullable(),
+  branchId: coercePositiveInt,
+  departmentId: coercePositiveInt,
+  localHeadUserId: coercePositiveInt.optional().nullable(),
+  employeeCapacity: coercePositiveInt.optional().nullable(),
   floorOrWing: z.string().max(100).optional().nullable(),
   extensionNumber: z.string().max(20).optional().nullable(),
   addressLine1: z.string().max(500).optional().nullable(),
   addressLine2: z.string().max(500).optional().nullable(),
   pincode: z.string().max(10).optional().nullable(),
-  countryId: z.number().int().positive().optional().nullable(),
-  stateId: z.number().int().positive().optional().nullable(),
-  cityId: z.number().int().positive().optional().nullable(),
+  countryId: coercePositiveInt.optional().nullable(),
+  stateId: coercePositiveInt.optional().nullable(),
+  cityId: coercePositiveInt.optional().nullable(),
   phone: z.string().max(20).optional().nullable(),
   googleMapsUrl: z.string().max(500).url().optional().nullable(),
   isActive: z.boolean().optional().default(true),
 });
 
 const updateBranchDepartmentSchema = z.object({
-  branchId: z.number().int().positive().optional(),
-  departmentId: z.number().int().positive().optional(),
-  localHeadUserId: z.number().int().positive().optional().nullable(),
-  employeeCapacity: z.number().int().positive().optional().nullable(),
+  branchId: coercePositiveInt.optional(),
+  departmentId: coercePositiveInt.optional(),
+  localHeadUserId: coercePositiveInt.optional().nullable(),
+  employeeCapacity: coercePositiveInt.optional().nullable(),
   floorOrWing: z.string().max(100).optional().nullable(),
   extensionNumber: z.string().max(20).optional().nullable(),
   addressLine1: z.string().max(500).optional().nullable(),
   addressLine2: z.string().max(500).optional().nullable(),
   pincode: z.string().max(10).optional().nullable(),
-  countryId: z.number().int().positive().optional().nullable(),
-  stateId: z.number().int().positive().optional().nullable(),
-  cityId: z.number().int().positive().optional().nullable(),
+  countryId: coercePositiveInt.optional().nullable(),
+  stateId: coercePositiveInt.optional().nullable(),
+  cityId: coercePositiveInt.optional().nullable(),
   phone: z.string().max(20).optional().nullable(),
   googleMapsUrl: z.string().max(500).url().optional().nullable(),
   isActive: z.boolean().optional(),

@@ -7,6 +7,7 @@
  */
 
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -28,7 +29,7 @@ const listQuerySchema = z.object({
 // ============================================================================
 
 const createReferralCodeSchema = z.object({
-  studentId: z.number().int().positive('Student ID is required'),
+  studentId: coercePositiveInt,
   referralCode: z.string().min(1).max(100).trim(),
   discountPercentage: z.number().min(0).max(100).optional().default(20.00),
   maxDiscountAmount: z.number().positive().optional().nullable(),

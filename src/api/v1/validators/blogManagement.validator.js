@@ -1,4 +1,5 @@
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -54,7 +55,7 @@ const createBlogCategorySchema = z
     name: z.string().min(1, 'Name is required').max(500).trim(),
     code: z.string().max(100).trim().optional(),
     description: z.string().max(2000).trim().optional(),
-    parentCategoryId: z.number().int().positive().optional().nullable(),
+    parentCategoryId: coercePositiveInt.optional().nullable(),
     displayOrder: z.number().int().nonnegative().optional().default(0),
     icon: z.string().max(500).optional(),
     coverImageUrl: z.string().max(1000).optional(),
@@ -67,7 +68,7 @@ const updateBlogCategorySchema = z
     name: z.string().min(1).max(500).trim().optional().nullable(),
     code: z.string().max(100).trim().optional().nullable(),
     description: z.string().max(2000).trim().optional().nullable(),
-    parentCategoryId: z.number().int().positive().optional().nullable(),
+    parentCategoryId: coercePositiveInt.optional().nullable(),
     displayOrder: z.number().int().nonnegative().optional().nullable(),
     icon: z.string().max(500).optional().nullable(),
     coverImageUrl: z.string().max(1000).optional().nullable(),
@@ -92,7 +93,7 @@ const blogCategoryListQuerySchema = listQuerySchema.extend({
 
 const createBlogCategoryTranslationSchema = z
   .object({
-    languageId: z.number().int().positive(),
+    languageId: coercePositiveInt,
     name: z.string().min(1, 'Name is required').max(500).trim(),
     description: z.string().max(2000).trim().optional(),
     isActive: z.boolean().optional(),
@@ -115,8 +116,8 @@ const createBlogSchema = z
   .object({
     title: z.string().min(1, 'Title is required').max(1000).trim(),
     blogOwner: z.enum(['system', 'instructor']).optional().default('system'),
-    authorId: z.number().int().positive().optional(),
-    categoryId: z.number().int().positive().optional(),
+    authorId: coercePositiveInt.optional(),
+    categoryId: coercePositiveInt.optional(),
     subtitle: z.string().max(500).trim().optional(),
     excerpt: z.string().max(2000).trim().optional(),
     metaTitle: z.string().max(500).optional(),
@@ -139,8 +140,8 @@ const updateBlogSchema = z
   .object({
     title: z.string().min(1).max(1000).trim().optional().nullable(),
     blogOwner: z.enum(['system', 'instructor']).optional().nullable(),
-    authorId: z.number().int().positive().optional().nullable(),
-    categoryId: z.number().int().positive().optional().nullable(),
+    authorId: coercePositiveInt.optional().nullable(),
+    categoryId: coercePositiveInt.optional().nullable(),
     subtitle: z.string().max(500).trim().optional().nullable(),
     excerpt: z.string().max(2000).trim().optional().nullable(),
     metaTitle: z.string().max(500).optional().nullable(),
@@ -160,7 +161,7 @@ const updateBlogSchema = z
     commentCount: z.number().int().nonnegative().optional().nullable(),
     shareCount: z.number().int().nonnegative().optional().nullable(),
     requiresApproval: z.boolean().optional().nullable(),
-    approvedBy: z.number().int().positive().optional().nullable(),
+    approvedBy: coercePositiveInt.optional().nullable(),
     approvedAt: z.string().datetime().optional().nullable(),
     rejectionReason: z.string().max(2000).optional().nullable(),
     isActive: z.boolean().optional().nullable(),
@@ -191,7 +192,7 @@ const blogListQuerySchema = listQuerySchema.extend({
 
 const createBlogTranslationSchema = z
   .object({
-    languageId: z.number().int().positive(),
+    languageId: coercePositiveInt,
     title: z.string().min(1, 'Title is required').max(1000).trim(),
     subtitle: z.string().max(500).trim().optional(),
     excerpt: z.string().max(2000).trim().optional(),
@@ -220,7 +221,7 @@ const updateBlogTranslationSchema = z
 
 const createContentBlockSchema = z
   .object({
-    blogId: z.number().int().positive(),
+    blogId: coercePositiveInt,
     blockType: z.enum(['text', 'image', 'video', 'text_with_image', 'text_with_video', 'text_with_media']),
     blockOrder: z.number().int().nonnegative().optional().default(0),
     content: z.string().max(50000).optional(),
@@ -271,7 +272,7 @@ const contentBlockListQuerySchema = listQuerySchema.extend({
 
 const createContentBlockTranslationSchema = z
   .object({
-    languageId: z.number().int().positive(),
+    languageId: coercePositiveInt,
     content: z.string().max(50000).optional(),
     imageAltText: z.string().max(500).optional(),
     imageCaption: z.string().max(2000).optional(),
@@ -294,7 +295,7 @@ const updateContentBlockTranslationSchema = z
 
 const createBlogTagSchema = z
   .object({
-    blogId: z.number().int().positive(),
+    blogId: coercePositiveInt,
     tag: z.string().min(1, 'Tag is required').max(100).trim(),
     displayOrder: z.number().int().nonnegative().optional().default(0),
     isActive: z.boolean().optional(),
@@ -327,9 +328,9 @@ const blogTagListQuerySchema = listQuerySchema.extend({
 
 const createBlogCommentSchema = z
   .object({
-    blogId: z.number().int().positive(),
+    blogId: coercePositiveInt,
     content: z.string().min(1, 'Content is required').max(5000).trim(),
-    parentCommentId: z.number().int().positive().optional().nullable(),
+    parentCommentId: coercePositiveInt.optional().nullable(),
     commentStatus: z.enum(['pending', 'approved', 'rejected', 'flagged']).optional().default('approved'),
     isActive: z.boolean().optional(),
   })
@@ -339,7 +340,7 @@ const updateBlogCommentSchema = z
   .object({
     content: z.string().min(1).max(5000).trim().optional().nullable(),
     commentStatus: z.enum(['pending', 'approved', 'rejected', 'flagged']).optional().nullable(),
-    moderatedBy: z.number().int().positive().optional().nullable(),
+    moderatedBy: coercePositiveInt.optional().nullable(),
     moderatedAt: z.string().datetime().optional().nullable(),
     rejectionReason: z.string().max(2000).optional().nullable(),
     isPinned: z.boolean().optional().nullable(),
@@ -372,7 +373,7 @@ const blogCommentListQuerySchema = listQuerySchema.extend({
 
 const createBlogCommentTranslationSchema = z
   .object({
-    languageId: z.number().int().positive(),
+    languageId: coercePositiveInt,
     content: z.string().min(1, 'Content is required').max(5000).trim(),
     isActive: z.boolean().optional(),
   })
@@ -392,8 +393,8 @@ const updateBlogCommentTranslationSchema = z
 const createBlogLikeSchema = z
   .object({
     likeableType: z.enum(['blog', 'comment']),
-    blogId: z.number().int().positive().optional(),
-    commentId: z.number().int().positive().optional(),
+    blogId: coercePositiveInt.optional(),
+    commentId: coercePositiveInt.optional(),
   })
   .strict()
   .refine(
@@ -433,8 +434,8 @@ const blogLikeListQuerySchema = listQuerySchema.extend({
 const createBlogFollowSchema = z
   .object({
     followType: z.enum(['author', 'category']),
-    authorId: z.number().int().positive().optional(),
-    categoryId: z.number().int().positive().optional(),
+    authorId: coercePositiveInt.optional(),
+    categoryId: coercePositiveInt.optional(),
     notifyNewPost: z.boolean().optional().default(true),
   })
   .strict()
@@ -475,8 +476,8 @@ const blogFollowListQuerySchema = listQuerySchema.extend({
 
 const createRelatedCourseSchema = z
   .object({
-    blogId: z.number().int().positive(),
-    courseId: z.number().int().positive(),
+    blogId: coercePositiveInt,
+    courseId: coercePositiveInt,
     displayOrder: z.number().int().nonnegative().optional().default(0),
     relevanceNote: z.string().max(1000).optional(),
   })

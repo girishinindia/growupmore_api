@@ -1,4 +1,5 @@
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 const paginationSchema = {
   page: z.preprocess(
@@ -61,13 +62,13 @@ const getEnrollmentsSchema = z.object({
 
 const createEnrollmentSchema = z.object({
   body: z.object({
-    studentId: z.number().int().positive('Student ID must be a positive integer'),
-    courseId: z.number().int().positive('Course ID must be a positive integer'),
+    studentId: coercePositiveInt,
+    courseId: coercePositiveInt,
     sourceType: z.string().optional().default('direct'),
-    bundleId: z.number().int().positive().optional().nullable(),
-    batchId: z.number().int().positive().optional().nullable(),
-    orderId: z.number().int().positive().optional().nullable(),
-    orderItemId: z.number().int().positive().optional().nullable(),
+    bundleId: coercePositiveInt.optional().nullable(),
+    batchId: coercePositiveInt.optional().nullable(),
+    orderId: coercePositiveInt.optional().nullable(),
+    orderItemId: coercePositiveInt.optional().nullable(),
     enrollmentStatus: z.string().optional().default('active'),
     enrolledAt: z.string().datetime().optional().nullable(),
     expiresAt: z.string().datetime().optional().nullable(),
@@ -102,13 +103,13 @@ const deleteEnrollmentSchema = z.object({
 
 const bulkDeleteEnrollmentsSchema = z.object({
   body: z.object({
-    ids: z.array(z.number().int().positive()).min(1),
+    ids: z.array(coercePositiveInt).min(1),
   }),
 });
 
 const bulkRestoreEnrollmentsSchema = z.object({
   body: z.object({
-    ids: z.array(z.number().int().positive()).min(1),
+    ids: z.array(coercePositiveInt).min(1),
   }),
 });
 
@@ -153,9 +154,9 @@ const getBatchEnrollmentsSchema = z.object({
 
 const createBatchEnrollmentSchema = z.object({
   body: z.object({
-    batchId: z.number().int().positive('Batch ID must be a positive integer'),
-    studentId: z.number().int().positive('Student ID must be a positive integer'),
-    orderId: z.number().int().positive().optional().nullable(),
+    batchId: coercePositiveInt,
+    studentId: coercePositiveInt,
+    orderId: coercePositiveInt.optional().nullable(),
     enrollmentStatus: z.string().optional().default('active'),
     enrolledAt: z.string().datetime().optional().nullable(),
     completedAt: z.string().datetime().optional().nullable(),
@@ -186,13 +187,13 @@ const deleteBatchEnrollmentSchema = z.object({
 
 const bulkDeleteBatchEnrollmentsSchema = z.object({
   body: z.object({
-    ids: z.array(z.number().int().positive()).min(1),
+    ids: z.array(coercePositiveInt).min(1),
   }),
 });
 
 const bulkRestoreBatchEnrollmentsSchema = z.object({
   body: z.object({
-    ids: z.array(z.number().int().positive()).min(1),
+    ids: z.array(coercePositiveInt).min(1),
   }),
 });
 
@@ -237,9 +238,9 @@ const getWebinarRegistrationsSchema = z.object({
 
 const createWebinarRegistrationSchema = z.object({
   body: z.object({
-    webinarId: z.number().int().positive('Webinar ID must be a positive integer'),
-    studentId: z.number().int().positive('Student ID must be a positive integer'),
-    orderId: z.number().int().positive().optional().nullable(),
+    webinarId: coercePositiveInt,
+    studentId: coercePositiveInt,
+    orderId: coercePositiveInt.optional().nullable(),
     registrationStatus: z.string().optional().default('registered'),
     registeredAt: z.string().datetime().optional().nullable(),
     attendedAt: z.string().datetime().optional().nullable(),
@@ -270,13 +271,13 @@ const deleteWebinarRegistrationSchema = z.object({
 
 const bulkDeleteWebinarRegistrationsSchema = z.object({
   body: z.object({
-    ids: z.array(z.number().int().positive()).min(1),
+    ids: z.array(coercePositiveInt).min(1),
   }),
 });
 
 const bulkRestoreWebinarRegistrationsSchema = z.object({
   body: z.object({
-    ids: z.array(z.number().int().positive()).min(1),
+    ids: z.array(coercePositiveInt).min(1),
   }),
 });
 

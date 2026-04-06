@@ -7,6 +7,7 @@
  */
 
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -29,20 +30,20 @@ const listQuerySchema = z.object({
 // ============================================================================
 
 const createStudentProfileSchema = z.object({
-  userId: z.number().int().positive('User ID is required'),
+  userId: coercePositiveInt,
   enrollmentNumber: z.string().min(1).max(100).trim(),
   enrollmentDate: z.string().date().optional().nullable(),
   enrollmentType: z.enum(['self', 'corporate', 'scholarship', 'referral', 'trial', 'other']).optional().default('self'),
-  educationLevelId: z.number().int().positive().optional().nullable(),
+  educationLevelId: coercePositiveInt.optional().nullable(),
   currentInstitution: z.string().max(500).optional().nullable(),
   currentFieldOfStudy: z.string().max(500).optional().nullable(),
   currentSemesterOrYear: z.string().max(100).optional().nullable(),
   expectedGraduationDate: z.string().date().optional().nullable(),
   isCurrentlyStudying: z.boolean().optional().default(false),
-  learningGoalId: z.number().int().positive().optional().nullable(),
-  specializationId: z.number().int().positive().optional().nullable(),
+  learningGoalId: coercePositiveInt.optional().nullable(),
+  specializationId: coercePositiveInt.optional().nullable(),
   preferredLearningMode: z.enum(['self_paced', 'instructor_led', 'blended', 'live_online', 'offline_classroom']).optional().default('self_paced'),
-  preferredLearningLanguageId: z.number().int().positive().optional().nullable(),
+  preferredLearningLanguageId: coercePositiveInt.optional().nullable(),
   preferredContentType: z.enum(['video', 'text', 'interactive', 'audio', 'mixed']).optional().default('video'),
   dailyLearningHours: z.number().positive().optional().nullable(),
   weeklyAvailableDays: z.number().int().min(1).max(7).optional().default(5),
@@ -52,7 +53,7 @@ const createStudentProfileSchema = z.object({
   parentGuardianEmail: z.string().email().optional().nullable(),
   parentGuardianRelation: z.string().max(100).optional().nullable(),
   subscriptionPlan: z.enum(['free', 'basic', 'premium', 'enterprise']).optional().default('free'),
-  referredByUserId: z.number().int().positive().optional().nullable(),
+  referredByUserId: coercePositiveInt.optional().nullable(),
   referralCode: z.string().max(100).optional().nullable(),
   isSeekingJob: z.boolean().optional().default(false),
   preferredJobRoles: z.string().max(500).optional().nullable(),
@@ -69,16 +70,16 @@ const updateStudentProfileSchema = z.object({
   enrollmentNumber: z.string().min(1).max(100).trim().optional(),
   enrollmentDate: z.string().date().optional().nullable(),
   enrollmentType: z.enum(['self', 'corporate', 'scholarship', 'referral', 'trial', 'other']).optional().nullable(),
-  educationLevelId: z.number().int().positive().optional().nullable(),
+  educationLevelId: coercePositiveInt.optional().nullable(),
   currentInstitution: z.string().max(500).optional().nullable(),
   currentFieldOfStudy: z.string().max(500).optional().nullable(),
   currentSemesterOrYear: z.string().max(100).optional().nullable(),
   expectedGraduationDate: z.string().date().optional().nullable(),
   isCurrentlyStudying: z.boolean().optional(),
-  learningGoalId: z.number().int().positive().optional().nullable(),
-  specializationId: z.number().int().positive().optional().nullable(),
+  learningGoalId: coercePositiveInt.optional().nullable(),
+  specializationId: coercePositiveInt.optional().nullable(),
   preferredLearningMode: z.enum(['self_paced', 'instructor_led', 'blended', 'live_online', 'offline_classroom']).optional().nullable(),
-  preferredLearningLanguageId: z.number().int().positive().optional().nullable(),
+  preferredLearningLanguageId: coercePositiveInt.optional().nullable(),
   preferredContentType: z.enum(['video', 'text', 'interactive', 'audio', 'mixed']).optional().nullable(),
   dailyLearningHours: z.number().positive().optional().nullable(),
   weeklyAvailableDays: z.number().int().min(1).max(7).optional().nullable(),
@@ -102,7 +103,7 @@ const updateStudentProfileSchema = z.object({
   subscriptionEndDate: z.string().date().optional().nullable(),
   totalAmountPaid: z.number().min(0).optional().nullable(),
   hasActiveSubscription: z.boolean().optional(),
-  referredByUserId: z.number().int().positive().optional().nullable(),
+  referredByUserId: coercePositiveInt.optional().nullable(),
   referralCode: z.string().max(100).optional().nullable(),
   isSeekingJob: z.boolean().optional(),
   preferredJobRoles: z.string().max(500).optional().nullable(),

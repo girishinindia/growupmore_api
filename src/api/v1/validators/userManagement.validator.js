@@ -1,42 +1,6 @@
 const { z } = require('zod');
 const { getValidRoleCodes } = require('../../../utils/roleCache');
-
-const coerceBoolean = z.preprocess(
-  (val) => {
-    if (typeof val === 'boolean') return val;
-    if (val === 'true') return true;
-    if (val === 'false') return false;
-    return val;
-  },
-  z.boolean()
-);
-
-const coerceSmallInt = z.preprocess(
-  (val) => {
-    if (typeof val === 'number') return val;
-    if (typeof val === 'string') { const n = parseInt(val, 10); return isNaN(n) ? val : n; }
-    return val;
-  },
-  z.number().int()
-);
-
-const coerceNumber = z.preprocess(
-  (val) => {
-    if (typeof val === 'number') return val;
-    if (typeof val === 'string') { const n = Number(val); return isNaN(n) ? val : n; }
-    return val;
-  },
-  z.number()
-);
-
-const coercePositiveNumber = z.preprocess(
-  (val) => {
-    if (typeof val === 'number') return val;
-    if (typeof val === 'string') { const n = Number(val); return isNaN(n) ? val : n; }
-    return val;
-  },
-  z.number().positive()
-);
+const { coerceBoolean, coerceSmallInt, coerceNumber, coercePositiveNumber, coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -59,7 +23,7 @@ const listQuerySchema = z.object({
 // ============================================================================
 
 const createUserSchema = z.object({
-  countryId: z.number().int().positive('Country ID must be a positive number'),
+  countryId: coercePositiveInt,
   firstName: z.string().min(1).max(100, 'First name must be between 1 and 100 characters'),
   lastName: z.string().min(1).max(100, 'Last name must be between 1 and 100 characters'),
   password: z.string().min(6).max(100, 'Password must be between 6 and 100 characters'),
@@ -73,7 +37,7 @@ const createUserSchema = z.object({
 });
 
 const updateUserSchema = z.object({
-  countryId: z.number().int().positive('Country ID must be a positive number').optional(),
+  countryId: coercePositiveInt.optional(),
   firstName: z.string().min(1).max(100, 'First name must be between 1 and 100 characters').optional(),
   lastName: z.string().min(1).max(100, 'Last name must be between 1 and 100 characters').optional(),
   email: z.string().email().optional().nullable(),
@@ -101,7 +65,7 @@ const userListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createUserProfileSchema = z.object({
-  userId: z.number().int().positive('User ID must be a positive number'),
+  userId: coercePositiveInt,
   dateOfBirth: z.string().optional().nullable(),
   gender: z.enum(['male', 'female', 'other', 'prefer_not_to_say']).optional().nullable(),
   bloodGroup: z.string().optional().nullable(),
@@ -112,16 +76,16 @@ const createUserProfileSchema = z.object({
   addressLine1: z.string().optional().nullable(),
   addressLine2: z.string().optional().nullable(),
   landmark: z.string().optional().nullable(),
-  countryId: z.number().int().positive().optional().nullable(),
-  stateId: z.number().int().positive().optional().nullable(),
-  cityId: z.number().int().positive().optional().nullable(),
+  countryId: coercePositiveInt.optional().nullable(),
+  stateId: coercePositiveInt.optional().nullable(),
+  cityId: coercePositiveInt.optional().nullable(),
   pincode: z.string().optional().nullable(),
   currentAddressLine1: z.string().optional().nullable(),
   currentAddressLine2: z.string().optional().nullable(),
   currentLandmark: z.string().optional().nullable(),
-  currentCountryId: z.number().int().positive().optional().nullable(),
-  currentStateId: z.number().int().positive().optional().nullable(),
-  currentCityId: z.number().int().positive().optional().nullable(),
+  currentCountryId: coercePositiveInt.optional().nullable(),
+  currentStateId: coercePositiveInt.optional().nullable(),
+  currentCityId: coercePositiveInt.optional().nullable(),
   currentPincode: z.string().optional().nullable(),
   isSameAsPermanent: coerceBoolean.optional(),
   alternateEmail: z.string().email().optional().nullable(),
@@ -140,7 +104,7 @@ const createUserProfileSchema = z.object({
   bankAccountType: z.enum(['savings', 'current']).optional().nullable(),
   upiId: z.string().optional().nullable(),
   gstNumber: z.string().optional().nullable(),
-  preferredLanguageId: z.number().int().positive().optional().nullable(),
+  preferredLanguageId: coercePositiveInt.optional().nullable(),
   timezone: z.string().default('Asia/Kolkata'),
   themePreference: z.enum(['light', 'dark', 'system']).default('system'),
   emailNotifications: coerceBoolean.optional(),
@@ -150,7 +114,7 @@ const createUserProfileSchema = z.object({
 });
 
 const updateUserProfileSchema = z.object({
-  userId: z.number().int().positive('User ID must be a positive number').optional(),
+  userId: coercePositiveInt.optional(),
   dateOfBirth: z.string().optional().nullable(),
   gender: z.enum(['male', 'female', 'other', 'prefer_not_to_say']).optional().nullable(),
   bloodGroup: z.string().optional().nullable(),
@@ -161,16 +125,16 @@ const updateUserProfileSchema = z.object({
   addressLine1: z.string().optional().nullable(),
   addressLine2: z.string().optional().nullable(),
   landmark: z.string().optional().nullable(),
-  countryId: z.number().int().positive().optional().nullable(),
-  stateId: z.number().int().positive().optional().nullable(),
-  cityId: z.number().int().positive().optional().nullable(),
+  countryId: coercePositiveInt.optional().nullable(),
+  stateId: coercePositiveInt.optional().nullable(),
+  cityId: coercePositiveInt.optional().nullable(),
   pincode: z.string().optional().nullable(),
   currentAddressLine1: z.string().optional().nullable(),
   currentAddressLine2: z.string().optional().nullable(),
   currentLandmark: z.string().optional().nullable(),
-  currentCountryId: z.number().int().positive().optional().nullable(),
-  currentStateId: z.number().int().positive().optional().nullable(),
-  currentCityId: z.number().int().positive().optional().nullable(),
+  currentCountryId: coercePositiveInt.optional().nullable(),
+  currentStateId: coercePositiveInt.optional().nullable(),
+  currentCityId: coercePositiveInt.optional().nullable(),
   currentPincode: z.string().optional().nullable(),
   isSameAsPermanent: coerceBoolean.optional(),
   alternateEmail: z.string().email().optional().nullable(),
@@ -189,7 +153,7 @@ const updateUserProfileSchema = z.object({
   bankAccountType: z.enum(['savings', 'current']).optional().nullable(),
   upiId: z.string().optional().nullable(),
   gstNumber: z.string().optional().nullable(),
-  preferredLanguageId: z.number().int().positive().optional().nullable(),
+  preferredLanguageId: coercePositiveInt.optional().nullable(),
   timezone: z.string().optional(),
   themePreference: z.enum(['light', 'dark', 'system']).optional(),
   emailNotifications: coerceBoolean.optional(),
@@ -216,8 +180,8 @@ const userProfileListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createUserEducationSchema = z.object({
-  userId: z.number().int().positive('User ID must be a positive number'),
-  educationLevelId: z.number().int().positive('Education Level ID must be a positive number'),
+  userId: coercePositiveInt,
+  educationLevelId: coercePositiveInt,
   institutionName: z.string().min(1).max(300, 'Institution name must be between 1 and 300 characters'),
   boardOrUniversity: z.string().optional().nullable(),
   fieldOfStudy: z.string().optional().nullable(),
@@ -233,8 +197,8 @@ const createUserEducationSchema = z.object({
 });
 
 const updateUserEducationSchema = z.object({
-  userId: z.number().int().positive('User ID must be a positive number').optional(),
-  educationLevelId: z.number().int().positive('Education Level ID must be a positive number').optional(),
+  userId: coercePositiveInt.optional(),
+  educationLevelId: coercePositiveInt.optional(),
   institutionName: z.string().min(1).max(300, 'Institution name must be between 1 and 300 characters').optional(),
   boardOrUniversity: z.string().optional().nullable(),
   fieldOfStudy: z.string().optional().nullable(),
@@ -263,11 +227,11 @@ const userEducationListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createUserExperienceSchema = z.object({
-  userId: z.number().int().positive('User ID must be a positive number'),
+  userId: coercePositiveInt,
   companyName: z.string().min(1).max(300, 'Company name must be between 1 and 300 characters'),
   jobTitle: z.string().min(1).max(300, 'Job title must be between 1 and 300 characters'),
   startDate: z.string(),
-  designationId: z.number().int().positive().optional().nullable(),
+  designationId: coercePositiveInt.optional().nullable(),
   employmentType: z.enum(['full_time', 'part_time', 'contract', 'internship', 'freelance']).default('full_time'),
   department: z.string().optional().nullable(),
   location: z.string().optional().nullable(),
@@ -285,11 +249,11 @@ const createUserExperienceSchema = z.object({
 });
 
 const updateUserExperienceSchema = z.object({
-  userId: z.number().int().positive('User ID must be a positive number').optional(),
+  userId: coercePositiveInt.optional(),
   companyName: z.string().min(1).max(300, 'Company name must be between 1 and 300 characters').optional(),
   jobTitle: z.string().min(1).max(300, 'Job title must be between 1 and 300 characters').optional(),
   startDate: z.string().optional(),
-  designationId: z.number().int().positive().optional().nullable(),
+  designationId: coercePositiveInt.optional().nullable(),
   employmentType: z.enum(['full_time', 'part_time', 'contract', 'internship', 'freelance']).optional(),
   department: z.string().optional().nullable(),
   location: z.string().optional().nullable(),
@@ -320,8 +284,8 @@ const userExperienceListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createUserSocialMediaSchema = z.object({
-  userId: z.number().int().positive('User ID must be a positive number'),
-  socialMediaId: z.number().int().positive('Social Media ID must be a positive number'),
+  userId: coercePositiveInt,
+  socialMediaId: coercePositiveInt,
   profileUrl: z.string().url('Profile URL must be a valid URL'),
   username: z.string().optional().nullable(),
   isPrimary: coerceBoolean.default(false),
@@ -330,8 +294,8 @@ const createUserSocialMediaSchema = z.object({
 });
 
 const updateUserSocialMediaSchema = z.object({
-  userId: z.number().int().positive('User ID must be a positive number').optional(),
-  socialMediaId: z.number().int().positive('Social Media ID must be a positive number').optional(),
+  userId: coercePositiveInt.optional(),
+  socialMediaId: coercePositiveInt.optional(),
   profileUrl: z.string().url('Profile URL must be a valid URL').optional(),
   username: z.string().optional().nullable(),
   isPrimary: coerceBoolean.optional(),
@@ -352,8 +316,8 @@ const userSocialMediaListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createUserSkillSchema = z.object({
-  userId: z.number().int().positive('User ID must be a positive number'),
-  skillId: z.number().int().positive('Skill ID must be a positive number'),
+  userId: coercePositiveInt,
+  skillId: coercePositiveInt,
   proficiencyLevel: z.enum(['beginner', 'intermediate', 'advanced', 'expert']).default('beginner'),
   yearsOfExperience: coercePositiveNumber.optional(),
   isPrimary: coerceBoolean.default(false),
@@ -362,8 +326,8 @@ const createUserSkillSchema = z.object({
 });
 
 const updateUserSkillSchema = z.object({
-  userId: z.number().int().positive('User ID must be a positive number').optional(),
-  skillId: z.number().int().positive('Skill ID must be a positive number').optional(),
+  userId: coercePositiveInt.optional(),
+  skillId: coercePositiveInt.optional(),
   proficiencyLevel: z.enum(['beginner', 'intermediate', 'advanced', 'expert']).optional(),
   yearsOfExperience: coercePositiveNumber.optional(),
   isPrimary: coerceBoolean.optional(),
@@ -385,8 +349,8 @@ const userSkillListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createUserLanguageSchema = z.object({
-  userId: z.number().int().positive('User ID must be a positive number'),
-  languageId: z.number().int().positive('Language ID must be a positive number'),
+  userId: coercePositiveInt,
+  languageId: coercePositiveInt,
   proficiencyLevel: z.enum(['basic', 'conversational', 'proficient', 'fluent', 'native']).default('basic'),
   canRead: coerceBoolean.default(false),
   canWrite: coerceBoolean.default(false),
@@ -397,8 +361,8 @@ const createUserLanguageSchema = z.object({
 });
 
 const updateUserLanguageSchema = z.object({
-  userId: z.number().int().positive('User ID must be a positive number').optional(),
-  languageId: z.number().int().positive('Language ID must be a positive number').optional(),
+  userId: coercePositiveInt.optional(),
+  languageId: coercePositiveInt.optional(),
   proficiencyLevel: z.enum(['basic', 'conversational', 'proficient', 'fluent', 'native']).optional(),
   canRead: coerceBoolean.optional(),
   canWrite: coerceBoolean.optional(),
@@ -422,9 +386,9 @@ const userLanguageListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createUserDocumentSchema = z.object({
-  userId: z.number().int().positive('User ID must be a positive number'),
-  documentTypeId: z.number().int().positive('Document Type ID must be a positive number'),
-  documentId: z.number().int().positive('Document ID must be a positive number'),
+  userId: coercePositiveInt,
+  documentTypeId: coercePositiveInt,
+  documentId: coercePositiveInt,
   documentNumber: z.string().optional().nullable(),
   fileFormat: z.string().optional().nullable(),
   issueDate: z.string().optional().nullable(),
@@ -435,16 +399,16 @@ const createUserDocumentSchema = z.object({
 });
 
 const updateUserDocumentSchema = z.object({
-  userId: z.number().int().positive('User ID must be a positive number').optional(),
-  documentTypeId: z.number().int().positive('Document Type ID must be a positive number').optional(),
-  documentId: z.number().int().positive('Document ID must be a positive number').optional(),
+  userId: coercePositiveInt.optional(),
+  documentTypeId: coercePositiveInt.optional(),
+  documentId: coercePositiveInt.optional(),
   documentNumber: z.string().optional().nullable(),
   fileFormat: z.string().optional().nullable(),
   issueDate: z.string().optional().nullable(),
   expiryDate: z.string().optional().nullable(),
   issuingAuthority: z.string().optional().nullable(),
   verificationStatus: z.enum(['pending', 'verified', 'rejected']).optional(),
-  verifiedBy: z.number().int().positive().optional(),
+  verifiedBy: coercePositiveInt.optional(),
   rejectionReason: z.string().optional().nullable(),
   adminNotes: z.string().optional().nullable(),
   isActive: coerceBoolean.optional()
@@ -463,7 +427,7 @@ const userDocumentListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createUserProjectSchema = z.object({
-  userId: z.number().int().positive('User ID must be a positive number'),
+  userId: coercePositiveInt,
   projectTitle: z.string().min(1).max(500, 'Project title must be between 1 and 500 characters'),
   startDate: z.string(),
   projectCode: z.string().optional().nullable(),
@@ -509,7 +473,7 @@ const createUserProjectSchema = z.object({
 });
 
 const updateUserProjectSchema = z.object({
-  userId: z.number().int().positive('User ID must be a positive number').optional(),
+  userId: coercePositiveInt.optional(),
   projectTitle: z.string().min(1).max(500, 'Project title must be between 1 and 500 characters').optional(),
   startDate: z.string().optional(),
   projectCode: z.string().optional().nullable(),

@@ -1,4 +1,5 @@
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -21,8 +22,8 @@ const listQuerySchema = z.object({
 // ============================================================================
 
 const createCourseSchema = z.object({
-  instructorId: z.number().int().positive().optional(),
-  courseLanguageId: z.number().int().positive().optional(),
+  instructorId: coercePositiveInt.optional(),
+  courseLanguageId: coercePositiveInt.optional(),
   isInstructorCourse: z.boolean().optional().default(false),
   code: z.string().min(1).max(100).trim().optional(),
   slug: z.string().min(1).max(255).trim().optional(),
@@ -40,7 +41,7 @@ const createCourseSchema = z.object({
   isBestseller: z.boolean().optional().default(false),
   hasPlacementAssistance: z.boolean().optional().default(false),
   hasCertificate: z.boolean().optional().default(true),
-  maxStudents: z.number().int().positive().nullable().optional(),
+  maxStudents: coercePositiveInt.nullable().optional(),
   refundDays: z.number().int().nonnegative().optional().default(0),
   isActive: z.boolean().optional().default(true),
   publishedAt: z.string().datetime().nullable().optional(),
@@ -48,8 +49,8 @@ const createCourseSchema = z.object({
 });
 
 const updateCourseSchema = z.object({
-  instructorId: z.number().int().positive().optional(),
-  courseLanguageId: z.number().int().positive().optional(),
+  instructorId: coercePositiveInt.optional(),
+  courseLanguageId: coercePositiveInt.optional(),
   isInstructorCourse: z.boolean().optional(),
   code: z.string().min(1).max(100).trim().optional(),
   slug: z.string().min(1).max(255).trim().optional(),
@@ -67,7 +68,7 @@ const updateCourseSchema = z.object({
   isBestseller: z.boolean().optional(),
   hasPlacementAssistance: z.boolean().optional(),
   hasCertificate: z.boolean().optional(),
-  maxStudents: z.number().int().positive().nullable().optional(),
+  maxStudents: coercePositiveInt.nullable().optional(),
   refundDays: z.number().int().nonnegative().optional(),
   isActive: z.boolean().optional(),
   publishedAt: z.string().datetime().nullable().optional(),
@@ -91,15 +92,15 @@ const courseListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createCourseTranslationSchema = z.object({
-  courseId: z.number().int().positive(),
-  languageId: z.number().int().positive(),
+  courseId: coercePositiveInt,
+  languageId: coercePositiveInt,
   title: z.string().min(1).max(500).trim(),
   shortIntro: z.string().max(1000).nullable().optional(),
   longIntro: z.string().nullable().optional(),
   tagline: z.string().max(500).nullable().optional(),
   videoTitle: z.string().max(500).nullable().optional(),
   videoDescription: z.string().nullable().optional(),
-  videoDurationMinutes: z.number().int().positive().nullable().optional(),
+  videoDurationMinutes: coercePositiveInt.nullable().optional(),
   tags: z.array(z.any()).nullable().optional(),
   isNewTitle: z.string().max(200).nullable().optional(),
   prerequisites: z.array(z.any()).nullable().optional(),
@@ -139,7 +140,7 @@ const updateCourseTranslationSchema = z.object({
   tagline: z.string().max(500).nullable().optional(),
   videoTitle: z.string().max(500).nullable().optional(),
   videoDescription: z.string().nullable().optional(),
-  videoDurationMinutes: z.number().int().positive().nullable().optional(),
+  videoDurationMinutes: coercePositiveInt.nullable().optional(),
   tags: z.array(z.any()).nullable().optional(),
   isNewTitle: z.string().max(200).nullable().optional(),
   prerequisites: z.array(z.any()).nullable().optional(),
@@ -177,17 +178,17 @@ const updateCourseTranslationSchema = z.object({
 // ============================================================================
 
 const createCourseModuleSchema = z.object({
-  courseId: z.number().int().positive(),
+  courseId: coercePositiveInt,
   slug: z.string().max(255).trim().nullable().optional(),
   displayOrder: z.number().int().nonnegative().optional().default(0),
-  estimatedMinutes: z.number().int().positive().nullable().optional(),
+  estimatedMinutes: coercePositiveInt.nullable().optional(),
   isActive: z.boolean().optional().default(true),
 });
 
 const updateCourseModuleSchema = z.object({
   slug: z.string().max(255).trim().nullable().optional(),
   displayOrder: z.number().int().nonnegative().optional(),
-  estimatedMinutes: z.number().int().positive().nullable().optional(),
+  estimatedMinutes: coercePositiveInt.nullable().optional(),
   isActive: z.boolean().optional(),
 }).strict();
 
@@ -205,8 +206,8 @@ const courseModuleListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createCourseModuleTranslationSchema = z.object({
-  courseModuleId: z.number().int().positive(),
-  languageId: z.number().int().positive(),
+  courseModuleId: coercePositiveInt,
+  languageId: coercePositiveInt,
   name: z.string().min(1).max(500).trim(),
   shortIntro: z.string().max(1000).nullable().optional(),
   description: z.string().nullable().optional(),
@@ -263,24 +264,24 @@ const updateCourseModuleTranslationSchema = z.object({
 // ============================================================================
 
 const createCourseModuleTopicSchema = z.object({
-  courseModuleId: z.number().int().positive(),
-  topicId: z.number().int().positive().nullable().optional(),
+  courseModuleId: coercePositiveInt,
+  topicId: coercePositiveInt.nullable().optional(),
   displayOrder: z.number().int().nonnegative().optional().default(0),
   customTitle: z.string().max(500).nullable().optional(),
   customDescription: z.string().nullable().optional(),
-  estimatedMinutes: z.number().int().positive().nullable().optional(),
+  estimatedMinutes: coercePositiveInt.nullable().optional(),
   isPreview: z.boolean().optional().default(false),
   note: z.string().max(1000).nullable().optional(),
   isActive: z.boolean().optional().default(true),
 });
 
 const updateCourseModuleTopicSchema = z.object({
-  courseModuleId: z.number().int().positive().optional(),
-  topicId: z.number().int().positive().nullable().optional(),
+  courseModuleId: coercePositiveInt.optional(),
+  topicId: coercePositiveInt.nullable().optional(),
   displayOrder: z.number().int().nonnegative().optional(),
   customTitle: z.string().max(500).nullable().optional(),
   customDescription: z.string().nullable().optional(),
-  estimatedMinutes: z.number().int().positive().nullable().optional(),
+  estimatedMinutes: coercePositiveInt.nullable().optional(),
   isPreview: z.boolean().optional(),
   note: z.string().max(1000).nullable().optional(),
   isActive: z.boolean().optional(),
@@ -296,7 +297,7 @@ const courseModuleTopicListQuerySchema = listQuerySchema.extend({
 });
 
 const bulkIdsSchema = z.object({
-  ids: z.array(z.number().int().positive()).min(1),
+  ids: z.array(coercePositiveInt).min(1),
 });
 
 // ============================================================================
@@ -304,8 +305,8 @@ const bulkIdsSchema = z.object({
 // ============================================================================
 
 const createCourseSubCategorySchema = z.object({
-  courseId: z.number().int().positive(),
-  subCategoryId: z.number().int().positive(),
+  courseId: coercePositiveInt,
+  subCategoryId: coercePositiveInt,
   isPrimary: z.boolean().optional().default(false),
   displayOrder: z.number().int().nonnegative().optional().default(0),
   isActive: z.boolean().optional().default(true),
@@ -322,9 +323,9 @@ const updateCourseSubCategorySchema = z.object({
 // ============================================================================
 
 const createCourseSubjectSchema = z.object({
-  courseId: z.number().int().positive(),
-  moduleId: z.number().int().positive(),
-  subjectId: z.number().int().positive(),
+  courseId: coercePositiveInt,
+  moduleId: coercePositiveInt,
+  subjectId: coercePositiveInt,
   displayOrder: z.number().int().nonnegative().optional().default(0),
   note: z.string().max(1000).nullable().optional(),
   isActive: z.boolean().optional().default(true),
@@ -341,8 +342,8 @@ const updateCourseSubjectSchema = z.object({
 // ============================================================================
 
 const createCourseChapterSchema = z.object({
-  courseSubjectId: z.number().int().positive(),
-  chapterId: z.number().int().positive(),
+  courseSubjectId: coercePositiveInt,
+  chapterId: coercePositiveInt,
   displayOrder: z.number().int().nonnegative().optional().default(0),
   isFreeTrial: z.boolean().optional().default(false),
   note: z.string().max(1000).nullable().optional(),
@@ -361,8 +362,8 @@ const updateCourseChapterSchema = z.object({
 // ============================================================================
 
 const createCourseInstructorSchema = z.object({
-  courseId: z.number().int().positive(),
-  instructorId: z.number().int().positive(),
+  courseId: coercePositiveInt,
+  instructorId: coercePositiveInt,
   instructorRole: z.enum(['lead', 'co_instructor', 'teaching_assistant', 'guest']).optional().default('co_instructor'),
   contribution: z.string().max(500).nullable().optional(),
   revenueSharePct: z.number().min(0).max(100).nullable().optional(),
@@ -390,13 +391,13 @@ const updateCourseInstructorSchema = z.object({
 
 const createBundleSchema = z.object({
   bundleOwner: z.enum(['system', 'instructor']).optional().default('system'),
-  instructorId: z.number().int().positive().nullable().optional(),
+  instructorId: coercePositiveInt.nullable().optional(),
   code: z.string().max(100).trim().nullable().optional(),
   slug: z.string().max(255).trim().nullable().optional(),
   price: z.number().nonnegative().optional().default(0),
   originalPrice: z.number().nonnegative().nullable().optional(),
   discountPercentage: z.number().min(0).max(100).nullable().optional(),
-  validityDays: z.number().int().positive().nullable().optional(),
+  validityDays: coercePositiveInt.nullable().optional(),
   startsAt: z.string().datetime().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
   isFeatured: z.boolean().optional().default(false),
@@ -406,13 +407,13 @@ const createBundleSchema = z.object({
 
 const updateBundleSchema = z.object({
   bundleOwner: z.enum(['system', 'instructor']).optional(),
-  instructorId: z.number().int().positive().nullable().optional(),
+  instructorId: coercePositiveInt.nullable().optional(),
   code: z.string().max(100).trim().nullable().optional(),
   slug: z.string().max(255).trim().nullable().optional(),
   price: z.number().nonnegative().optional(),
   originalPrice: z.number().nonnegative().nullable().optional(),
   discountPercentage: z.number().min(0).max(100).nullable().optional(),
-  validityDays: z.number().int().positive().nullable().optional(),
+  validityDays: coercePositiveInt.nullable().optional(),
   startsAt: z.string().datetime().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
   isFeatured: z.boolean().optional(),
@@ -434,8 +435,8 @@ const bundleListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createBundleTranslationSchema = z.object({
-  bundleId: z.number().int().positive(),
-  languageId: z.number().int().positive(),
+  bundleId: coercePositiveInt,
+  languageId: coercePositiveInt,
   title: z.string().min(1).max(500).trim(),
   description: z.string().nullable().optional(),
   shortDescription: z.string().max(1000).nullable().optional(),
@@ -494,8 +495,8 @@ const updateBundleTranslationSchema = z.object({
 // ============================================================================
 
 const createBundleCourseSchema = z.object({
-  bundleId: z.number().int().positive(),
-  courseId: z.number().int().positive(),
+  bundleId: coercePositiveInt,
+  courseId: coercePositiveInt,
   displayOrder: z.number().int().nonnegative().optional().default(0),
   isActive: z.boolean().optional().default(true),
 });

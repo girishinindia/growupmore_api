@@ -1,4 +1,5 @@
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -13,7 +14,7 @@ const restoreSchema = z.object({
 }).strict();
 
 const bulkIdsSchema = z.object({
-  ids: z.array(z.number().int().positive()).min(1),
+  ids: z.array(coercePositiveInt).min(1),
 }).strict();
 
 // ============================================================================
@@ -27,8 +28,8 @@ const createCouponSchema = z.object({
   minPurchaseAmount: z.number().nonnegative().nullable().optional(),
   maxDiscountAmount: z.number().nonnegative().nullable().optional(),
   applicableTo: z.enum(['all', 'course', 'bundle', 'batch', 'webinar']).default('all'),
-  usageLimit: z.number().int().positive().nullable().optional(),
-  usagePerUser: z.number().int().positive().optional().default(1),
+  usageLimit: coercePositiveInt.nullable().optional(),
+  usagePerUser: coercePositiveInt.optional().default(1),
   validFrom: z.string().datetime().nullable().optional(),
   validUntil: z.string().datetime().nullable().optional(),
   isActive: z.boolean().optional().default(true),
@@ -38,8 +39,8 @@ const updateCouponSchema = z.object({
   discountValue: z.number().nonnegative().optional(),
   minPurchaseAmount: z.number().nonnegative().nullable().optional(),
   maxDiscountAmount: z.number().nonnegative().nullable().optional(),
-  usageLimit: z.number().int().positive().nullable().optional(),
-  usagePerUser: z.number().int().positive().optional(),
+  usageLimit: coercePositiveInt.nullable().optional(),
+  usagePerUser: coercePositiveInt.optional(),
   validFrom: z.string().datetime().nullable().optional(),
   validUntil: z.string().datetime().nullable().optional(),
   isActive: z.boolean().optional(),
@@ -62,8 +63,8 @@ const couponListQuerySchema = z.object({
 // ============================================================================
 
 const createCouponTranslationSchema = z.object({
-  couponId: z.number().int().positive(),
-  languageId: z.number().int().positive(),
+  couponId: coercePositiveInt,
+  languageId: coercePositiveInt,
   title: z.string().min(1).max(500).trim(),
   description: z.string().max(5000).nullable().optional(),
   isActive: z.boolean().optional().default(true),
@@ -80,8 +81,8 @@ const updateCouponTranslationSchema = z.object({
 // ============================================================================
 
 const createCouponCourseSchema = z.object({
-  couponId: z.number().int().positive(),
-  courseId: z.number().int().positive(),
+  couponId: coercePositiveInt,
+  courseId: coercePositiveInt,
   displayOrder: z.number().int().nonnegative().optional().default(0),
   isActive: z.boolean().optional().default(true),
 }).strict();
@@ -107,8 +108,8 @@ const couponCourseListQuerySchema = z.object({
 // ============================================================================
 
 const createCouponBundleSchema = z.object({
-  couponId: z.number().int().positive(),
-  bundleId: z.number().int().positive(),
+  couponId: coercePositiveInt,
+  bundleId: coercePositiveInt,
   displayOrder: z.number().int().nonnegative().optional().default(0),
   isActive: z.boolean().optional().default(true),
 }).strict();
@@ -134,8 +135,8 @@ const couponBundleListQuerySchema = z.object({
 // ============================================================================
 
 const createCouponBatchSchema = z.object({
-  couponId: z.number().int().positive(),
-  batchId: z.number().int().positive(),
+  couponId: coercePositiveInt,
+  batchId: coercePositiveInt,
   displayOrder: z.number().int().nonnegative().optional().default(0),
   isActive: z.boolean().optional().default(true),
 }).strict();
@@ -161,8 +162,8 @@ const couponBatchListQuerySchema = z.object({
 // ============================================================================
 
 const createCouponWebinarSchema = z.object({
-  couponId: z.number().int().positive(),
-  webinarId: z.number().int().positive(),
+  couponId: coercePositiveInt,
+  webinarId: coercePositiveInt,
   displayOrder: z.number().int().nonnegative().optional().default(0),
   isActive: z.boolean().optional().default(true),
 }).strict();

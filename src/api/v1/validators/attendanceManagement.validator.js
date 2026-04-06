@@ -7,6 +7,7 @@
  */
 
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -17,11 +18,11 @@ const idParamSchema = z.object({
 });
 
 const restoreSchema = z.object({
-  ids: z.array(z.number().int().positive()).min(1, 'At least one ID is required'),
+  ids: z.array(coercePositiveInt).min(1, 'At least one ID is required'),
 });
 
 const bulkIdsSchema = z.object({
-  ids: z.array(z.number().int().positive()).min(1, 'At least one ID is required'),
+  ids: z.array(coercePositiveInt).min(1, 'At least one ID is required'),
 });
 
 const listQuerySchema = z.object({
@@ -36,12 +37,12 @@ const listQuerySchema = z.object({
 // ============================================================================
 
 const createAttendanceSchema = z.object({
-  studentId: z.number().int().positive('Student ID is required'),
+  studentId: coercePositiveInt,
   attendanceType: z.enum(['batch_session', 'webinar'], {
     errorMap: () => ({ message: 'Attendance type must be either "batch_session" or "webinar"' }),
   }),
-  batchSessionId: z.number().int().positive().optional().nullable(),
-  webinarId: z.number().int().positive().optional().nullable(),
+  batchSessionId: coercePositiveInt.optional().nullable(),
+  webinarId: coercePositiveInt.optional().nullable(),
   status: z.enum(['present', 'absent', 'late', 'excused']).optional().default('present'),
   joinedAt: z.string().refine(val => !isNaN(Date.parse(val)), 'Invalid datetime format').optional().nullable(),
   leftAt: z.string().refine(val => !isNaN(Date.parse(val)), 'Invalid datetime format').optional().nullable(),

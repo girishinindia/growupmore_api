@@ -1,4 +1,5 @@
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -70,7 +71,7 @@ const callPurposeListQuerySchema = listQuerySchema.extend({
 
 const createCallPurposeTranslationSchema = z
   .object({
-    languageId: z.number().int().positive('Language ID must be a positive integer'),
+    languageId: coercePositiveInt,
     name: z.string().min(1, 'Name is required').max(500).trim(),
     description: z.string().max(2000).trim().optional().nullable(),
   })
@@ -89,11 +90,11 @@ const updateCallPurposeTranslationSchema = z
 
 const createCallLogSchema = z
   .object({
-    studentId: z.number().int().positive('Student ID must be a positive integer'),
-    calledBy: z.number().int().positive('Called by must be a positive integer'),
-    purposeId: z.number().int().positive().optional().nullable(),
-    previousCallId: z.number().int().positive().optional().nullable(),
-    followUpNumber: z.number().int().positive().optional().default(1),
+    studentId: coercePositiveInt,
+    calledBy: coercePositiveInt,
+    purposeId: coercePositiveInt.optional().nullable(),
+    previousCallId: coercePositiveInt.optional().nullable(),
+    followUpNumber: coercePositiveInt.optional().default(1),
     callType: z.enum(['outbound', 'inbound']).optional().default('outbound'),
     callStatus: z
       .enum(['scheduled', 'attempted', 'connected', 'no_answer', 'busy', 'voicemail', 'completed'])
@@ -103,10 +104,10 @@ const createCallLogSchema = z
     calledAt: z.string().datetime().optional().nullable(),
     durationSeconds: z.number().int().nonnegative().optional().nullable(),
     phoneNumberUsed: z.string().max(20).optional().nullable(),
-    courseId: z.number().int().positive().optional().nullable(),
-    batchId: z.number().int().positive().optional().nullable(),
-    orderId: z.number().int().positive().optional().nullable(),
-    ticketId: z.number().int().positive().optional().nullable(),
+    courseId: coercePositiveInt.optional().nullable(),
+    batchId: coercePositiveInt.optional().nullable(),
+    orderId: coercePositiveInt.optional().nullable(),
+    ticketId: coercePositiveInt.optional().nullable(),
     outcome: z
       .enum(['interested', 'not_interested', 'callback_requested', 'enrolled', 'issue_resolved', 'escalated', 'wrong_number', 'unreachable'])
       .optional()
@@ -118,9 +119,9 @@ const createCallLogSchema = z
 
 const updateCallLogSchema = z
   .object({
-    purposeId: z.number().int().positive().optional().nullable(),
-    previousCallId: z.number().int().positive().optional().nullable(),
-    followUpNumber: z.number().int().positive().optional().nullable(),
+    purposeId: coercePositiveInt.optional().nullable(),
+    previousCallId: coercePositiveInt.optional().nullable(),
+    followUpNumber: coercePositiveInt.optional().nullable(),
     callType: z.enum(['outbound', 'inbound']).optional().nullable(),
     callStatus: z
       .enum(['scheduled', 'attempted', 'connected', 'no_answer', 'busy', 'voicemail', 'completed'])
@@ -163,7 +164,7 @@ const callLogListQuerySchema = listQuerySchema.extend({
 
 const createCallLogTranslationSchema = z
   .object({
-    languageId: z.number().int().positive('Language ID must be a positive integer'),
+    languageId: coercePositiveInt,
     summary: z.string().max(2000).optional().nullable(),
     studentResponse: z.string().max(2000).optional().nullable(),
     internalNotes: z.string().max(5000).optional().nullable(),

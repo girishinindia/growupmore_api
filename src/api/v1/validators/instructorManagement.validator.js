@@ -7,6 +7,7 @@
  */
 
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -29,19 +30,19 @@ const listQuerySchema = z.object({
 // ============================================================================
 
 const createInstructorProfileSchema = z.object({
-  userId: z.number().int().positive('User ID is required'),
+  userId: coercePositiveInt,
   instructorCode: z.string().min(1).max(100).trim(),
   instructorType: z.enum(['internal', 'external', 'guest', 'visiting', 'corporate', 'community', 'other']).optional().default('external'),
-  designationId: z.number().int().positive().optional().nullable(),
-  departmentId: z.number().int().positive().optional().nullable(),
-  branchId: z.number().int().positive().optional().nullable(),
+  designationId: coercePositiveInt.optional().nullable(),
+  departmentId: coercePositiveInt.optional().nullable(),
+  branchId: coercePositiveInt.optional().nullable(),
   joiningDate: z.string().date().optional().nullable(),
-  specializationId: z.number().int().positive().optional().nullable(),
-  secondarySpecializationId: z.number().int().positive().optional().nullable(),
+  specializationId: coercePositiveInt.optional().nullable(),
+  secondarySpecializationId: coercePositiveInt.optional().nullable(),
   teachingExperienceYears: z.number().nonnegative().optional().nullable(),
   industryExperienceYears: z.number().nonnegative().optional().nullable(),
   totalExperienceYears: z.number().nonnegative().optional().nullable(),
-  preferredTeachingLanguageId: z.number().int().positive().optional().nullable(),
+  preferredTeachingLanguageId: coercePositiveInt.optional().nullable(),
   teachingMode: z.enum(['online', 'offline', 'hybrid', 'recorded']).optional().default('online'),
   instructorBio: z.string().max(5000).optional().nullable(),
   tagline: z.string().max(500).optional().nullable(),
@@ -55,7 +56,7 @@ const createInstructorProfileSchema = z.object({
   availableFrom: z.string().date().optional().nullable(),
   availableUntil: z.string().date().optional().nullable(),
   preferredTimeSlots: z.string().max(500).optional().nullable(),
-  maxConcurrentCourses: z.number().int().positive().optional().default(3),
+  maxConcurrentCourses: coercePositiveInt.optional().default(3),
   paymentModel: z.enum(['revenue_share', 'fixed_per_course', 'hourly', 'salary', 'hybrid']).optional().default('revenue_share'),
   revenueSharePercentage: z.number().nonnegative().max(100).optional().nullable(),
   fixedRatePerCourse: z.number().nonnegative().optional().nullable(),
@@ -67,16 +68,16 @@ const createInstructorProfileSchema = z.object({
 const updateInstructorProfileSchema = z.object({
   instructorCode: z.string().min(1).max(100).trim().optional(),
   instructorType: z.enum(['internal', 'external', 'guest', 'visiting', 'corporate', 'community', 'other']).optional(),
-  designationId: z.number().int().positive().optional().nullable(),
-  departmentId: z.number().int().positive().optional().nullable(),
-  branchId: z.number().int().positive().optional().nullable(),
+  designationId: coercePositiveInt.optional().nullable(),
+  departmentId: coercePositiveInt.optional().nullable(),
+  branchId: coercePositiveInt.optional().nullable(),
   joiningDate: z.string().date().optional().nullable(),
-  specializationId: z.number().int().positive().optional().nullable(),
-  secondarySpecializationId: z.number().int().positive().optional().nullable(),
+  specializationId: coercePositiveInt.optional().nullable(),
+  secondarySpecializationId: coercePositiveInt.optional().nullable(),
   teachingExperienceYears: z.number().nonnegative().optional().nullable(),
   industryExperienceYears: z.number().nonnegative().optional().nullable(),
   totalExperienceYears: z.number().nonnegative().optional().nullable(),
-  preferredTeachingLanguageId: z.number().int().positive().optional().nullable(),
+  preferredTeachingLanguageId: coercePositiveInt.optional().nullable(),
   teachingMode: z.enum(['online', 'offline', 'hybrid', 'recorded']).optional().nullable(),
   instructorBio: z.string().max(5000).optional().nullable(),
   tagline: z.string().max(500).optional().nullable(),
@@ -100,14 +101,14 @@ const updateInstructorProfileSchema = z.object({
   availableFrom: z.string().date().optional().nullable(),
   availableUntil: z.string().date().optional().nullable(),
   preferredTimeSlots: z.string().max(500).optional().nullable(),
-  maxConcurrentCourses: z.number().int().positive().optional().nullable(),
+  maxConcurrentCourses: coercePositiveInt.optional().nullable(),
   paymentModel: z.enum(['revenue_share', 'fixed_per_course', 'hourly', 'salary', 'hybrid']).optional().nullable(),
   revenueSharePercentage: z.number().nonnegative().max(100).optional().nullable(),
   fixedRatePerCourse: z.number().nonnegative().optional().nullable(),
   hourlyRate: z.number().nonnegative().optional().nullable(),
   paymentCurrency: z.string().max(10).optional().nullable(),
   approvalStatus: z.enum(['pending', 'approved', 'rejected', 'suspended']).optional().nullable(),
-  approvedBy: z.number().int().positive().optional().nullable(),
+  approvedBy: coercePositiveInt.optional().nullable(),
   approvedAt: z.string().datetime().optional().nullable(),
   rejectionReason: z.string().max(1000).optional().nullable(),
   isVerified: z.boolean().optional(),

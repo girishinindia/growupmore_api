@@ -1,4 +1,5 @@
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -24,9 +25,9 @@ const listQuerySchema = z.object({
 // ============================================================================
 
 const createCourseReviewSchema = z.object({
-  studentId: z.number().int().positive(),
-  courseId: z.number().int().positive(),
-  enrollmentId: z.number().int().positive(),
+  studentId: coercePositiveInt,
+  courseId: coercePositiveInt,
+  enrollmentId: coercePositiveInt,
   rating: z.number().int().min(1).max(5),
   title: z.string().max(500).trim().optional().nullable(),
   reviewText: z.string().max(5000).optional().nullable(),
@@ -41,7 +42,7 @@ const updateCourseReviewSchema = z.object({
   isVerifiedPurchase: z.boolean().optional(),
   helpfulCount: z.number().int().nonnegative().optional().nullable(),
   reportedCount: z.number().int().nonnegative().optional().nullable(),
-  approvedBy: z.number().int().positive().optional().nullable(),
+  approvedBy: coercePositiveInt.optional().nullable(),
   approvedAt: z.string().datetime().optional().nullable(),
 }).strict();
 

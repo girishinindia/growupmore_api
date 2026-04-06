@@ -7,6 +7,7 @@
  */
 
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -34,7 +35,7 @@ const listQuerySchema = z.object({
 // ============================================================================
 
 const createOrderSchema = z.object({
-  studentId: z.number().int().positive('Student ID is required'),
+  studentId: coercePositiveInt,
   orderNumber: z.string().max(100).optional().nullable(),
   cartId: z.number().int().optional().nullable(),
   orderStatus: z.enum(['pending', 'processing', 'completed', 'failed', 'cancelled', 'refunded']).optional().default('pending'),
@@ -105,7 +106,7 @@ const orderListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createOrderItemSchema = z.object({
-  orderId: z.number().int().positive('Order ID is required'),
+  orderId: coercePositiveInt,
   itemType: z.enum(['course', 'bundle', 'batch', 'webinar']),
   courseId: z.number().int().optional().nullable(),
   bundleId: z.number().int().optional().nullable(),

@@ -23,6 +23,7 @@
  */
 
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -58,7 +59,7 @@ const listQuerySchema = z.object({
  * Optional: mcqType, code, points, displayOrder, difficultyLevel, isMandatory, isActive
  */
 const createMcqQuestionSchema = z.object({
-  topicId: z.number().int().positive(),
+  topicId: coercePositiveInt,
   mcqType: z.enum(['single', 'multiple']).optional().default('single'),
   code: z.string().max(100).trim().nullable().optional(),
   points: z.number().positive().optional().default(1),
@@ -73,7 +74,7 @@ const createMcqQuestionSchema = z.object({
  * All fields are optional, no default values applied
  */
 const updateMcqQuestionSchema = z.object({
-  topicId: z.number().int().positive().optional(),
+  topicId: coercePositiveInt.optional(),
   mcqType: z.enum(['single', 'multiple']).optional(),
   code: z.string().max(100).trim().nullable().optional(),
   points: z.number().positive().optional(),
@@ -108,8 +109,8 @@ const mcqQuestionListQuerySchema = listQuerySchema.extend({
  * Optional: explanation, hint, isActive
  */
 const createMcqQuestionTranslationSchema = z.object({
-  mcqQuestionId: z.number().int().positive(),
-  languageId: z.number().int().positive(),
+  mcqQuestionId: coercePositiveInt,
+  languageId: coercePositiveInt,
   questionText: z.string().min(1).trim(),
   explanation: z.string().nullable().optional(),
   hint: z.string().nullable().optional(),
@@ -121,8 +122,8 @@ const createMcqQuestionTranslationSchema = z.object({
  * All fields are optional, no default values applied
  */
 const updateMcqQuestionTranslationSchema = z.object({
-  mcqQuestionId: z.number().int().positive().optional(),
-  languageId: z.number().int().positive().optional(),
+  mcqQuestionId: coercePositiveInt.optional(),
+  languageId: coercePositiveInt.optional(),
   questionText: z.string().min(1).trim().optional(),
   explanation: z.string().nullable().optional(),
   hint: z.string().nullable().optional(),
@@ -139,7 +140,7 @@ const updateMcqQuestionTranslationSchema = z.object({
  * Optional: isCorrect, displayOrder, isActive
  */
 const createMcqOptionSchema = z.object({
-  mcqQuestionId: z.number().int().positive(),
+  mcqQuestionId: coercePositiveInt,
   isCorrect: z.boolean().optional().default(false),
   displayOrder: z.number().int().nonnegative().optional().default(0),
   isActive: z.boolean().optional().default(true),
@@ -150,7 +151,7 @@ const createMcqOptionSchema = z.object({
  * All fields are optional, no default values applied
  */
 const updateMcqOptionSchema = z.object({
-  mcqQuestionId: z.number().int().positive().optional(),
+  mcqQuestionId: coercePositiveInt.optional(),
   isCorrect: z.boolean().optional(),
   displayOrder: z.number().int().nonnegative().optional(),
   isActive: z.boolean().optional(),
@@ -166,8 +167,8 @@ const updateMcqOptionSchema = z.object({
  * Optional: isActive
  */
 const createMcqOptionTranslationSchema = z.object({
-  mcqOptionId: z.number().int().positive(),
-  languageId: z.number().int().positive(),
+  mcqOptionId: coercePositiveInt,
+  languageId: coercePositiveInt,
   optionText: z.string().min(1).trim(),
   isActive: z.boolean().optional().default(true),
 });
@@ -177,8 +178,8 @@ const createMcqOptionTranslationSchema = z.object({
  * All fields are optional, no default values applied
  */
 const updateMcqOptionTranslationSchema = z.object({
-  mcqOptionId: z.number().int().positive().optional(),
-  languageId: z.number().int().positive().optional(),
+  mcqOptionId: coercePositiveInt.optional(),
+  languageId: coercePositiveInt.optional(),
   optionText: z.string().min(1).trim().optional(),
   isActive: z.boolean().optional(),
 }).strict();
@@ -193,7 +194,7 @@ const updateMcqOptionTranslationSchema = z.object({
  * Optional: questionType, code, points, isCaseSensitive, isTrimWhitespace, displayOrder, difficultyLevel, isMandatory, isActive
  */
 const createOneWordQuestionSchema = z.object({
-  topicId: z.number().int().positive(),
+  topicId: coercePositiveInt,
   questionType: z.enum(['one_word', 'number', 'date']).optional().default('one_word'),
   code: z.string().max(100).trim().nullable().optional(),
   points: z.number().positive().optional().default(1),
@@ -210,7 +211,7 @@ const createOneWordQuestionSchema = z.object({
  * All fields are optional, no default values applied
  */
 const updateOneWordQuestionSchema = z.object({
-  topicId: z.number().int().positive().optional(),
+  topicId: coercePositiveInt.optional(),
   questionType: z.enum(['one_word', 'number', 'date']).optional(),
   code: z.string().max(100).trim().nullable().optional(),
   points: z.number().positive().optional(),
@@ -248,8 +249,8 @@ const oneWordQuestionListQuerySchema = listQuerySchema.extend({
  * Optional: explanation, hint, isActive
  */
 const createOneWordQuestionTranslationSchema = z.object({
-  oneWordQuestionId: z.number().int().positive(),
-  languageId: z.number().int().positive(),
+  oneWordQuestionId: coercePositiveInt,
+  languageId: coercePositiveInt,
   questionText: z.string().min(1).trim(),
   correctAnswer: z.string().min(1).trim(),
   explanation: z.string().nullable().optional(),
@@ -263,8 +264,8 @@ const createOneWordQuestionTranslationSchema = z.object({
  * Includes allow clear flags for nullable fields
  */
 const updateOneWordQuestionTranslationSchema = z.object({
-  oneWordQuestionId: z.number().int().positive().optional(),
-  languageId: z.number().int().positive().optional(),
+  oneWordQuestionId: coercePositiveInt.optional(),
+  languageId: coercePositiveInt.optional(),
   questionText: z.string().min(1).trim().optional(),
   correctAnswer: z.string().min(1).trim().optional(),
   explanation: z.string().nullable().optional(),
@@ -286,7 +287,7 @@ const updateOneWordQuestionTranslationSchema = z.object({
  * Optional: displayOrder, isActive
  */
 const createOneWordSynonymSchema = z.object({
-  oneWordQuestionId: z.number().int().positive(),
+  oneWordQuestionId: coercePositiveInt,
   displayOrder: z.number().int().nonnegative().optional().default(0),
   isActive: z.boolean().optional().default(true),
 });
@@ -301,8 +302,8 @@ const createOneWordSynonymSchema = z.object({
  * Optional: isActive
  */
 const createOneWordSynonymTranslationSchema = z.object({
-  oneWordSynonymId: z.number().int().positive(),
-  languageId: z.number().int().positive(),
+  oneWordSynonymId: coercePositiveInt,
+  languageId: coercePositiveInt,
   synonymText: z.string().min(1).trim(),
   isActive: z.boolean().optional().default(true),
 });
@@ -312,8 +313,8 @@ const createOneWordSynonymTranslationSchema = z.object({
  * All fields are optional, no default values applied
  */
 const updateOneWordSynonymTranslationSchema = z.object({
-  oneWordSynonymId: z.number().int().positive().optional(),
-  languageId: z.number().int().positive().optional(),
+  oneWordSynonymId: coercePositiveInt.optional(),
+  languageId: coercePositiveInt.optional(),
   synonymText: z.string().min(1).trim().optional(),
   isActive: z.boolean().optional(),
 }).strict();
@@ -328,12 +329,12 @@ const updateOneWordSynonymTranslationSchema = z.object({
  * Optional: answerType, code, points, minWords, maxWords, displayOrder, difficultyLevel, isMandatory, isActive
  */
 const createDescriptiveQuestionSchema = z.object({
-  topicId: z.number().int().positive(),
+  topicId: coercePositiveInt,
   answerType: z.enum(['short_answer', 'long_answer', 'essay']).optional().default('short_answer'),
   code: z.string().max(100).trim().nullable().optional(),
   points: z.number().positive().optional().default(1),
   minWords: z.number().int().nonnegative().nullable().optional(),
-  maxWords: z.number().int().positive().nullable().optional(),
+  maxWords: coercePositiveInt.nullable().optional(),
   displayOrder: z.number().int().nonnegative().optional().default(0),
   difficultyLevel: z.enum(['easy', 'medium', 'hard']).optional().default('medium'),
   isMandatory: z.boolean().optional().default(true),
@@ -345,12 +346,12 @@ const createDescriptiveQuestionSchema = z.object({
  * All fields are optional, no default values applied
  */
 const updateDescriptiveQuestionSchema = z.object({
-  topicId: z.number().int().positive().optional(),
+  topicId: coercePositiveInt.optional(),
   answerType: z.enum(['short_answer', 'long_answer', 'essay']).optional(),
   code: z.string().max(100).trim().nullable().optional(),
   points: z.number().positive().optional(),
   minWords: z.number().int().nonnegative().nullable().optional(),
-  maxWords: z.number().int().positive().nullable().optional(),
+  maxWords: coercePositiveInt.nullable().optional(),
   displayOrder: z.number().int().nonnegative().optional(),
   difficultyLevel: z.enum(['easy', 'medium', 'hard']).optional(),
   isMandatory: z.boolean().optional(),
@@ -381,8 +382,8 @@ const descriptiveQuestionListQuerySchema = listQuerySchema.extend({
  * Optional: explanation, hint, modelAnswer, isActive
  */
 const createDescriptiveQuestionTranslationSchema = z.object({
-  descriptiveQuestionId: z.number().int().positive(),
-  languageId: z.number().int().positive(),
+  descriptiveQuestionId: coercePositiveInt,
+  languageId: coercePositiveInt,
   questionText: z.string().min(1).trim(),
   explanation: z.string().nullable().optional(),
   hint: z.string().nullable().optional(),
@@ -395,8 +396,8 @@ const createDescriptiveQuestionTranslationSchema = z.object({
  * All fields are optional, no default values applied
  */
 const updateDescriptiveQuestionTranslationSchema = z.object({
-  descriptiveQuestionId: z.number().int().positive().optional(),
-  languageId: z.number().int().positive().optional(),
+  descriptiveQuestionId: coercePositiveInt.optional(),
+  languageId: coercePositiveInt.optional(),
   questionText: z.string().min(1).trim().optional(),
   explanation: z.string().nullable().optional(),
   hint: z.string().nullable().optional(),
@@ -414,7 +415,7 @@ const updateDescriptiveQuestionTranslationSchema = z.object({
  * Optional: code, points, partialScoring, displayOrder, difficultyLevel, isMandatory, isActive
  */
 const createMatchingQuestionSchema = z.object({
-  topicId: z.number().int().positive(),
+  topicId: coercePositiveInt,
   code: z.string().max(100).trim().nullable().optional(),
   points: z.number().positive().optional().default(1),
   partialScoring: z.boolean().optional().default(false),
@@ -429,7 +430,7 @@ const createMatchingQuestionSchema = z.object({
  * All fields are optional, no default values applied
  */
 const updateMatchingQuestionSchema = z.object({
-  topicId: z.number().int().positive().optional(),
+  topicId: coercePositiveInt.optional(),
   code: z.string().max(100).trim().nullable().optional(),
   points: z.number().positive().optional(),
   partialScoring: z.boolean().optional(),
@@ -463,7 +464,7 @@ const matchingQuestionListQuerySchema = listQuerySchema.extend({
  * Optional: isActive
  */
 const createMatchingPairSchema = z.object({
-  matchingQuestionId: z.number().int().positive(),
+  matchingQuestionId: coercePositiveInt,
   correctPosition: z.number().int().nonnegative(),
   isActive: z.boolean().optional().default(true),
 });
@@ -473,7 +474,7 @@ const createMatchingPairSchema = z.object({
  * All fields are optional, no default values applied
  */
 const updateMatchingPairSchema = z.object({
-  matchingQuestionId: z.number().int().positive().optional(),
+  matchingQuestionId: coercePositiveInt.optional(),
   correctPosition: z.number().int().nonnegative().optional(),
   isActive: z.boolean().optional(),
 }).strict();
@@ -488,7 +489,7 @@ const updateMatchingPairSchema = z.object({
  * Optional: code, points, partialScoring, displayOrder, difficultyLevel, isMandatory, isActive
  */
 const createOrderingQuestionSchema = z.object({
-  topicId: z.number().int().positive(),
+  topicId: coercePositiveInt,
   code: z.string().max(100).trim().nullable().optional(),
   points: z.number().positive().nullable().optional(),
   partialScoring: z.boolean().nullable().optional(),
@@ -503,7 +504,7 @@ const createOrderingQuestionSchema = z.object({
  * All fields are optional, no default values applied
  */
 const updateOrderingQuestionSchema = z.object({
-  topicId: z.number().int().positive().optional(),
+  topicId: coercePositiveInt.optional(),
   code: z.string().max(100).trim().nullable().optional(),
   points: z.number().positive().nullable().optional(),
   partialScoring: z.boolean().nullable().optional(),
@@ -537,7 +538,7 @@ const orderingQuestionListQuerySchema = listQuerySchema.extend({
  * Optional: isActive
  */
 const createOrderingItemSchema = z.object({
-  orderingQuestionId: z.number().int().positive(),
+  orderingQuestionId: coercePositiveInt,
   correctPosition: z.number().int().nonnegative(),
   isActive: z.boolean().optional().default(true),
 });
@@ -547,7 +548,7 @@ const createOrderingItemSchema = z.object({
  * All fields are optional, no default values applied
  */
 const updateOrderingItemSchema = z.object({
-  orderingQuestionId: z.number().int().positive().optional(),
+  orderingQuestionId: coercePositiveInt.optional(),
   correctPosition: z.number().int().nonnegative().optional(),
   isActive: z.boolean().optional(),
 }).strict();

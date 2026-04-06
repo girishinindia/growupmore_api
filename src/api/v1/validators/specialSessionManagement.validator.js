@@ -1,4 +1,5 @@
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -43,13 +44,13 @@ const listQuerySchema = z.object({
 
 const createSessionRequestSchema = z
   .object({
-    studentId: z.number().int().positive(),
-    instructorId: z.number().int().positive().optional().nullable(),
-    courseId: z.number().int().positive().optional().nullable(),
+    studentId: coercePositiveInt,
+    instructorId: coercePositiveInt.optional().nullable(),
+    courseId: coercePositiveInt.optional().nullable(),
     requestType: z.enum(['one_on_one', 'group', 'doubt_clearing', 'mentoring', 'career_guidance']).optional().default('one_on_one'),
     preferredDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
     preferredTimeSlot: z.string().max(100).optional().nullable(),
-    durationMinutes: z.number().int().positive().optional().default(60),
+    durationMinutes: coercePositiveInt.optional().default(60),
     isFree: z.boolean().optional().default(false),
     price: z.number().nonnegative().optional().default(0.00),
   })
@@ -57,12 +58,12 @@ const createSessionRequestSchema = z
 
 const updateSessionRequestSchema = z
   .object({
-    instructorId: z.number().int().positive().optional().nullable(),
-    courseId: z.number().int().positive().optional().nullable(),
+    instructorId: coercePositiveInt.optional().nullable(),
+    courseId: coercePositiveInt.optional().nullable(),
     requestType: z.enum(['one_on_one', 'group', 'doubt_clearing', 'mentoring', 'career_guidance']).optional().nullable(),
     preferredDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
     preferredTimeSlot: z.string().max(100).optional().nullable(),
-    durationMinutes: z.number().int().positive().optional().nullable(),
+    durationMinutes: coercePositiveInt.optional().nullable(),
     isFree: z.boolean().optional().nullable(),
     price: z.number().nonnegative().optional().nullable(),
     requestStatus: z.enum(['pending', 'approved', 'scheduled', 'completed', 'rejected', 'cancelled']).optional().nullable(),
@@ -91,7 +92,7 @@ const sessionRequestListQuerySchema = listQuerySchema.extend({
 
 const createSessionRequestTranslationSchema = z
   .object({
-    languageId: z.number().int().positive(),
+    languageId: coercePositiveInt,
     topic: z.string().min(1, 'Topic is required').max(1000).trim(),
     description: z.string().max(5000).optional().nullable(),
   })
@@ -110,12 +111,12 @@ const updateSessionRequestTranslationSchema = z
 
 const createScheduledSessionSchema = z
   .object({
-    studentId: z.number().int().positive(),
-    instructorId: z.number().int().positive(),
+    studentId: coercePositiveInt,
+    instructorId: coercePositiveInt,
     scheduledAt: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/),
-    sessionRequestId: z.number().int().positive().optional().nullable(),
-    orderId: z.number().int().positive().optional().nullable(),
-    durationMinutes: z.number().int().positive().optional().default(60),
+    sessionRequestId: coercePositiveInt.optional().nullable(),
+    orderId: coercePositiveInt.optional().nullable(),
+    durationMinutes: coercePositiveInt.optional().default(60),
     meetingUrl: z.string().url().optional().nullable(),
     meetingPlatform: z.enum(['zoom', 'google_meet', 'teams', 'custom']).optional().nullable(),
     meetingId: z.string().max(500).optional().nullable(),
@@ -126,7 +127,7 @@ const createScheduledSessionSchema = z
 const updateScheduledSessionSchema = z
   .object({
     scheduledAt: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/).optional().nullable(),
-    durationMinutes: z.number().int().positive().optional().nullable(),
+    durationMinutes: coercePositiveInt.optional().nullable(),
     endedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/).optional().nullable(),
     meetingUrl: z.string().url().optional().nullable(),
     meetingPlatform: z.enum(['zoom', 'google_meet', 'teams', 'custom']).optional().nullable(),
@@ -135,7 +136,7 @@ const updateScheduledSessionSchema = z
     sessionStatus: z.enum(['scheduled', 'in_progress', 'completed', 'cancelled', 'no_show']).optional().nullable(),
     recordingUrl: z.string().url().optional().nullable(),
     rating: z.number().int().min(1).max(5).optional().nullable(),
-    cancelledBy: z.number().int().positive().optional().nullable(),
+    cancelledBy: coercePositiveInt.optional().nullable(),
     cancellationReason: z.string().max(1000).optional().nullable(),
   })
   .strict();
@@ -161,7 +162,7 @@ const scheduledSessionListQuerySchema = listQuerySchema.extend({
 
 const createScheduledSessionTranslationSchema = z
   .object({
-    languageId: z.number().int().positive(),
+    languageId: coercePositiveInt,
     instructorNotes: z.string().max(5000).optional().nullable(),
     studentFeedback: z.string().max(5000).optional().nullable(),
   })

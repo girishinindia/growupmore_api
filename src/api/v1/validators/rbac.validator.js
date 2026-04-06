@@ -1,4 +1,5 @@
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // ROLE SCHEMAS
@@ -8,7 +9,7 @@ const createRoleSchema = z.object({
   name: z.string().min(2).max(100).trim(),
   code: z.string().min(2).max(50).regex(/^[a-z][a-z0-9_]*$/, 'Code must be lowercase alphanumeric with underscores').trim(),
   description: z.string().max(500).optional().nullable(),
-  parentRoleId: z.number().int().positive().optional().nullable(),
+  parentRoleId: coercePositiveInt.optional().nullable(),
   level: z.number().int().min(0).max(99).optional().default(99),
   displayOrder: z.number().int().min(0).optional().default(0),
   icon: z.string().max(50).optional().nullable(),
@@ -20,7 +21,7 @@ const updateRoleSchema = z.object({
   name: z.string().min(2).max(100).trim().optional(),
   code: z.string().min(2).max(50).regex(/^[a-z][a-z0-9_]*$/).trim().optional(),
   description: z.string().max(500).optional().nullable(),
-  parentRoleId: z.number().int().positive().optional().nullable(),
+  parentRoleId: coercePositiveInt.optional().nullable(),
   level: z.number().int().min(0).max(99).optional(),
   displayOrder: z.number().int().min(0).optional(),
   icon: z.string().max(50).optional().nullable(),
@@ -33,11 +34,11 @@ const updateRoleSchema = z.object({
 // ============================================================================
 
 const assignPermissionSchema = z.object({
-  permissionId: z.number().int().positive('Permission ID is required'),
+  permissionId: coercePositiveInt,
 });
 
 const bulkAssignPermissionsSchema = z.object({
-  permissionIds: z.array(z.number().int().positive()).min(1, 'At least one permission ID is required'),
+  permissionIds: z.array(coercePositiveInt).min(1, 'At least one permission ID is required'),
 });
 
 // ============================================================================
@@ -45,10 +46,10 @@ const bulkAssignPermissionsSchema = z.object({
 // ============================================================================
 
 const assignRoleToUserSchema = z.object({
-  userId: z.number().int().positive('User ID is required'),
-  roleId: z.number().int().positive('Role ID is required'),
+  userId: coercePositiveInt,
+  roleId: coercePositiveInt,
   contextType: z.string().max(50).optional().nullable(),
-  contextId: z.number().int().positive().optional().nullable(),
+  contextId: coercePositiveInt.optional().nullable(),
   expiresAt: z.string().datetime().optional().nullable(),
   reason: z.string().max(500).optional().nullable(),
 }).refine(data => {

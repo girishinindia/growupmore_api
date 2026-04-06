@@ -14,6 +14,7 @@
  */
 
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -56,14 +57,14 @@ const restoreSchema = z.object({
 const createAssessmentSchema = z.object({
   assessmentType: z.enum(['assignment', 'quiz', 'project', 'exam']).optional().default('assignment'),
   assessmentScope: z.enum(['chapter', 'module', 'course']).optional().default('chapter'),
-  chapterId: z.number().int().positive().optional(),
-  moduleId: z.number().int().positive().optional(),
-  courseId: z.number().int().positive().optional(),
+  chapterId: coercePositiveInt.optional(),
+  moduleId: coercePositiveInt.optional(),
+  courseId: coercePositiveInt.optional(),
   contentType: z.enum(['coding', 'text', 'multiple_choice', 'mixed']).optional().default('coding'),
   code: z.string().max(100).trim().nullable().optional(),
   points: z.number().positive().optional(),
   difficultyLevel: z.enum(['easy', 'medium', 'hard']).optional().default('medium'),
-  dueDays: z.number().int().positive().optional(),
+  dueDays: coercePositiveInt.optional(),
   estimatedHours: z.number().positive().optional(),
   isMandatory: z.boolean().optional().default(true),
   displayOrder: z.number().int().nonnegative().optional(),
@@ -81,7 +82,7 @@ const updateAssessmentSchema = z.object({
   code: z.string().max(100).trim().nullable().optional(),
   points: z.number().positive().optional(),
   difficultyLevel: z.enum(['easy', 'medium', 'hard']).optional(),
-  dueDays: z.number().int().positive().optional(),
+  dueDays: coercePositiveInt.optional(),
   estimatedHours: z.number().positive().optional(),
   isMandatory: z.boolean().optional(),
   displayOrder: z.number().int().nonnegative().optional(),
@@ -115,8 +116,8 @@ const assessmentListQuerySchema = listQuerySchema.extend({
  * Optional: description, instructions, tech stack, learning outcomes, images, SEO fields
  */
 const createAssessmentTranslationSchema = z.object({
-  assessmentId: z.number().int().positive(),
-  languageId: z.number().int().positive(),
+  assessmentId: coercePositiveInt,
+  languageId: coercePositiveInt,
   title: z.string().min(1).trim(),
   description: z.string().nullable().optional(),
   instructions: z.string().nullable().optional(),
@@ -149,8 +150,8 @@ const createAssessmentTranslationSchema = z.object({
  * All fields are optional
  */
 const updateAssessmentTranslationSchema = z.object({
-  assessmentId: z.number().int().positive().optional(),
-  languageId: z.number().int().positive().optional(),
+  assessmentId: coercePositiveInt.optional(),
+  languageId: coercePositiveInt.optional(),
   title: z.string().min(1).trim().optional(),
   description: z.string().nullable().optional(),
   instructions: z.string().nullable().optional(),
@@ -188,7 +189,7 @@ const updateAssessmentTranslationSchema = z.object({
  * Optional: fileUrl, githubUrl, fileName, fileSizeBytes, mimeType
  */
 const createAssessmentAttachmentSchema = z.object({
-  assessmentId: z.number().int().positive(),
+  assessmentId: coercePositiveInt,
   attachmentType: z.enum(['document', 'resource', 'reference', 'example']),
   fileUrl: z.string().url().nullable().optional(),
   githubUrl: z.string().url().nullable().optional(),
@@ -204,7 +205,7 @@ const createAssessmentAttachmentSchema = z.object({
  * All fields are optional
  */
 const updateAssessmentAttachmentSchema = z.object({
-  assessmentId: z.number().int().positive().optional(),
+  assessmentId: coercePositiveInt.optional(),
   attachmentType: z.enum(['document', 'resource', 'reference', 'example']).optional(),
   fileUrl: z.string().url().nullable().optional(),
   githubUrl: z.string().url().nullable().optional(),
@@ -235,8 +236,8 @@ const assessmentAttachmentListQuerySchema = listQuerySchema.extend({
  * Optional: title, description, isActive
  */
 const createAssessmentAttachmentTranslationSchema = z.object({
-  assessmentAttachmentId: z.number().int().positive(),
-  languageId: z.number().int().positive(),
+  assessmentAttachmentId: coercePositiveInt,
+  languageId: coercePositiveInt,
   title: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   isActive: z.boolean().optional().default(true),
@@ -247,8 +248,8 @@ const createAssessmentAttachmentTranslationSchema = z.object({
  * All fields are optional
  */
 const updateAssessmentAttachmentTranslationSchema = z.object({
-  assessmentAttachmentId: z.number().int().positive().optional(),
-  languageId: z.number().int().positive().optional(),
+  assessmentAttachmentId: coercePositiveInt.optional(),
+  languageId: coercePositiveInt.optional(),
   title: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   isActive: z.boolean().optional(),
@@ -264,7 +265,7 @@ const updateAssessmentAttachmentTranslationSchema = z.object({
  * Optional: fileUrl, githubUrl, videoUrl, fileName, fileSizeBytes, mimeType, videoDurationSeconds
  */
 const createAssessmentSolutionSchema = z.object({
-  assessmentId: z.number().int().positive(),
+  assessmentId: coercePositiveInt,
   solutionType: z.enum(['file', 'github', 'video', 'text']),
   fileUrl: z.string().url().nullable().optional(),
   githubUrl: z.string().url().nullable().optional(),
@@ -272,7 +273,7 @@ const createAssessmentSolutionSchema = z.object({
   fileName: z.string().nullable().optional(),
   fileSizeBytes: z.number().int().nonnegative().nullable().optional(),
   mimeType: z.string().nullable().optional(),
-  videoDurationSeconds: z.number().int().positive().nullable().optional(),
+  videoDurationSeconds: coercePositiveInt.nullable().optional(),
   displayOrder: z.number().int().nonnegative().optional().default(0),
   isActive: z.boolean().optional().default(true),
 });
@@ -282,7 +283,7 @@ const createAssessmentSolutionSchema = z.object({
  * All fields are optional
  */
 const updateAssessmentSolutionSchema = z.object({
-  assessmentId: z.number().int().positive().optional(),
+  assessmentId: coercePositiveInt.optional(),
   solutionType: z.enum(['file', 'github', 'video', 'text']).optional(),
   fileUrl: z.string().url().nullable().optional(),
   githubUrl: z.string().url().nullable().optional(),
@@ -290,7 +291,7 @@ const updateAssessmentSolutionSchema = z.object({
   fileName: z.string().nullable().optional(),
   fileSizeBytes: z.number().int().nonnegative().nullable().optional(),
   mimeType: z.string().nullable().optional(),
-  videoDurationSeconds: z.number().int().positive().nullable().optional(),
+  videoDurationSeconds: coercePositiveInt.nullable().optional(),
   displayOrder: z.number().int().nonnegative().optional(),
   isActive: z.boolean().optional(),
 }).strict();
@@ -315,8 +316,8 @@ const assessmentSolutionListQuerySchema = listQuerySchema.extend({
  * Optional: title, description, videoTitle, videoDescription, videoThumbnail, isActive
  */
 const createAssessmentSolutionTranslationSchema = z.object({
-  assessmentSolutionId: z.number().int().positive(),
-  languageId: z.number().int().positive(),
+  assessmentSolutionId: coercePositiveInt,
+  languageId: coercePositiveInt,
   title: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   videoTitle: z.string().nullable().optional(),
@@ -330,8 +331,8 @@ const createAssessmentSolutionTranslationSchema = z.object({
  * All fields are optional
  */
 const updateAssessmentSolutionTranslationSchema = z.object({
-  assessmentSolutionId: z.number().int().positive().optional(),
-  languageId: z.number().int().positive().optional(),
+  assessmentSolutionId: coercePositiveInt.optional(),
+  languageId: coercePositiveInt.optional(),
   title: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   videoTitle: z.string().nullable().optional(),

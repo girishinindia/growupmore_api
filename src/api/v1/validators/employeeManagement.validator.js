@@ -7,6 +7,7 @@
  */
 
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -29,20 +30,20 @@ const listQuerySchema = z.object({
 // ============================================================================
 
 const createEmployeeProfileSchema = z.object({
-  userId: z.number().int().positive('User ID is required'),
+  userId: coercePositiveInt,
   employeeCode: z.string().min(1).max(100).trim(),
-  designationId: z.number().int().positive('Designation ID is required'),
-  departmentId: z.number().int().positive('Department ID is required'),
-  branchId: z.number().int().positive('Branch ID is required'),
+  designationId: coercePositiveInt,
+  departmentId: coercePositiveInt,
+  branchId: coercePositiveInt,
   joiningDate: z.string().refine(val => !isNaN(Date.parse(val)), 'Invalid date format'),
   employeeType: z.enum(['full_time', 'part_time', 'contract', 'probation', 'intern', 'consultant', 'temporary', 'freelance']).optional().default('full_time'),
-  reportingManagerId: z.number().int().positive().optional().nullable(),
+  reportingManagerId: coercePositiveInt.optional().nullable(),
   confirmationDate: z.string().refine(val => !isNaN(Date.parse(val)), 'Invalid date format').optional().nullable(),
   probationEndDate: z.string().refine(val => !isNaN(Date.parse(val)), 'Invalid date format').optional().nullable(),
   contractEndDate: z.string().refine(val => !isNaN(Date.parse(val)), 'Invalid date format').optional().nullable(),
   workMode: z.enum(['on_site', 'remote', 'hybrid']).optional().default('on_site'),
   shiftType: z.enum(['general', 'morning', 'afternoon', 'night', 'rotational']).optional().default('general'),
-  shiftBranchId: z.number().int().positive().optional().nullable(),
+  shiftBranchId: coercePositiveInt.optional().nullable(),
   workLocation: z.string().max(500).optional().nullable(),
   weeklyOffDays: z.string().max(100).optional().default('saturday,sunday'),
   payGrade: z.string().max(50).optional().nullable(),
@@ -73,10 +74,10 @@ const createEmployeeProfileSchema = z.object({
 const updateEmployeeProfileSchema = z.object({
   employeeCode: z.string().min(1).max(100).trim().optional(),
   employeeType: z.enum(['full_time', 'part_time', 'contract', 'probation', 'intern', 'consultant', 'temporary', 'freelance']).optional(),
-  designationId: z.number().int().positive().optional(),
-  departmentId: z.number().int().positive().optional(),
-  branchId: z.number().int().positive().optional(),
-  reportingManagerId: z.number().int().positive().optional().nullable(),
+  designationId: coercePositiveInt.optional(),
+  departmentId: coercePositiveInt.optional(),
+  branchId: coercePositiveInt.optional(),
+  reportingManagerId: coercePositiveInt.optional().nullable(),
   joiningDate: z.string().refine(val => !isNaN(Date.parse(val)), 'Invalid date format').optional(),
   confirmationDate: z.string().refine(val => !isNaN(Date.parse(val)), 'Invalid date format').optional().nullable(),
   probationEndDate: z.string().refine(val => !isNaN(Date.parse(val)), 'Invalid date format').optional().nullable(),
@@ -86,7 +87,7 @@ const updateEmployeeProfileSchema = z.object({
   relievingDate: z.string().refine(val => !isNaN(Date.parse(val)), 'Invalid date format').optional().nullable(),
   workMode: z.enum(['on_site', 'remote', 'hybrid']).optional(),
   shiftType: z.enum(['general', 'morning', 'afternoon', 'night', 'rotational']).optional(),
-  shiftBranchId: z.number().int().positive().optional().nullable(),
+  shiftBranchId: coercePositiveInt.optional().nullable(),
   workLocation: z.string().max(500).optional().nullable(),
   weeklyOffDays: z.string().max(100).optional(),
   payGrade: z.string().max(50).optional().nullable(),

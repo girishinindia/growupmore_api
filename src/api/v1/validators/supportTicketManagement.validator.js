@@ -7,6 +7,7 @@
  */
 
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -33,7 +34,7 @@ const restoreSchema = z.object({
 });
 
 const bulkIdsSchema = z.object({
-  ids: z.array(z.number().int().positive()).min(1, 'At least one ID is required'),
+  ids: z.array(coercePositiveInt).min(1, 'At least one ID is required'),
 });
 
 const listQuerySchema = z.object({
@@ -51,7 +52,7 @@ const listQuerySchema = z.object({
 const createTicketCategorySchema = z.object({
   name: z.string().min(1).max(255).trim(),
   code: z.string().min(1).max(100).trim(),
-  parentCategoryId: z.number().int().positive().optional().nullable(),
+  parentCategoryId: coercePositiveInt.optional().nullable(),
   displayOrder: z.number().int().nonnegative().optional().default(0),
   icon: z.string().max(100).optional().nullable(),
   isActive: z.boolean().optional().default(true),
@@ -60,7 +61,7 @@ const createTicketCategorySchema = z.object({
 const updateTicketCategorySchema = z.object({
   name: z.string().min(1).max(255).trim().optional(),
   code: z.string().min(1).max(100).trim().optional(),
-  parentCategoryId: z.number().int().positive().optional().nullable(),
+  parentCategoryId: coercePositiveInt.optional().nullable(),
   displayOrder: z.number().int().nonnegative().optional(),
   icon: z.string().max(100).optional().nullable(),
   isActive: z.boolean().optional(),
@@ -76,8 +77,8 @@ const ticketCategoryListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createTicketCategoryTranslationSchema = z.object({
-  categoryId: z.number().int().positive('Category ID is required'),
-  languageId: z.number().int().positive('Language ID is required'),
+  categoryId: coercePositiveInt,
+  languageId: coercePositiveInt,
   name: z.string().min(1).max(255).trim(),
   description: z.string().max(2000).optional().nullable(),
   isActive: z.boolean().optional().default(true),
@@ -94,30 +95,30 @@ const updateTicketCategoryTranslationSchema = z.object({
 // ============================================================================
 
 const createTicketSchema = z.object({
-  raisedBy: z.number().int().positive('Raised by user ID is required'),
+  raisedBy: coercePositiveInt,
   subject: z.string().min(1).max(500).trim(),
-  categoryId: z.number().int().positive('Category ID is required'),
-  assignedTo: z.number().int().positive().optional().nullable(),
+  categoryId: coercePositiveInt,
+  assignedTo: coercePositiveInt.optional().nullable(),
   ticketType: z.enum(['complaint', 'request', 'suggestion', 'feedback']).optional().default('complaint'),
   priority: z.enum(['low', 'medium', 'high', 'urgent']).optional().default('medium'),
   ticketStatus: z.enum(['open', 'in_progress', 'awaiting_response', 'resolved', 'closed', 'reopened']).optional().default('open'),
-  courseId: z.number().int().positive().optional().nullable(),
-  batchId: z.number().int().positive().optional().nullable(),
-  webinarId: z.number().int().positive().optional().nullable(),
-  orderId: z.number().int().positive().optional().nullable(),
+  courseId: coercePositiveInt.optional().nullable(),
+  batchId: coercePositiveInt.optional().nullable(),
+  webinarId: coercePositiveInt.optional().nullable(),
+  orderId: coercePositiveInt.optional().nullable(),
 }).strict();
 
 const updateTicketSchema = z.object({
   subject: z.string().min(1).max(500).trim().optional(),
   priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
   ticketStatus: z.enum(['open', 'in_progress', 'awaiting_response', 'resolved', 'closed', 'reopened']).optional(),
-  assignedTo: z.number().int().positive().optional().nullable(),
-  categoryId: z.number().int().positive().optional(),
+  assignedTo: coercePositiveInt.optional().nullable(),
+  categoryId: coercePositiveInt.optional(),
   ticketType: z.enum(['complaint', 'request', 'suggestion', 'feedback']).optional(),
-  courseId: z.number().int().positive().optional().nullable(),
-  batchId: z.number().int().positive().optional().nullable(),
-  webinarId: z.number().int().positive().optional().nullable(),
-  orderId: z.number().int().positive().optional().nullable(),
+  courseId: coercePositiveInt.optional().nullable(),
+  batchId: coercePositiveInt.optional().nullable(),
+  webinarId: coercePositiveInt.optional().nullable(),
+  orderId: coercePositiveInt.optional().nullable(),
   firstResponseAt: z.string().datetime().optional().nullable(),
   resolvedAt: z.string().datetime().optional().nullable(),
   closedAt: z.string().datetime().optional().nullable(),
@@ -144,8 +145,8 @@ const ticketListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createTicketTranslationSchema = z.object({
-  ticketId: z.number().int().positive('Ticket ID is required'),
-  languageId: z.number().int().positive('Language ID is required'),
+  ticketId: coercePositiveInt,
+  languageId: coercePositiveInt,
   description: z.string().min(1).max(5000).trim(),
   resolutionNotes: z.string().max(5000).optional().nullable(),
   isActive: z.boolean().optional().default(true),
@@ -162,8 +163,8 @@ const updateTicketTranslationSchema = z.object({
 // ============================================================================
 
 const createTicketMessageSchema = z.object({
-  ticketId: z.number().int().positive('Ticket ID is required'),
-  senderId: z.number().int().positive('Sender ID is required'),
+  ticketId: coercePositiveInt,
+  senderId: coercePositiveInt,
   messageBody: z.string().min(1).max(5000).trim(),
   attachmentUrl: z.string().max(2000).optional().nullable(),
   attachmentType: z.enum(['image', 'pdf', 'document', 'video', 'other']).optional().nullable(),
@@ -190,8 +191,8 @@ const ticketMessageListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createTicketMessageTranslationSchema = z.object({
-  ticketMessageId: z.number().int().positive('Ticket Message ID is required'),
-  languageId: z.number().int().positive('Language ID is required'),
+  ticketMessageId: coercePositiveInt,
+  languageId: coercePositiveInt,
   messageBody: z.string().min(1).max(5000).trim(),
   isActive: z.boolean().optional().default(true),
 }).strict();

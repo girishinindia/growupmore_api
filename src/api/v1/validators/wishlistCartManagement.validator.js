@@ -7,6 +7,7 @@
  */
 
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -17,7 +18,7 @@ const idParamSchema = z.object({
 });
 
 const idsBodySchema = z.object({
-  ids: z.array(z.number().int().positive('Each ID must be a positive integer')).min(1, 'At least one ID is required'),
+  ids: z.array(coercePositiveInt).min(1, 'At least one ID is required'),
 });
 
 const listQuerySchema = z.object({
@@ -33,12 +34,12 @@ const listQuerySchema = z.object({
 // ============================================================================
 
 const createWishlistSchema = z.object({
-  studentId: z.number().int().positive('Student ID is required'),
+  studentId: coercePositiveInt,
   itemType: z.enum(['course', 'bundle', 'batch', 'webinar'], { message: 'Item type must be one of: course, bundle, batch, webinar' }),
-  courseId: z.number().int().positive().optional().nullable(),
-  bundleId: z.number().int().positive().optional().nullable(),
-  batchId: z.number().int().positive().optional().nullable(),
-  webinarId: z.number().int().positive().optional().nullable(),
+  courseId: coercePositiveInt.optional().nullable(),
+  bundleId: coercePositiveInt.optional().nullable(),
+  batchId: coercePositiveInt.optional().nullable(),
+  webinarId: coercePositiveInt.optional().nullable(),
   isActive: z.boolean().optional().default(true),
 });
 
@@ -61,13 +62,13 @@ const wishlistListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createCartSchema = z.object({
-  studentId: z.number().int().positive('Student ID is required'),
+  studentId: coercePositiveInt,
   currency: z.string().max(3).optional().default('INR'),
   expiresAt: z.string().datetime().optional().nullable(),
 });
 
 const updateCartSchema = z.object({
-  couponId: z.number().int().positive().optional().nullable(),
+  couponId: coercePositiveInt.optional().nullable(),
   subtotal: z.number().positive().optional().nullable(),
   discountAmount: z.number().min(0).optional().nullable(),
   totalAmount: z.number().positive().optional().nullable(),
@@ -88,12 +89,12 @@ const cartListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createCartItemSchema = z.object({
-  cartId: z.number().int().positive('Cart ID is required'),
+  cartId: coercePositiveInt,
   itemType: z.enum(['course', 'bundle', 'batch', 'webinar'], { message: 'Item type must be one of: course, bundle, batch, webinar' }),
-  courseId: z.number().int().positive().optional().nullable(),
-  bundleId: z.number().int().positive().optional().nullable(),
-  batchId: z.number().int().positive().optional().nullable(),
-  webinarId: z.number().int().positive().optional().nullable(),
+  courseId: coercePositiveInt.optional().nullable(),
+  bundleId: coercePositiveInt.optional().nullable(),
+  batchId: coercePositiveInt.optional().nullable(),
+  webinarId: coercePositiveInt.optional().nullable(),
   displayOrder: z.number().int().min(0).optional().default(0),
 });
 

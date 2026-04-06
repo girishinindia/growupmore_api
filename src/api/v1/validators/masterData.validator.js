@@ -7,6 +7,7 @@
  */
 
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -98,7 +99,7 @@ const countryListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createStateSchema = z.object({
-  countryId: z.number().int().positive('Country ID is required'),
+  countryId: coercePositiveInt,
   name: z.string().min(1).max(200).trim(),
   languages: z.array(z.string()).optional().default([]),
   website: z.string().max(500).url().optional().nullable(),
@@ -106,7 +107,7 @@ const createStateSchema = z.object({
 });
 
 const updateStateSchema = z.object({
-  countryId: z.number().int().positive().optional(),
+  countryId: coercePositiveInt.optional(),
   name: z.string().min(1).max(200).trim().optional(),
   languages: z.array(z.string()).optional().nullable(),
   website: z.string().max(500).url().optional().nullable(),
@@ -123,7 +124,7 @@ const stateListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createCitySchema = z.object({
-  stateId: z.number().int().positive('State ID is required'),
+  stateId: coercePositiveInt,
   name: z.string().min(1).max(200).trim(),
   phonecode: z.string().max(10).optional().nullable(),
   timezone: z.string().max(100).optional().nullable(),
@@ -132,7 +133,7 @@ const createCitySchema = z.object({
 });
 
 const updateCitySchema = z.object({
-  stateId: z.number().int().positive().optional(),
+  stateId: coercePositiveInt.optional(),
   name: z.string().min(1).max(200).trim().optional(),
   phonecode: z.string().max(10).optional().nullable(),
   timezone: z.string().max(100).optional().nullable(),

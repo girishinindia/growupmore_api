@@ -7,6 +7,7 @@
  */
 
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -29,7 +30,7 @@ const listQuerySchema = z.object({
 // ============================================================================
 
 const createInstructorPromotionSchema = z.object({
-  instructorId: z.number().int().positive('Instructor ID is required'),
+  instructorId: coercePositiveInt,
   discountType: z.enum(['percentage', 'fixed_amount']),
   discountValue: z.number().positive('Discount value must be positive'),
   validFrom: z.string().datetime(),
@@ -38,8 +39,8 @@ const createInstructorPromotionSchema = z.object({
   maxDiscountAmount: z.number().positive().optional().nullable(),
   minPurchaseAmount: z.number().positive().optional().nullable(),
   applicableTo: z.string().max(50).optional().default('all_my_courses'),
-  usageLimit: z.number().int().positive().optional().nullable(),
-  usagePerUser: z.number().int().positive().optional().default(1),
+  usageLimit: coercePositiveInt.optional().nullable(),
+  usagePerUser: coercePositiveInt.optional().default(1),
   promotionStatus: z.enum(['draft', 'pending_approval', 'approved', 'rejected', 'active', 'inactive']).optional().default('draft'),
   requiresApproval: z.boolean().optional().default(true),
   isActive: z.boolean().optional().default(true),
@@ -54,11 +55,11 @@ const updateInstructorPromotionSchema = z.object({
   maxDiscountAmount: z.number().positive().optional().nullable(),
   minPurchaseAmount: z.number().positive().optional().nullable(),
   applicableTo: z.string().max(50).optional().nullable(),
-  usageLimit: z.number().int().positive().optional().nullable(),
-  usagePerUser: z.number().int().positive().optional().nullable(),
+  usageLimit: coercePositiveInt.optional().nullable(),
+  usagePerUser: coercePositiveInt.optional().nullable(),
   promotionStatus: z.enum(['draft', 'pending_approval', 'approved', 'rejected', 'active', 'inactive']).optional(),
   requiresApproval: z.boolean().optional(),
-  approvedBy: z.number().int().positive().optional().nullable(),
+  approvedBy: coercePositiveInt.optional().nullable(),
   approvedAt: z.string().datetime().optional().nullable(),
   rejectionReason: z.string().max(1000).optional().nullable(),
   isActive: z.boolean().optional(),
@@ -82,8 +83,8 @@ const instructorPromotionListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createInstructorPromotionTranslationSchema = z.object({
-  promotionId: z.number().int().positive('Promotion ID is required'),
-  languageId: z.number().int().positive('Language ID is required'),
+  promotionId: coercePositiveInt,
+  languageId: coercePositiveInt,
   promotionName: z.string().min(1).max(500).trim(),
   description: z.string().max(2000).optional().nullable(),
   isActive: z.boolean().optional().default(true),
@@ -100,8 +101,8 @@ const updateInstructorPromotionTranslationSchema = z.object({
 // ============================================================================
 
 const createInstructorPromotionCourseSchema = z.object({
-  promotionId: z.number().int().positive('Promotion ID is required'),
-  courseId: z.number().int().positive('Course ID is required'),
+  promotionId: coercePositiveInt,
+  courseId: coercePositiveInt,
   displayOrder: z.number().int().optional().default(0),
   isActive: z.boolean().optional().default(true),
 });

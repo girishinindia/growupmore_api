@@ -13,6 +13,7 @@
  */
 
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -90,10 +91,10 @@ const subjectListQuerySchema = listQuerySchema.extend({
  * Optional: displayOrder, difficultyLevel, estimatedMinutes, note, isActive
  */
 const createChapterSchema = z.object({
-  subjectId: z.number().int().positive(),
+  subjectId: coercePositiveInt,
   displayOrder: z.number().int().nonnegative().optional().default(0),
   difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional().default('beginner'),
-  estimatedMinutes: z.number().int().positive().nullable().optional(),
+  estimatedMinutes: coercePositiveInt.nullable().optional(),
   note: z.string().max(1000).nullable().optional(),
   isActive: z.boolean().optional().default(true),
 });
@@ -104,10 +105,10 @@ const createChapterSchema = z.object({
  * subjectId can be changed during update
  */
 const updateChapterSchema = z.object({
-  subjectId: z.number().int().positive().optional(),
+  subjectId: coercePositiveInt.optional(),
   displayOrder: z.number().int().nonnegative().optional(),
   difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
-  estimatedMinutes: z.number().int().positive().nullable().optional(),
+  estimatedMinutes: coercePositiveInt.nullable().optional(),
   note: z.string().max(1000).nullable().optional(),
   isActive: z.boolean().optional(),
 }).strict();
@@ -135,10 +136,10 @@ const chapterListQuerySchema = listQuerySchema.extend({
  * Optional: displayOrder, difficultyLevel, estimatedMinutes, note, isActive
  */
 const createTopicSchema = z.object({
-  chapterId: z.number().int().positive().nullable().optional(),
+  chapterId: coercePositiveInt.nullable().optional(),
   displayOrder: z.number().int().nonnegative().optional().default(0),
   difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional().default('beginner'),
-  estimatedMinutes: z.number().int().positive().nullable().optional(),
+  estimatedMinutes: coercePositiveInt.nullable().optional(),
   note: z.string().max(1000).nullable().optional(),
   isActive: z.boolean().optional().default(true),
 });
@@ -149,10 +150,10 @@ const createTopicSchema = z.object({
  * chapterId can be changed, removed, or added during update
  */
 const updateTopicSchema = z.object({
-  chapterId: z.number().int().positive().nullable().optional(),
+  chapterId: coercePositiveInt.nullable().optional(),
   displayOrder: z.number().int().nonnegative().optional(),
   difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
-  estimatedMinutes: z.number().int().positive().nullable().optional(),
+  estimatedMinutes: coercePositiveInt.nullable().optional(),
   note: z.string().max(1000).nullable().optional(),
   isActive: z.boolean().optional(),
 }).strict();
@@ -182,10 +183,10 @@ const topicListQuerySchema = listQuerySchema.extend({
  * Optional: displayOrder, difficultyLevel, estimatedMinutes, note, isActive
  */
 const createSubTopicSchema = z.object({
-  topicId: z.number().int().positive(),
+  topicId: coercePositiveInt,
   displayOrder: z.number().int().nonnegative().optional().default(0),
   difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional().default('beginner'),
-  estimatedMinutes: z.number().int().positive().nullable().optional(),
+  estimatedMinutes: coercePositiveInt.nullable().optional(),
   note: z.string().max(1000).nullable().optional(),
   isActive: z.boolean().optional().default(true),
 });
@@ -196,10 +197,10 @@ const createSubTopicSchema = z.object({
  * topicId can be changed during update
  */
 const updateSubTopicSchema = z.object({
-  topicId: z.number().int().positive().optional(),
+  topicId: coercePositiveInt.optional(),
   displayOrder: z.number().int().nonnegative().optional(),
   difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
-  estimatedMinutes: z.number().int().positive().nullable().optional(),
+  estimatedMinutes: coercePositiveInt.nullable().optional(),
   note: z.string().max(1000).nullable().optional(),
   isActive: z.boolean().optional(),
 }).strict();

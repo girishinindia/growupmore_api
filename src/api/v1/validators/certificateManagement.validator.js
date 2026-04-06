@@ -1,4 +1,5 @@
 const { z } = require('zod');
+const { coercePositiveInt } = require('./shared/coerce');
 
 // ============================================================================
 // SHARED SCHEMAS
@@ -60,8 +61,8 @@ const certificateTemplateListQuerySchema = listQuerySchema.extend({
 // ============================================================================
 
 const createTemplateTranslationSchema = z.object({
-  certificateTemplateId: z.number().int().positive(),
-  languageId: z.number().int().positive(),
+  certificateTemplateId: coercePositiveInt,
+  languageId: coercePositiveInt,
   title: z.string().min(1, 'Title is required').max(500).trim(),
   description: z.string().max(2000).trim().optional().nullable(),
   congratulationsText: z.string().max(2000).trim().optional().nullable(),
@@ -82,10 +83,10 @@ const updateTemplateTranslationSchema = z.object({
 // ============================================================================
 
 const createCertificateSchema = z.object({
-  studentId: z.number().int().positive(),
-  courseId: z.number().int().positive(),
-  enrollmentId: z.number().int().positive(),
-  certificateTemplateId: z.number().int().positive(),
+  studentId: coercePositiveInt,
+  courseId: coercePositiveInt,
+  enrollmentId: coercePositiveInt,
+  certificateTemplateId: coercePositiveInt,
   certificateNumber: z.string().max(100).trim().optional().nullable(),
   studentNameSnapshot: z.string().max(500).trim().optional().nullable(),
   courseTitleSnapshot: z.string().max(500).trim().optional().nullable(),
