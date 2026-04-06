@@ -28,6 +28,12 @@ const orderManagementRoutes = require('./routes/orderManagement.routes');
 const referralManagementRoutes = require('./routes/referralManagement.routes');
 const enrollmentManagementRoutes = require('./routes/enrollmentManagement.routes');
 const courseReviewManagementRoutes = require('./routes/courseReviewManagement.routes');
+const discussionManagementRoutes = require('./routes/discussionManagement.routes');
+const certificateManagementRoutes = require('./routes/certificateManagement.routes');
+const attendanceManagementRoutes = require('./routes/attendanceManagement.routes');
+const supportTicketManagementRoutes = require('./routes/supportTicketManagement.routes');
+const specialSessionManagementRoutes = require('./routes/specialSessionManagement.routes');
+const callFollowupManagementRoutes = require('./routes/callFollowupManagement.routes');
 
 const router = Router();
 
@@ -55,5 +61,11 @@ router.use('/order-management', orderManagementRoutes);
 router.use('/referral-management', referralManagementRoutes);
 router.use('/enrollment-management', enrollmentManagementRoutes);
 router.use('/course-review-management', courseReviewManagementRoutes);
+router.use('/discussion-management', discussionManagementRoutes);
+router.use('/certificate-management', certificateManagementRoutes);
+router.use('/attendance-management', attendanceManagementRoutes);
+router.use('/support-ticket-management', supportTicketManagementRoutes);
+router.use('/special-session-management', specialSessionManagementRoutes);
+router.use('/call-followup-management', callFollowupManagementRoutes);
 
 module.exports = router;
