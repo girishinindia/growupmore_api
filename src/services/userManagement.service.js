@@ -64,7 +64,7 @@ class UserManagementService {
         lastName: data.lastName,
         password: data.password,
         email: data.email || null,
-        mobileNumber: data.mobileNumber || null,
+        mobile: data.mobile || null,
         role: data.role || 'USER',
         isActive: data.isActive !== undefined ? data.isActive : true,
         isDeleted: data.isDeleted !== undefined ? data.isDeleted : false,
@@ -92,17 +92,18 @@ class UserManagementService {
         throw new NotFoundError('User not found');
       }
 
+      // Note: udf_get_users returns columns with user_ prefix (e.g. user_mobile, user_country_id)
       const updateData = {
-        countryId: data.countryId !== undefined ? data.countryId : existingUser.countryId,
-        firstName: data.firstName !== undefined ? data.firstName : existingUser.firstName,
-        lastName: data.lastName !== undefined ? data.lastName : existingUser.lastName,
-        email: data.email !== undefined ? data.email : existingUser.email,
-        mobileNumber: data.mobileNumber !== undefined ? data.mobileNumber : existingUser.mobileNumber,
-        role: data.role !== undefined ? data.role : existingUser.role,
-        isActive: data.isActive !== undefined ? data.isActive : existingUser.isActive,
-        isDeleted: data.isDeleted !== undefined ? data.isDeleted : existingUser.isDeleted,
-        isEmailVerified: data.isEmailVerified !== undefined ? data.isEmailVerified : existingUser.isEmailVerified,
-        isMobileVerified: data.isMobileVerified !== undefined ? data.isMobileVerified : existingUser.isMobileVerified,
+        countryId: data.countryId !== undefined ? data.countryId : existingUser.user_country_id,
+        firstName: data.firstName !== undefined ? data.firstName : existingUser.user_first_name,
+        lastName: data.lastName !== undefined ? data.lastName : existingUser.user_last_name,
+        email: data.email !== undefined ? data.email : existingUser.user_email,
+        mobile: data.mobile !== undefined ? data.mobile : existingUser.user_mobile,
+        role: data.role !== undefined ? data.role : existingUser.user_role,
+        isActive: data.isActive !== undefined ? data.isActive : existingUser.user_is_active,
+        isDeleted: data.isDeleted !== undefined ? data.isDeleted : existingUser.user_is_deleted,
+        isEmailVerified: data.isEmailVerified !== undefined ? data.isEmailVerified : existingUser.user_is_email_verified,
+        isMobileVerified: data.isMobileVerified !== undefined ? data.isMobileVerified : existingUser.user_is_mobile_verified,
         updatedBy: actingUserId,
       };
 
@@ -262,22 +263,23 @@ class UserManagementService {
         throw new NotFoundError('User Profile not found');
       }
 
+      // Note: udf_get_user_profiles returns columns with profile_ prefix
       const updateData = {
-        userId: data.userId !== undefined ? data.userId : existingUserProfile.userId,
-        gender: data.gender !== undefined ? data.gender : existingUserProfile.gender,
-        bloodGroup: data.bloodGroup !== undefined ? data.bloodGroup : existingUserProfile.bloodGroup,
-        maritalStatus: data.maritalStatus !== undefined ? data.maritalStatus : existingUserProfile.maritalStatus,
-        nationality: data.nationality !== undefined ? data.nationality : existingUserProfile.nationality,
-        dateOfBirth: data.dateOfBirth !== undefined ? data.dateOfBirth : existingUserProfile.dateOfBirth,
-        profileImageUrl: data.profileImageUrl !== undefined ? data.profileImageUrl : existingUserProfile.profileImageUrl,
-        isProfileComplete: data.isProfileComplete !== undefined ? data.isProfileComplete : existingUserProfile.isProfileComplete,
-        isActive: data.isActive !== undefined ? data.isActive : existingUserProfile.isActive,
-        isDeleted: data.isDeleted !== undefined ? data.isDeleted : existingUserProfile.isDeleted,
-        countryId: data.countryId !== undefined ? data.countryId : existingUserProfile.countryId,
-        stateId: data.stateId !== undefined ? data.stateId : existingUserProfile.stateId,
-        cityId: data.cityId !== undefined ? data.cityId : existingUserProfile.cityId,
-        preferredLanguageId: data.preferredLanguageId !== undefined ? data.preferredLanguageId : existingUserProfile.preferredLanguageId,
-        themePreference: data.themePreference !== undefined ? data.themePreference : existingUserProfile.themePreference,
+        userId: data.userId !== undefined ? data.userId : existingUserProfile.profile_user_id,
+        gender: data.gender !== undefined ? data.gender : existingUserProfile.profile_gender,
+        bloodGroup: data.bloodGroup !== undefined ? data.bloodGroup : existingUserProfile.profile_blood_group,
+        maritalStatus: data.maritalStatus !== undefined ? data.maritalStatus : existingUserProfile.profile_marital_status,
+        nationality: data.nationality !== undefined ? data.nationality : existingUserProfile.profile_nationality,
+        dateOfBirth: data.dateOfBirth !== undefined ? data.dateOfBirth : existingUserProfile.profile_date_of_birth,
+        profileImageUrl: data.profileImageUrl !== undefined ? data.profileImageUrl : existingUserProfile.profile_photo_url,
+        isProfileComplete: data.isProfileComplete !== undefined ? data.isProfileComplete : existingUserProfile.profile_is_complete,
+        isActive: data.isActive !== undefined ? data.isActive : existingUserProfile.profile_is_active,
+        isDeleted: data.isDeleted !== undefined ? data.isDeleted : existingUserProfile.profile_is_deleted,
+        countryId: data.countryId !== undefined ? data.countryId : existingUserProfile.profile_country_id,
+        stateId: data.stateId !== undefined ? data.stateId : existingUserProfile.profile_state_id,
+        cityId: data.cityId !== undefined ? data.cityId : existingUserProfile.profile_city_id,
+        preferredLanguageId: data.preferredLanguageId !== undefined ? data.preferredLanguageId : existingUserProfile.profile_preferred_language_id,
+        themePreference: data.themePreference !== undefined ? data.themePreference : existingUserProfile.profile_theme_preference,
         updatedBy: actingUserId,
       };
 
@@ -404,20 +406,21 @@ class UserManagementService {
         throw new NotFoundError('User Education not found');
       }
 
+      // Note: udf_get_user_education returns columns with edu_ prefix
       const updateData = {
-        userId: data.userId !== undefined ? data.userId : existingUserEducation.userId,
-        educationLevelId: data.educationLevelId !== undefined ? data.educationLevelId : existingUserEducation.educationLevelId,
-        institutionName: data.institutionName !== undefined ? data.institutionName : existingUserEducation.institutionName,
-        fieldOfStudy: data.fieldOfStudy !== undefined ? data.fieldOfStudy : existingUserEducation.fieldOfStudy,
-        grade: data.grade !== undefined ? data.grade : existingUserEducation.grade,
-        startDate: data.startDate !== undefined ? data.startDate : existingUserEducation.startDate,
-        endDate: data.endDate !== undefined ? data.endDate : existingUserEducation.endDate,
-        description: data.description !== undefined ? data.description : existingUserEducation.description,
-        documentUrl: data.documentUrl !== undefined ? data.documentUrl : existingUserEducation.documentUrl,
-        isCurrentlyStudying: data.isCurrentlyStudying !== undefined ? data.isCurrentlyStudying : existingUserEducation.isCurrentlyStudying,
-        isHighest: data.isHighest !== undefined ? data.isHighest : existingUserEducation.isHighest,
-        isActive: data.isActive !== undefined ? data.isActive : existingUserEducation.isActive,
-        isDeleted: data.isDeleted !== undefined ? data.isDeleted : existingUserEducation.isDeleted,
+        userId: data.userId !== undefined ? data.userId : existingUserEducation.edu_user_id,
+        educationLevelId: data.educationLevelId !== undefined ? data.educationLevelId : existingUserEducation.edu_level_id,
+        institutionName: data.institutionName !== undefined ? data.institutionName : existingUserEducation.edu_institution_name,
+        fieldOfStudy: data.fieldOfStudy !== undefined ? data.fieldOfStudy : existingUserEducation.edu_field_of_study,
+        grade: data.grade !== undefined ? data.grade : existingUserEducation.edu_grade_or_percentage,
+        startDate: data.startDate !== undefined ? data.startDate : existingUserEducation.edu_start_date,
+        endDate: data.endDate !== undefined ? data.endDate : existingUserEducation.edu_end_date,
+        description: data.description !== undefined ? data.description : existingUserEducation.edu_description,
+        documentUrl: data.documentUrl !== undefined ? data.documentUrl : existingUserEducation.edu_certificate_url,
+        isCurrentlyStudying: data.isCurrentlyStudying !== undefined ? data.isCurrentlyStudying : existingUserEducation.edu_is_currently_studying,
+        isHighest: data.isHighest !== undefined ? data.isHighest : existingUserEducation.edu_is_highest_qualification,
+        isActive: data.isActive !== undefined ? data.isActive : existingUserEducation.edu_is_active,
+        isDeleted: data.isDeleted !== undefined ? data.isDeleted : existingUserEducation.edu_is_deleted,
         updatedBy: actingUserId,
       };
 
@@ -544,20 +547,21 @@ class UserManagementService {
         throw new NotFoundError('User Experience not found');
       }
 
+      // Note: udf_get_user_experience returns columns with exp_ prefix
       const updateData = {
-        userId: data.userId !== undefined ? data.userId : existingUserExperience.userId,
-        companyName: data.companyName !== undefined ? data.companyName : existingUserExperience.companyName,
-        jobTitle: data.jobTitle !== undefined ? data.jobTitle : existingUserExperience.jobTitle,
-        startDate: data.startDate !== undefined ? data.startDate : existingUserExperience.startDate,
-        endDate: data.endDate !== undefined ? data.endDate : existingUserExperience.endDate,
-        designationId: data.designationId !== undefined ? data.designationId : existingUserExperience.designationId,
-        employmentType: data.employmentType !== undefined ? data.employmentType : existingUserExperience.employmentType,
-        workMode: data.workMode !== undefined ? data.workMode : existingUserExperience.workMode,
-        levelBand: data.levelBand !== undefined ? data.levelBand : existingUserExperience.levelBand,
-        description: data.description !== undefined ? data.description : existingUserExperience.description,
-        isCurrentJob: data.isCurrentJob !== undefined ? data.isCurrentJob : existingUserExperience.isCurrentJob,
-        isActive: data.isActive !== undefined ? data.isActive : existingUserExperience.isActive,
-        isDeleted: data.isDeleted !== undefined ? data.isDeleted : existingUserExperience.isDeleted,
+        userId: data.userId !== undefined ? data.userId : existingUserExperience.exp_user_id,
+        companyName: data.companyName !== undefined ? data.companyName : existingUserExperience.exp_company_name,
+        jobTitle: data.jobTitle !== undefined ? data.jobTitle : existingUserExperience.exp_job_title,
+        startDate: data.startDate !== undefined ? data.startDate : existingUserExperience.exp_start_date,
+        endDate: data.endDate !== undefined ? data.endDate : existingUserExperience.exp_end_date,
+        designationId: data.designationId !== undefined ? data.designationId : existingUserExperience.exp_designation_id,
+        employmentType: data.employmentType !== undefined ? data.employmentType : existingUserExperience.exp_employment_type,
+        workMode: data.workMode !== undefined ? data.workMode : existingUserExperience.exp_work_mode,
+        levelBand: data.levelBand !== undefined ? data.levelBand : null,
+        description: data.description !== undefined ? data.description : existingUserExperience.exp_description,
+        isCurrentJob: data.isCurrentJob !== undefined ? data.isCurrentJob : existingUserExperience.exp_is_current_job,
+        isActive: data.isActive !== undefined ? data.isActive : existingUserExperience.exp_is_active,
+        isDeleted: data.isDeleted !== undefined ? data.isDeleted : existingUserExperience.exp_is_deleted,
         updatedBy: actingUserId,
       };
 
@@ -680,17 +684,18 @@ class UserManagementService {
         throw new NotFoundError('User Social Media not found');
       }
 
+      // Note: udf_get_user_social_medias returns columns with usm_ prefix
       const updateData = {
-        userId: data.userId !== undefined ? data.userId : existingUserSocialMedia.userId,
-        socialMediaId: data.socialMediaId !== undefined ? data.socialMediaId : existingUserSocialMedia.socialMediaId,
-        profileUrl: data.profileUrl !== undefined ? data.profileUrl : existingUserSocialMedia.profileUrl,
-        platformType: data.platformType !== undefined ? data.platformType : existingUserSocialMedia.platformType,
-        username: data.username !== undefined ? data.username : existingUserSocialMedia.username,
-        followers: data.followers !== undefined ? data.followers : existingUserSocialMedia.followers,
-        isPrimary: data.isPrimary !== undefined ? data.isPrimary : existingUserSocialMedia.isPrimary,
-        isVerified: data.isVerified !== undefined ? data.isVerified : existingUserSocialMedia.isVerified,
-        isActive: data.isActive !== undefined ? data.isActive : existingUserSocialMedia.isActive,
-        isDeleted: data.isDeleted !== undefined ? data.isDeleted : existingUserSocialMedia.isDeleted,
+        userId: data.userId !== undefined ? data.userId : existingUserSocialMedia.usm_user_id,
+        socialMediaId: data.socialMediaId !== undefined ? data.socialMediaId : existingUserSocialMedia.usm_social_media_id,
+        profileUrl: data.profileUrl !== undefined ? data.profileUrl : existingUserSocialMedia.usm_profile_url,
+        platformType: data.platformType !== undefined ? data.platformType : existingUserSocialMedia.social_media_platform_type,
+        username: data.username !== undefined ? data.username : existingUserSocialMedia.usm_username,
+        followers: data.followers !== undefined ? data.followers : null,
+        isPrimary: data.isPrimary !== undefined ? data.isPrimary : existingUserSocialMedia.usm_is_primary,
+        isVerified: data.isVerified !== undefined ? data.isVerified : existingUserSocialMedia.usm_is_verified,
+        isActive: data.isActive !== undefined ? data.isActive : existingUserSocialMedia.usm_is_active,
+        isDeleted: data.isDeleted !== undefined ? data.isDeleted : existingUserSocialMedia.usm_is_deleted,
         updatedBy: actingUserId,
       };
 
@@ -813,16 +818,17 @@ class UserManagementService {
         throw new NotFoundError('User Skill not found');
       }
 
+      // Note: udf_get_user_skills returns columns with uskill_ prefix
       const updateData = {
-        userId: data.userId !== undefined ? data.userId : existingUserSkill.userId,
-        skillId: data.skillId !== undefined ? data.skillId : existingUserSkill.skillId,
-        proficiencyLevel: data.proficiencyLevel !== undefined ? data.proficiencyLevel : existingUserSkill.proficiencyLevel,
-        skillCategory: data.skillCategory !== undefined ? data.skillCategory : existingUserSkill.skillCategory,
-        yearsOfExperience: data.yearsOfExperience !== undefined ? data.yearsOfExperience : existingUserSkill.yearsOfExperience,
-        endorsementCount: data.endorsementCount !== undefined ? data.endorsementCount : existingUserSkill.endorsementCount,
-        isPrimary: data.isPrimary !== undefined ? data.isPrimary : existingUserSkill.isPrimary,
-        isActive: data.isActive !== undefined ? data.isActive : existingUserSkill.isActive,
-        isDeleted: data.isDeleted !== undefined ? data.isDeleted : existingUserSkill.isDeleted,
+        userId: data.userId !== undefined ? data.userId : existingUserSkill.uskill_user_id,
+        skillId: data.skillId !== undefined ? data.skillId : existingUserSkill.uskill_skill_id,
+        proficiencyLevel: data.proficiencyLevel !== undefined ? data.proficiencyLevel : existingUserSkill.uskill_proficiency_level,
+        skillCategory: data.skillCategory !== undefined ? data.skillCategory : existingUserSkill.skill_category,
+        yearsOfExperience: data.yearsOfExperience !== undefined ? data.yearsOfExperience : existingUserSkill.uskill_years_of_experience,
+        endorsementCount: data.endorsementCount !== undefined ? data.endorsementCount : existingUserSkill.uskill_endorsement_count,
+        isPrimary: data.isPrimary !== undefined ? data.isPrimary : existingUserSkill.uskill_is_primary,
+        isActive: data.isActive !== undefined ? data.isActive : existingUserSkill.uskill_is_active,
+        isDeleted: data.isDeleted !== undefined ? data.isDeleted : existingUserSkill.uskill_is_deleted,
         updatedBy: actingUserId,
       };
 
@@ -950,18 +956,19 @@ class UserManagementService {
         throw new NotFoundError('User Language not found');
       }
 
+      // Note: udf_get_user_languages returns columns with ulang_ prefix
       const updateData = {
-        userId: data.userId !== undefined ? data.userId : existingUserLanguage.userId,
-        languageId: data.languageId !== undefined ? data.languageId : existingUserLanguage.languageId,
-        proficiencyLevel: data.proficiencyLevel !== undefined ? data.proficiencyLevel : existingUserLanguage.proficiencyLevel,
-        script: data.script !== undefined ? data.script : existingUserLanguage.script,
-        isPrimary: data.isPrimary !== undefined ? data.isPrimary : existingUserLanguage.isPrimary,
-        isNative: data.isNative !== undefined ? data.isNative : existingUserLanguage.isNative,
-        canRead: data.canRead !== undefined ? data.canRead : existingUserLanguage.canRead,
-        canWrite: data.canWrite !== undefined ? data.canWrite : existingUserLanguage.canWrite,
-        canSpeak: data.canSpeak !== undefined ? data.canSpeak : existingUserLanguage.canSpeak,
-        isActive: data.isActive !== undefined ? data.isActive : existingUserLanguage.isActive,
-        isDeleted: data.isDeleted !== undefined ? data.isDeleted : existingUserLanguage.isDeleted,
+        userId: data.userId !== undefined ? data.userId : existingUserLanguage.ulang_user_id,
+        languageId: data.languageId !== undefined ? data.languageId : existingUserLanguage.ulang_language_id,
+        proficiencyLevel: data.proficiencyLevel !== undefined ? data.proficiencyLevel : existingUserLanguage.ulang_proficiency_level,
+        script: data.script !== undefined ? data.script : existingUserLanguage.language_script,
+        isPrimary: data.isPrimary !== undefined ? data.isPrimary : existingUserLanguage.ulang_is_primary,
+        isNative: data.isNative !== undefined ? data.isNative : existingUserLanguage.ulang_is_native,
+        canRead: data.canRead !== undefined ? data.canRead : existingUserLanguage.ulang_can_read,
+        canWrite: data.canWrite !== undefined ? data.canWrite : existingUserLanguage.ulang_can_write,
+        canSpeak: data.canSpeak !== undefined ? data.canSpeak : existingUserLanguage.ulang_can_speak,
+        isActive: data.isActive !== undefined ? data.isActive : existingUserLanguage.ulang_is_active,
+        isDeleted: data.isDeleted !== undefined ? data.isDeleted : existingUserLanguage.ulang_is_deleted,
         updatedBy: actingUserId,
       };
 
@@ -1086,19 +1093,20 @@ class UserManagementService {
         throw new NotFoundError('User Document not found');
       }
 
+      // Note: udf_get_user_documents returns columns with udoc_ prefix
       const updateData = {
-        userId: data.userId !== undefined ? data.userId : existingUserDocument.userId,
-        documentTypeId: data.documentTypeId !== undefined ? data.documentTypeId : existingUserDocument.documentTypeId,
-        documentId: data.documentId !== undefined ? data.documentId : existingUserDocument.documentId,
-        fileUrl: data.fileUrl !== undefined ? data.fileUrl : existingUserDocument.fileUrl,
-        fileName: data.fileName !== undefined ? data.fileName : existingUserDocument.fileName,
-        fileFormat: data.fileFormat !== undefined ? data.fileFormat : existingUserDocument.fileFormat,
-        fileSize: data.fileSize !== undefined ? data.fileSize : existingUserDocument.fileSize,
-        verificationStatus: data.verificationStatus !== undefined ? data.verificationStatus : existingUserDocument.verificationStatus,
-        expiryDate: data.expiryDate !== undefined ? data.expiryDate : existingUserDocument.expiryDate,
-        uploadedDate: data.uploadedDate !== undefined ? data.uploadedDate : existingUserDocument.uploadedDate,
-        isActive: data.isActive !== undefined ? data.isActive : existingUserDocument.isActive,
-        isDeleted: data.isDeleted !== undefined ? data.isDeleted : existingUserDocument.isDeleted,
+        userId: data.userId !== undefined ? data.userId : existingUserDocument.udoc_user_id,
+        documentTypeId: data.documentTypeId !== undefined ? data.documentTypeId : existingUserDocument.udoc_document_type_id,
+        documentId: data.documentId !== undefined ? data.documentId : existingUserDocument.udoc_document_id,
+        fileUrl: data.fileUrl !== undefined ? data.fileUrl : existingUserDocument.udoc_file_url,
+        fileName: data.fileName !== undefined ? data.fileName : existingUserDocument.udoc_file_name,
+        fileFormat: data.fileFormat !== undefined ? data.fileFormat : existingUserDocument.udoc_file_format,
+        fileSize: data.fileSize !== undefined ? data.fileSize : existingUserDocument.udoc_file_size_kb,
+        verificationStatus: data.verificationStatus !== undefined ? data.verificationStatus : existingUserDocument.udoc_verification_status,
+        expiryDate: data.expiryDate !== undefined ? data.expiryDate : existingUserDocument.udoc_expiry_date,
+        uploadedDate: data.uploadedDate !== undefined ? data.uploadedDate : existingUserDocument.udoc_issue_date,
+        isActive: data.isActive !== undefined ? data.isActive : existingUserDocument.udoc_is_active,
+        isDeleted: data.isDeleted !== undefined ? data.isDeleted : existingUserDocument.udoc_is_deleted,
         updatedBy: actingUserId,
       };
 
@@ -1232,25 +1240,26 @@ class UserManagementService {
         throw new NotFoundError('User Project not found');
       }
 
+      // Note: udf_get_user_projects returns columns with proj_ prefix
       const updateData = {
-        userId: data.userId !== undefined ? data.userId : existingUserProject.userId,
-        projectTitle: data.projectTitle !== undefined ? data.projectTitle : existingUserProject.projectTitle,
-        startDate: data.startDate !== undefined ? data.startDate : existingUserProject.startDate,
-        endDate: data.endDate !== undefined ? data.endDate : existingUserProject.endDate,
-        description: data.description !== undefined ? data.description : existingUserProject.description,
-        projectType: data.projectType !== undefined ? data.projectType : existingUserProject.projectType,
-        projectStatus: data.projectStatus !== undefined ? data.projectStatus : existingUserProject.projectStatus,
-        platform: data.platform !== undefined ? data.platform : existingUserProject.platform,
-        technologies: data.technologies !== undefined ? data.technologies : existingUserProject.technologies,
-        projectUrl: data.projectUrl !== undefined ? data.projectUrl : existingUserProject.projectUrl,
-        repositoryUrl: data.repositoryUrl !== undefined ? data.repositoryUrl : existingUserProject.repositoryUrl,
-        teamSize: data.teamSize !== undefined ? data.teamSize : existingUserProject.teamSize,
-        isOngoing: data.isOngoing !== undefined ? data.isOngoing : existingUserProject.isOngoing,
-        isFeatured: data.isFeatured !== undefined ? data.isFeatured : existingUserProject.isFeatured,
-        isPublished: data.isPublished !== undefined ? data.isPublished : existingUserProject.isPublished,
-        isSoloProject: data.isSoloProject !== undefined ? data.isSoloProject : existingUserProject.isSoloProject,
-        isActive: data.isActive !== undefined ? data.isActive : existingUserProject.isActive,
-        isDeleted: data.isDeleted !== undefined ? data.isDeleted : existingUserProject.isDeleted,
+        userId: data.userId !== undefined ? data.userId : existingUserProject.proj_user_id,
+        projectTitle: data.projectTitle !== undefined ? data.projectTitle : existingUserProject.proj_project_title,
+        startDate: data.startDate !== undefined ? data.startDate : existingUserProject.proj_start_date,
+        endDate: data.endDate !== undefined ? data.endDate : existingUserProject.proj_end_date,
+        description: data.description !== undefined ? data.description : existingUserProject.proj_description,
+        projectType: data.projectType !== undefined ? data.projectType : existingUserProject.proj_project_type,
+        projectStatus: data.projectStatus !== undefined ? data.projectStatus : existingUserProject.proj_project_status,
+        platform: data.platform !== undefined ? data.platform : existingUserProject.proj_platform,
+        technologies: data.technologies !== undefined ? data.technologies : existingUserProject.proj_technologies_used,
+        projectUrl: data.projectUrl !== undefined ? data.projectUrl : existingUserProject.proj_project_url,
+        repositoryUrl: data.repositoryUrl !== undefined ? data.repositoryUrl : existingUserProject.proj_repository_url,
+        teamSize: data.teamSize !== undefined ? data.teamSize : existingUserProject.proj_team_size,
+        isOngoing: data.isOngoing !== undefined ? data.isOngoing : existingUserProject.proj_is_ongoing,
+        isFeatured: data.isFeatured !== undefined ? data.isFeatured : existingUserProject.proj_is_featured,
+        isPublished: data.isPublished !== undefined ? data.isPublished : existingUserProject.proj_is_published,
+        isSoloProject: data.isSoloProject !== undefined ? data.isSoloProject : existingUserProject.proj_is_solo_project,
+        isActive: data.isActive !== undefined ? data.isActive : existingUserProject.proj_is_active,
+        isDeleted: data.isDeleted !== undefined ? data.isDeleted : existingUserProject.proj_is_deleted,
         updatedBy: actingUserId,
       };
 

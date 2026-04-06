@@ -110,14 +110,14 @@ class UserManagementRepository {
     return result;
   }
 
-  async updateUser(data) {
+  async updateUser(id, data) {
     const {
-      id,
       countryId = null,
       firstName = null,
       lastName = null,
       email = null,
       mobile = null,
+      mobileNumber = null,
       password = null,
       role = null,
       isActive = null,
@@ -131,12 +131,12 @@ class UserManagementRepository {
       p_first_name: firstName || null,
       p_last_name: lastName || null,
       p_email: email || null,
-      p_mobile: mobile || null,
+      p_mobile: mobile || mobileNumber || null,
       p_password: password || null,
       p_role: role || null,
-      p_is_active: isActive || null,
-      p_is_email_verified: isEmailVerified || null,
-      p_is_mobile_verified: isMobileVerified || null,
+      p_is_active: isActive !== null && isActive !== undefined ? isActive : null,
+      p_is_email_verified: isEmailVerified !== null && isEmailVerified !== undefined ? isEmailVerified : null,
+      p_is_mobile_verified: isMobileVerified !== null && isMobileVerified !== undefined ? isMobileVerified : null,
     });
 
     if (error) {
