@@ -121,7 +121,7 @@ const createAssessmentTranslationSchema = z.object({
   title: z.string().min(1).trim(),
   description: z.string().nullable().optional(),
   instructions: z.string().nullable().optional(),
-  techStack: z.record(z.any()).nullable().optional(),
+  techStack: z.record(z.string(), z.any()).nullable().optional(),
   learningOutcomes: z.array(z.string()).nullable().optional(),
   tags: z.array(z.string()).nullable().optional(),
   metaTitle: z.string().max(60).nullable().optional(),
@@ -141,7 +141,7 @@ const createAssessmentTranslationSchema = z.object({
   twitterCard: z.string().nullable().optional(),
   robotsDirective: z.string().nullable().optional(),
   focusKeyword: z.string().nullable().optional(),
-  structuredData: z.record(z.any()).nullable().optional(),
+  structuredData: z.record(z.string(), z.any()).nullable().optional(),
   isActive: z.boolean().optional().default(true),
 });
 
@@ -155,7 +155,7 @@ const updateAssessmentTranslationSchema = z.object({
   title: z.string().min(1).trim().optional(),
   description: z.string().nullable().optional(),
   instructions: z.string().nullable().optional(),
-  techStack: z.record(z.any()).nullable().optional(),
+  techStack: z.record(z.string(), z.any()).nullable().optional(),
   learningOutcomes: z.array(z.string()).nullable().optional(),
   tags: z.array(z.string()).nullable().optional(),
   metaTitle: z.string().max(60).nullable().optional(),
@@ -175,7 +175,7 @@ const updateAssessmentTranslationSchema = z.object({
   twitterCard: z.string().nullable().optional(),
   robotsDirective: z.string().nullable().optional(),
   focusKeyword: z.string().nullable().optional(),
-  structuredData: z.record(z.any()).nullable().optional(),
+  structuredData: z.record(z.string(), z.any()).nullable().optional(),
   isActive: z.boolean().optional(),
 }).strict();
 
