@@ -95,7 +95,7 @@ This creates 16 permissions across 4 resources (subject, chapter, topic, sub_top
 Ensure your database contains:
 - At least one `language` record (for `languageId` field)
 - Optional `subject` records (for referencing in chapters)
-- Difficulty levels must match enum: `easy`, `medium`, `hard`, `advanced`
+- Difficulty levels must match enum: `beginner`, `intermediate`, `advanced`, `expert`, `all_levels`
 
 ---
 
@@ -123,7 +123,7 @@ Content-Type: application/json
   "description": "Comprehensive mathematics curriculum covering algebra, geometry, trigonometry, and calculus",
   "code": "MATH",
   "languageId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-  "difficultyLevel": "medium",
+  "difficultyLevel": "intermediate",
   "imageUrl": "https://cdn.example.com/subjects/math.png",
   "isActive": true
 }
@@ -134,7 +134,7 @@ Content-Type: application/json
 - `description` (string, optional): Detailed subject description
 - `code` (string, required): Unique subject code (e.g., MATH, SCI, ENG)
 - `languageId` (UUID, required): Associated language ID
-- `difficultyLevel` (enum, optional): easy, medium, hard, advanced
+- `difficultyLevel` (enum, optional): beginner, intermediate, advanced, expert, all_levels
 - `imageUrl` (string, optional): URL to subject thumbnail/icon
 - `isActive` (boolean, default: true): Active status
 
@@ -149,7 +149,7 @@ Content-Type: application/json
     "description": "Comprehensive mathematics curriculum...",
     "code": "MATH",
     "languageId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-    "difficultyLevel": "medium",
+    "difficultyLevel": "intermediate",
     "imageUrl": "https://cdn.example.com/subjects/math.png",
     "isActive": true,
     "createdAt": "2026-04-05T10:30:00Z",
@@ -181,7 +181,7 @@ Content-Type: application/json
 | `search` | string | - | Search by name or description |
 | `sortBy` | string | createdAt | Sort field: name, code, difficultyLevel, createdAt |
 | `sortDir` | string | asc | Sort direction: asc, desc |
-| `difficultyLevel` | string | - | Filter: easy, medium, hard, advanced |
+| `difficultyLevel` | string | - | Filter: beginner, intermediate, advanced, expert, all_levels |
 | `languageId` | UUID | - | Filter by language |
 | `isActive` | boolean | - | Filter by active status |
 
@@ -197,7 +197,7 @@ Content-Type: application/json
       "description": "Comprehensive mathematics curriculum...",
       "code": "MATH",
       "languageId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-      "difficultyLevel": "medium",
+      "difficultyLevel": "intermediate",
       "imageUrl": "https://cdn.example.com/subjects/math.png",
       "isActive": true,
       "createdAt": "2026-04-05T10:30:00Z",
@@ -239,7 +239,7 @@ Content-Type: application/json
     "description": "Comprehensive mathematics curriculum...",
     "code": "MATH",
     "languageId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-    "difficultyLevel": "medium",
+    "difficultyLevel": "intermediate",
     "imageUrl": "https://cdn.example.com/subjects/math.png",
     "isActive": true,
     "createdAt": "2026-04-05T10:30:00Z",
@@ -269,7 +269,7 @@ Content-Type: application/json
   "name": "Advanced Mathematics",
   "description": "Extended mathematics curriculum with advanced topics",
   "code": "MATH-ADV",
-  "difficultyLevel": "hard",
+  "difficultyLevel": "advanced",
   "imageUrl": "https://cdn.example.com/subjects/math-advanced.png",
   "isActive": true
 }
@@ -286,7 +286,7 @@ Content-Type: application/json
     "description": "Extended mathematics curriculum with advanced topics",
     "code": "MATH-ADV",
     "languageId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-    "difficultyLevel": "hard",
+    "difficultyLevel": "advanced",
     "imageUrl": "https://cdn.example.com/subjects/math-advanced.png",
     "isActive": true,
     "createdAt": "2026-04-05T10:30:00Z",
@@ -390,7 +390,7 @@ Content-Type: application/json
   "code": "MATH-CH01",
   "subjectId": "550e8400-e29b-41d4-a716-446655440000",
   "chapterNumber": 1,
-  "difficultyLevel": "easy",
+  "difficultyLevel": "beginner",
   "sequenceOrder": 1,
   "estimatedDurationMinutes": 180,
   "imageUrl": "https://cdn.example.com/chapters/algebra-basics.png",
@@ -404,7 +404,7 @@ Content-Type: application/json
 - `code` (string, required): Unique chapter code within subject
 - `subjectId` (UUID, required): Parent subject ID
 - `chapterNumber` (integer, optional): Chapter sequence number
-- `difficultyLevel` (enum, optional): easy, medium, hard, advanced
+- `difficultyLevel` (enum, optional): beginner, intermediate, advanced, expert, all_levels
 - `sequenceOrder` (integer, optional): Display order within subject
 - `estimatedDurationMinutes` (integer, optional): Estimated learning time in minutes
 - `imageUrl` (string, optional): Chapter thumbnail/icon URL
@@ -422,7 +422,7 @@ Content-Type: application/json
     "code": "MATH-CH01",
     "subjectId": "550e8400-e29b-41d4-a716-446655440000",
     "chapterNumber": 1,
-    "difficultyLevel": "easy",
+    "difficultyLevel": "beginner",
     "sequenceOrder": 1,
     "estimatedDurationMinutes": 180,
     "imageUrl": "https://cdn.example.com/chapters/algebra-basics.png",
@@ -456,7 +456,7 @@ Content-Type: application/json
 | `search` | string | - | Search by name or description |
 | `sortBy` | string | sequenceOrder | Sort field: name, code, difficultyLevel, sequenceOrder, createdAt |
 | `sortDir` | string | asc | Sort direction: asc, desc |
-| `difficultyLevel` | string | - | Filter: easy, medium, hard, advanced |
+| `difficultyLevel` | string | - | Filter: beginner, intermediate, advanced, expert, all_levels |
 | `subjectCode` | string | - | Filter by subject code |
 | `subjectId` | UUID | - | Filter by subject ID |
 | `languageId` | UUID | - | Filter by language via subject |
@@ -476,7 +476,7 @@ Content-Type: application/json
       "code": "MATH-CH01",
       "subjectId": "550e8400-e29b-41d4-a716-446655440000",
       "chapterNumber": 1,
-      "difficultyLevel": "easy",
+      "difficultyLevel": "beginner",
       "sequenceOrder": 1,
       "estimatedDurationMinutes": 180,
       "imageUrl": "https://cdn.example.com/chapters/algebra-basics.png",
@@ -521,7 +521,7 @@ Content-Type: application/json
     "code": "MATH-CH01",
     "subjectId": "550e8400-e29b-41d4-a716-446655440000",
     "chapterNumber": 1,
-    "difficultyLevel": "easy",
+    "difficultyLevel": "beginner",
     "sequenceOrder": 1,
     "estimatedDurationMinutes": 180,
     "imageUrl": "https://cdn.example.com/chapters/algebra-basics.png",
@@ -554,7 +554,7 @@ Content-Type: application/json
   "description": "Comprehensive introduction to algebraic concepts",
   "code": "MATH-CH01-V2",
   "chapterNumber": 1,
-  "difficultyLevel": "medium",
+  "difficultyLevel": "intermediate",
   "sequenceOrder": 2,
   "estimatedDurationMinutes": 240,
   "isActive": true
@@ -573,7 +573,7 @@ Content-Type: application/json
     "code": "MATH-CH01-V2",
     "subjectId": "550e8400-e29b-41d4-a716-446655440000",
     "chapterNumber": 1,
-    "difficultyLevel": "medium",
+    "difficultyLevel": "intermediate",
     "sequenceOrder": 2,
     "estimatedDurationMinutes": 240,
     "imageUrl": "https://cdn.example.com/chapters/algebra-basics.png",
@@ -679,7 +679,7 @@ Content-Type: application/json
   "code": "MATH-CH01-TOPIC01",
   "chapterId": "660e8400-e29b-41d4-a716-446655440001",
   "topicNumber": 1,
-  "difficultyLevel": "easy",
+  "difficultyLevel": "beginner",
   "sequenceOrder": 1,
   "estimatedDurationMinutes": 60,
   "isStandalone": false,
@@ -700,7 +700,7 @@ Content-Type: application/json
 - `code` (string, required): Unique topic code
 - `chapterId` (UUID, optional): Parent chapter ID (required if not standalone)
 - `topicNumber` (integer, optional): Topic sequence number within chapter
-- `difficultyLevel` (enum, optional): easy, medium, hard, advanced
+- `difficultyLevel` (enum, optional): beginner, intermediate, advanced, expert, all_levels
 - `sequenceOrder` (integer, optional): Display order
 - `estimatedDurationMinutes` (integer, optional): Estimated learning time
 - `isStandalone` (boolean, default: false): Can exist without chapter
@@ -721,7 +721,7 @@ Content-Type: application/json
     "code": "MATH-CH01-TOPIC01",
     "chapterId": "660e8400-e29b-41d4-a716-446655440001",
     "topicNumber": 1,
-    "difficultyLevel": "easy",
+    "difficultyLevel": "beginner",
     "sequenceOrder": 1,
     "estimatedDurationMinutes": 60,
     "isStandalone": false,
@@ -762,7 +762,7 @@ Content-Type: application/json
 | `search` | string | - | Search by name, description, or keywords |
 | `sortBy` | string | sequenceOrder | Sort field: name, code, difficultyLevel, sequenceOrder, createdAt |
 | `sortDir` | string | asc | Sort direction: asc, desc |
-| `difficultyLevel` | string | - | Filter: easy, medium, hard, advanced |
+| `difficultyLevel` | string | - | Filter: beginner, intermediate, advanced, expert, all_levels |
 | `isStandalone` | boolean | - | Filter by standalone status |
 | `topicId` | UUID | - | Filter by specific topic ID |
 | `chapterId` | UUID | - | Filter by chapter ID |
@@ -783,7 +783,7 @@ Content-Type: application/json
       "code": "MATH-CH01-TOPIC01",
       "chapterId": "660e8400-e29b-41d4-a716-446655440001",
       "topicNumber": 1,
-      "difficultyLevel": "easy",
+      "difficultyLevel": "beginner",
       "sequenceOrder": 1,
       "estimatedDurationMinutes": 60,
       "isStandalone": false,
@@ -835,7 +835,7 @@ Content-Type: application/json
     "code": "MATH-CH01-TOPIC01",
     "chapterId": "660e8400-e29b-41d4-a716-446655440001",
     "topicNumber": 1,
-    "difficultyLevel": "easy",
+    "difficultyLevel": "beginner",
     "sequenceOrder": 1,
     "estimatedDurationMinutes": 60,
     "isStandalone": false,
@@ -875,7 +875,7 @@ Content-Type: application/json
   "description": "Comprehensive guide to linear equations with examples and exercises",
   "code": "MATH-CH01-TOPIC01-V2",
   "topicNumber": 1,
-  "difficultyLevel": "medium",
+  "difficultyLevel": "intermediate",
   "sequenceOrder": 2,
   "estimatedDurationMinutes": 90,
   "learningObjectives": [
@@ -900,7 +900,7 @@ Content-Type: application/json
     "code": "MATH-CH01-TOPIC01-V2",
     "chapterId": "660e8400-e29b-41d4-a716-446655440001",
     "topicNumber": 1,
-    "difficultyLevel": "medium",
+    "difficultyLevel": "intermediate",
     "sequenceOrder": 2,
     "estimatedDurationMinutes": 90,
     "isStandalone": false,
@@ -1013,7 +1013,7 @@ Content-Type: application/json
   "code": "MATH-CH01-TOPIC01-SUBTOPIC01",
   "topicId": "770e8400-e29b-41d4-a716-446655440002",
   "subTopicNumber": 1,
-  "difficultyLevel": "easy",
+  "difficultyLevel": "beginner",
   "sequenceOrder": 1,
   "estimatedDurationMinutes": 30,
   "learningObjectives": [
@@ -1036,7 +1036,7 @@ Content-Type: application/json
 - `code` (string, required): Unique sub-topic code
 - `topicId` (UUID, required): Parent topic ID
 - `subTopicNumber` (integer, optional): Sequence within topic
-- `difficultyLevel` (enum, optional): easy, medium, hard, advanced
+- `difficultyLevel` (enum, optional): beginner, intermediate, advanced, expert, all_levels
 - `sequenceOrder` (integer, optional): Display order
 - `estimatedDurationMinutes` (integer, optional): Estimated learning time
 - `learningObjectives` (array of strings, optional): Learning outcomes
@@ -1059,7 +1059,7 @@ Content-Type: application/json
     "code": "MATH-CH01-TOPIC01-SUBTOPIC01",
     "topicId": "770e8400-e29b-41d4-a716-446655440002",
     "subTopicNumber": 1,
-    "difficultyLevel": "easy",
+    "difficultyLevel": "beginner",
     "sequenceOrder": 1,
     "estimatedDurationMinutes": 30,
     "learningObjectives": [
@@ -1102,7 +1102,7 @@ Content-Type: application/json
 | `search` | string | - | Search by name, description, or keywords |
 | `sortBy` | string | sequenceOrder | Sort field: name, code, difficultyLevel, sequenceOrder, createdAt |
 | `sortDir` | string | asc | Sort direction: asc, desc |
-| `difficultyLevel` | string | - | Filter: easy, medium, hard, advanced |
+| `difficultyLevel` | string | - | Filter: beginner, intermediate, advanced, expert, all_levels |
 | `topicId` | UUID | - | Filter by parent topic ID |
 | `chapterId` | UUID | - | Filter by chapter ID (via topic) |
 | `subjectId` | UUID | - | Filter by subject ID (via chapter) |
@@ -1122,7 +1122,7 @@ Content-Type: application/json
       "code": "MATH-CH01-TOPIC01-SUBTOPIC01",
       "topicId": "770e8400-e29b-41d4-a716-446655440002",
       "subTopicNumber": 1,
-      "difficultyLevel": "easy",
+      "difficultyLevel": "beginner",
       "sequenceOrder": 1,
       "estimatedDurationMinutes": 30,
       "learningObjectives": [
@@ -1176,7 +1176,7 @@ Content-Type: application/json
     "code": "MATH-CH01-TOPIC01-SUBTOPIC01",
     "topicId": "770e8400-e29b-41d4-a716-446655440002",
     "subTopicNumber": 1,
-    "difficultyLevel": "easy",
+    "difficultyLevel": "beginner",
     "sequenceOrder": 1,
     "estimatedDurationMinutes": 30,
     "learningObjectives": [
@@ -1218,7 +1218,7 @@ Content-Type: application/json
   "description": "In-depth guide to solving complex equations using substitution",
   "code": "MATH-CH01-TOPIC01-SUBTOPIC01-V2",
   "subTopicNumber": 1,
-  "difficultyLevel": "medium",
+  "difficultyLevel": "intermediate",
   "sequenceOrder": 2,
   "estimatedDurationMinutes": 45,
   "learningObjectives": [
@@ -1246,7 +1246,7 @@ Content-Type: application/json
     "code": "MATH-CH01-TOPIC01-SUBTOPIC01-V2",
     "topicId": "770e8400-e29b-41d4-a716-446655440002",
     "subTopicNumber": 1,
-    "difficultyLevel": "medium",
+    "difficultyLevel": "intermediate",
     "sequenceOrder": 2,
     "estimatedDurationMinutes": 45,
     "learningObjectives": [
