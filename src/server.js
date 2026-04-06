@@ -8,6 +8,7 @@ const app = require('./app');
 const config = require('./config');
 const logger = require('./config/logger');
 const { testConnection } = require('./config/database');
+const { loadRoles } = require('./utils/roleCache');
 
 const PORT = config.port;
 
@@ -16,6 +17,9 @@ const PORT = config.port;
 const startServer = async () => {
   // Test database connection
   await testConnection();
+
+  // Load dynamic role codes into memory cache
+  await loadRoles();
 
   const server = app.listen(PORT, () => {
     logger.info('═══════════════════════════════════════════════════');

@@ -1,4 +1,5 @@
 const { z } = require('zod');
+const { getValidRoleCodes } = require('../../../utils/roleCache');
 
 const coerceBoolean = z.preprocess(
   (val) => {
@@ -64,7 +65,10 @@ const createUserSchema = z.object({
   password: z.string().min(6).max(100, 'Password must be between 6 and 100 characters'),
   email: z.string().email().optional().nullable(),
   mobile: z.string().optional().nullable(),
-  role: z.enum(['sa', 'admin', 'student', 'instructor']).default('student'),
+  role: z.string().default('student').refine(
+    (val) => getValidRoleCodes().includes(val),
+    { message: () => `Invalid role. Valid roles: ${getValidRoleCodes().join(', ')}` },
+  ),
   isActive: coerceBoolean.default(true)
 });
 
@@ -74,12 +78,18 @@ const updateUserSchema = z.object({
   lastName: z.string().min(1).max(100, 'Last name must be between 1 and 100 characters').optional(),
   email: z.string().email().optional().nullable(),
   mobile: z.string().optional().nullable(),
-  role: z.enum(['sa', 'admin', 'student', 'instructor']).optional(),
+  role: z.string().optional().refine(
+    (val) => val === undefined || getValidRoleCodes().includes(val),
+    { message: () => `Invalid role. Valid roles: ${getValidRoleCodes().join(', ')}` },
+  ),
   isActive: coerceBoolean.optional()
 });
 
 const userListQuerySchema = listQuerySchema.extend({
-  role: z.enum(['sa', 'admin', 'student', 'instructor']).optional(),
+  role: z.string().optional().refine(
+    (val) => val === undefined || getValidRoleCodes().includes(val),
+    { message: () => `Invalid role. Valid roles: ${getValidRoleCodes().join(', ')}` },
+  ),
   countryId: z.string().regex(/^\d+$/).transform(Number).optional(),
   isActive: z.enum(['true', 'false']).transform(v => v === 'true').optional(),
   isEmailVerified: z.enum(['true', 'false']).transform(v => v === 'true').optional(),

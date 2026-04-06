@@ -34,6 +34,7 @@ const attendanceManagementRoutes = require('./routes/attendanceManagement.routes
 const supportTicketManagementRoutes = require('./routes/supportTicketManagement.routes');
 const specialSessionManagementRoutes = require('./routes/specialSessionManagement.routes');
 const callFollowupManagementRoutes = require('./routes/callFollowupManagement.routes');
+const blogManagementRoutes = require('./routes/blogManagement.routes');
 
 const router = Router();
 
@@ -67,5 +68,6 @@ router.use('/attendance-management', attendanceManagementRoutes);
 router.use('/support-ticket-management', supportTicketManagementRoutes);
 router.use('/special-session-management', specialSessionManagementRoutes);
 router.use('/call-followup-management', callFollowupManagementRoutes);
+router.use('/blog-management', blogManagementRoutes);
 
 module.exports = router;
