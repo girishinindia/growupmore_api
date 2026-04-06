@@ -369,9 +369,8 @@ class UserManagementRepository {
     return result;
   }
 
-  async updateUserProfile(data) {
+  async updateUserProfile(id, data) {
     const {
-      id,
       dateOfBirth = null,
       gender = null,
       bloodGroup = null,
@@ -628,9 +627,8 @@ class UserManagementRepository {
     return result;
   }
 
-  async updateUserEducation(data) {
+  async updateUserEducation(id, data) {
     const {
-      id,
       educationLevelId = null,
       institutionName = null,
       boardOrUniversity = null,
@@ -825,9 +823,8 @@ class UserManagementRepository {
     return result;
   }
 
-  async updateUserExperience(data) {
+  async updateUserExperience(id, data) {
     const {
-      id,
       designationId = null,
       companyName = null,
       jobTitle = null,
@@ -1005,9 +1002,8 @@ class UserManagementRepository {
     return result;
   }
 
-  async updateUserSocialMedia(data) {
+  async updateUserSocialMedia(id, data) {
     const {
-      id,
       socialMediaId = null,
       profileUrl = null,
       username = null,
@@ -1166,9 +1162,8 @@ class UserManagementRepository {
     return result;
   }
 
-  async updateUserSkill(data) {
+  async updateUserSkill(id, data) {
     const {
-      id,
       skillId = null,
       proficiencyLevel = null,
       yearsOfExperience = null,
@@ -1340,9 +1335,8 @@ class UserManagementRepository {
     return result;
   }
 
-  async updateUserLanguage(data) {
+  async updateUserLanguage(id, data) {
     const {
-      id,
       languageId = null,
       proficiencyLevel = null,
       canRead = null,
@@ -1512,9 +1506,8 @@ class UserManagementRepository {
     return result;
   }
 
-  async updateUserDocument(data) {
+  async updateUserDocument(id, data) {
     const {
-      id,
       documentTypeId = null,
       documentId = null,
       documentNumber = null,
@@ -1771,9 +1764,8 @@ class UserManagementRepository {
     return result;
   }
 
-  async updateUserProject(data) {
+  async updateUserProject(id, data) {
     const {
-      id,
       projectTitle = null,
       projectCode = null,
       projectType = null,
