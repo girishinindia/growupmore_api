@@ -49,6 +49,8 @@ graph TB
 
 Registration requires **both email and mobile**. Two separate OTP verifications are performed — email first, then mobile. The user is only created in the database after both are verified.
 
+**Role Selection:** During registration, users can choose to register as either `student` (default) or `instructor`. The optional `role` field controls the user's primary role. Only roles marked as `is_self_registerable = TRUE` in the database are allowed during public registration — all other roles (admin, moderator, etc.) can only be assigned by administrators.
+
 ```mermaid
 sequenceDiagram
     participant Client
@@ -60,10 +62,10 @@ sequenceDiagram
 
     Note over Client,DB: Step 1 — Initiate Registration
 
-    Client->>API: POST /register (name, email, mobile, password)
+    Client->>API: POST /register (name, email, mobile, password, role?)
     API->>DB: udf_get_users (check email/mobile exists)
     DB-->>API: No duplicate found
-    API->>Redis: Store pending data + password (RAW) + step=email_pending
+    API->>Redis: Store pending data + password (RAW) + role + step=email_pending
     API->>Redis: Generate & store EMAIL OTP (3 min TTL)
     API->>Redis: Set resend cooldown (60 sec)
     API->>Brevo: Send OTP to EMAIL only
@@ -85,8 +87,10 @@ sequenceDiagram
     API->>Redis: Verify MOBILE OTP (max 3 attempts)
     Redis-->>API: Mobile OTP valid
     API->>Redis: Get pending registration data
-    API->>DB: sp_users_insert (password hashed by pgcrypto)
-    DB-->>API: User created (isEmailVerified=true, isMobileVerified=true)
+    API->>DB: sp_users_insert (password hashed by pgcrypto, isSelfRegistration=true)
+    Note over API,DB: SP validates role has is_self_registerable=TRUE
+    DB-->>API: User created (role=chosen_role, isEmailVerified=true, isMobileVerified=true)
+    API->>DB: Auto-assign role in user_role_assignments
     API->>Redis: Create session + refresh token
     API-->>Client: 201 Created (user, accessToken, refreshToken)
 
@@ -102,7 +106,7 @@ sequenceDiagram
     API-->>Client: 200 OK (resent to current step's channel)
 ```
 
-> Both email and mobile are **required**. The flow is always: `/register` → `/register/verify-email` → `/register/verify-mobile` → user created.
+> Both email and mobile are **required**. The `role` field is **optional** (defaults to `student`). Allowed self-registration roles: `student`, `instructor`. The flow is always: `/register` → `/register/verify-email` → `/register/verify-mobile` → user created.
 
 ---
 
@@ -216,7 +220,7 @@ POST http://localhost:5001/api/v1/auth/register
 |-----|-------|
 | Content-Type | application/json |
 
-**Request Body:**
+**Request Body (Register as Student — default):**
 
 ```json
 {
@@ -225,6 +229,19 @@ POST http://localhost:5001/api/v1/auth/register
   "email": "girish@example.com",
   "mobile": "9662278990",
   "password": "Girish@123"
+}
+```
+
+**Request Body (Register as Instructor):**
+
+```json
+{
+  "firstName": "Girish",
+  "lastName": "Chaudhary",
+  "email": "girish@example.com",
+  "mobile": "9662278990",
+  "password": "Girish@123",
+  "role": "instructor"
 }
 ```
 
@@ -239,6 +256,7 @@ POST http://localhost:5001/api/v1/auth/register
 | email | string | Yes | Valid email, max 255 chars |
 | mobile | string | Yes | Exactly 10 digits without country code (e.g. `9662278990`) |
 | password | string | Yes | Min 8 chars, 1 lowercase, 1 uppercase, 1 digit, 1 special char |
+| role | string | No | Lowercase letters/underscores only, 2-50 chars. Defaults to `student`. Only self-registerable roles allowed: `student`, `instructor` |
 
 **Response — 200 OK (email OTP sent):**
 
@@ -293,6 +311,17 @@ POST http://localhost:5001/api/v1/auth/register
   ]
 }
 ```
+
+**Response — 400 Bad Request (non-self-registerable role):**
+
+```json
+{
+  "success": false,
+  "message": "Role \"admin\" is not available for self-registration."
+}
+```
+
+> This error is returned by the database when a user tries to register with a role that has `is_self_registerable = FALSE` (e.g. `admin`, `moderator`, `super_admin`). Only `student` and `instructor` are allowed for public registration.
 
 **Response — 429 Too Many Requests:**
 
@@ -508,6 +537,8 @@ POST http://localhost:5001/api/v1/auth/register/verify-mobile
 | otp | string | Yes | Exactly 6 digits (the mobile OTP) |
 
 **Response — 201 Created (both verified, user created + auto-login):**
+
+> The `role` in the response reflects the role chosen during Step 1 (`student` by default, or `instructor` if specified). The same role is also auto-assigned in `user_role_assignments`.
 
 ```json
 {
