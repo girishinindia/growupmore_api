@@ -50,7 +50,7 @@ const listQuerySchema = z.object({
  */
 const createSubjectSchema = z.object({
   code: z.string().min(1).max(100).trim(),
-  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional().default('beginner'),
+  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced', 'expert', 'all_levels']).optional().default('beginner'),
   estimatedHours: z.number().positive().nullable().optional(),
   displayOrder: z.number().int().nonnegative().optional().default(0),
   note: z.string().max(1000).nullable().optional(),
@@ -63,7 +63,7 @@ const createSubjectSchema = z.object({
  */
 const updateSubjectSchema = z.object({
   code: z.string().min(1).max(100).trim().optional(),
-  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
+  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced', 'expert', 'all_levels']).optional(),
   estimatedHours: z.number().positive().nullable().optional(),
   displayOrder: z.number().int().nonnegative().optional(),
   note: z.string().max(1000).nullable().optional(),
@@ -75,7 +75,7 @@ const updateSubjectSchema = z.object({
  * Extends base listQuerySchema with subject-specific filters
  */
 const subjectListQuerySchema = listQuerySchema.extend({
-  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
+  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced', 'expert', 'all_levels']).optional(),
   subjectId: z.string().regex(/^\d+$/).transform(Number).optional(),
   languageId: z.string().regex(/^\d+$/).transform(Number).optional(),
   isActive: z.enum(['true', 'false']).transform(v => v === 'true').optional(),
@@ -93,7 +93,7 @@ const subjectListQuerySchema = listQuerySchema.extend({
 const createChapterSchema = z.object({
   subjectId: coercePositiveInt,
   displayOrder: z.number().int().nonnegative().optional().default(0),
-  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional().default('beginner'),
+  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced', 'expert', 'all_levels']).optional().default('beginner'),
   estimatedMinutes: coercePositiveInt.nullable().optional(),
   note: z.string().max(1000).nullable().optional(),
   isActive: z.boolean().optional().default(true),
@@ -107,7 +107,7 @@ const createChapterSchema = z.object({
 const updateChapterSchema = z.object({
   subjectId: coercePositiveInt.optional(),
   displayOrder: z.number().int().nonnegative().optional(),
-  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
+  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced', 'expert', 'all_levels']).optional(),
   estimatedMinutes: coercePositiveInt.nullable().optional(),
   note: z.string().max(1000).nullable().optional(),
   isActive: z.boolean().optional(),
@@ -118,7 +118,7 @@ const updateChapterSchema = z.object({
  * Extends base listQuerySchema with chapter-specific filters
  */
 const chapterListQuerySchema = listQuerySchema.extend({
-  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
+  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced', 'expert', 'all_levels']).optional(),
   subjectCode: z.string().optional(),
   chapterId: z.string().regex(/^\d+$/).transform(Number).optional(),
   subjectId: z.string().regex(/^\d+$/).transform(Number).optional(),
@@ -138,7 +138,7 @@ const chapterListQuerySchema = listQuerySchema.extend({
 const createTopicSchema = z.object({
   chapterId: coercePositiveInt.nullable().optional(),
   displayOrder: z.number().int().nonnegative().optional().default(0),
-  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional().default('beginner'),
+  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced', 'expert', 'all_levels']).optional().default('beginner'),
   estimatedMinutes: coercePositiveInt.nullable().optional(),
   note: z.string().max(1000).nullable().optional(),
   isActive: z.boolean().optional().default(true),
@@ -152,7 +152,7 @@ const createTopicSchema = z.object({
 const updateTopicSchema = z.object({
   chapterId: coercePositiveInt.nullable().optional(),
   displayOrder: z.number().int().nonnegative().optional(),
-  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
+  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced', 'expert', 'all_levels']).optional(),
   estimatedMinutes: coercePositiveInt.nullable().optional(),
   note: z.string().max(1000).nullable().optional(),
   isActive: z.boolean().optional(),
@@ -164,7 +164,7 @@ const updateTopicSchema = z.object({
  * Supports filtering by standalone status
  */
 const topicListQuerySchema = listQuerySchema.extend({
-  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
+  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced', 'expert', 'all_levels']).optional(),
   isStandalone: z.enum(['true', 'false']).transform(v => v === 'true').optional(),
   topicId: z.string().regex(/^\d+$/).transform(Number).optional(),
   chapterId: z.string().regex(/^\d+$/).transform(Number).optional(),
@@ -185,7 +185,7 @@ const topicListQuerySchema = listQuerySchema.extend({
 const createSubTopicSchema = z.object({
   topicId: coercePositiveInt,
   displayOrder: z.number().int().nonnegative().optional().default(0),
-  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional().default('beginner'),
+  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced', 'expert', 'all_levels']).optional().default('beginner'),
   estimatedMinutes: coercePositiveInt.nullable().optional(),
   note: z.string().max(1000).nullable().optional(),
   isActive: z.boolean().optional().default(true),
@@ -199,7 +199,7 @@ const createSubTopicSchema = z.object({
 const updateSubTopicSchema = z.object({
   topicId: coercePositiveInt.optional(),
   displayOrder: z.number().int().nonnegative().optional(),
-  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
+  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced', 'expert', 'all_levels']).optional(),
   estimatedMinutes: coercePositiveInt.nullable().optional(),
   note: z.string().max(1000).nullable().optional(),
   isActive: z.boolean().optional(),
@@ -210,7 +210,7 @@ const updateSubTopicSchema = z.object({
  * Extends base listQuerySchema with sub-topic-specific filters
  */
 const subTopicListQuerySchema = listQuerySchema.extend({
-  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
+  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced', 'expert', 'all_levels']).optional(),
   subTopicId: z.string().regex(/^\d+$/).transform(Number).optional(),
   topicId: z.string().regex(/^\d+$/).transform(Number).optional(),
   chapterId: z.string().regex(/^\d+$/).transform(Number).optional(),

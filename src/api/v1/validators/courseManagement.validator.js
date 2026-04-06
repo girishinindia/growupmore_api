@@ -27,7 +27,7 @@ const createCourseSchema = z.object({
   isInstructorCourse: z.boolean().optional().default(false),
   code: z.string().min(1).max(100).trim().optional(),
   slug: z.string().min(1).max(255).trim().optional(),
-  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional().default('beginner'),
+  difficultyLevel: z.enum(['absolute beginner', 'beginner', 'intermediate', 'advanced', 'expert', 'bootcamp', 'mega']).optional().default('beginner'),
   courseStatus: z.enum(['draft', 'review', 'published', 'archived', 'suspended']).optional().default('draft'),
   durationHours: z.number().positive().nullable().optional(),
   price: z.number().nonnegative().optional().default(0),
@@ -54,7 +54,7 @@ const updateCourseSchema = z.object({
   isInstructorCourse: z.boolean().optional(),
   code: z.string().min(1).max(100).trim().optional(),
   slug: z.string().min(1).max(255).trim().optional(),
-  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
+  difficultyLevel: z.enum(['absolute beginner', 'beginner', 'intermediate', 'advanced', 'expert', 'bootcamp', 'mega']).optional(),
   courseStatus: z.enum(['draft', 'review', 'published', 'archived', 'suspended']).optional(),
   durationHours: z.number().positive().nullable().optional(),
   price: z.number().nonnegative().optional(),
@@ -76,7 +76,7 @@ const updateCourseSchema = z.object({
 }).strict();
 
 const courseListQuerySchema = listQuerySchema.extend({
-  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
+  difficultyLevel: z.enum(['absolute beginner', 'beginner', 'intermediate', 'advanced', 'expert', 'bootcamp', 'mega']).optional(),
   courseStatus: z.enum(['draft', 'review', 'published', 'archived', 'suspended']).optional(),
   isFree: z.enum(['true', 'false']).transform(v => v === 'true').optional(),
   currency: z.string().optional(),
