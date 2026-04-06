@@ -190,7 +190,7 @@ class UserRepository {
    * @param {string} params.password — RAW plaintext (function hashes it)
    * @returns {Object} Full user object from udf_get_users
    */
-  async create({ firstName, lastName, email, mobile, password, role, countryId, isEmailVerified, isMobileVerified }) {
+  async create({ firstName, lastName, email, mobile, password, role, countryId, isEmailVerified, isMobileVerified, isSelfRegistration }) {
     const { data: newId, error } = await supabase.rpc('sp_users_insert', {
       p_country_id: countryId,
       p_first_name: firstName,
@@ -202,6 +202,7 @@ class UserRepository {
       p_is_active: true,
       p_is_email_verified: isEmailVerified || false,
       p_is_mobile_verified: isMobileVerified || false,
+      p_is_self_registration: isSelfRegistration || false,
     });
 
     if (error) {

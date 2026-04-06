@@ -57,10 +57,13 @@ class AuthService {
   //  Both email and mobile are REQUIRED.
   //  Flow: register → verify-email → verify-mobile → user created
   // ─────────────────────────────────────────────────────────────
-  async initiateRegistration({ firstName, lastName, email, mobile, password }) {
+  async initiateRegistration({ firstName, lastName, email, mobile, password, role }) {
     // Normalise
     email = normaliseEmail(email);
     mobile = normaliseMobile(mobile);
+
+    // Default role to student if not provided
+    role = role || ROLES.STUDENT;
 
     // Both email and mobile are required
     if (!email || !mobile) {
@@ -86,7 +89,7 @@ class AuthService {
       email,
       mobile,
       password, // RAW — sp_users_insert hashes via pgcrypto
-      role: ROLES.STUDENT,
+      role,
       countryId: DEFAULT_COUNTRY_ID,
       step: 'email_pending',
     });
@@ -225,6 +228,7 @@ class AuthService {
 
     // NOW save to database via sp_users_insert
     // Password is RAW — the SP hashes it via crypt(p_password, gen_salt('bf'))
+    // isSelfRegistration: true → SP validates role is self-registerable
     const user = await userRepository.create({
       firstName: userData.firstName,
       lastName: userData.lastName,
@@ -235,26 +239,27 @@ class AuthService {
       countryId: userData.countryId,
       isEmailVerified: !!userData.email,
       isMobileVerified: true,
+      isSelfRegistration: true,
     });
 
     // Clean up pending data
     await redis.del(pendingKey);
 
-    // Auto-assign 'student' role to new user
+    // Auto-assign the chosen role to user_role_assignments
     try {
-      const studentRole = await rbacRepository.findRoleByCode('student');
-      if (studentRole) {
+      const chosenRole = await rbacRepository.findRoleByCode(userData.role);
+      if (chosenRole) {
         await rbacRepository.assignRoleToUser({
           userId: user.user_id || user.id,
-          roleId: studentRole.role_id,
+          roleId: chosenRole.role_id,
           reason: 'Auto-assigned on registration',
           assignedBy: user.user_id || user.id,
         });
-        logger.info(`Student role auto-assigned to user: ${user.user_id || user.id}`);
+        logger.info(`${userData.role} role auto-assigned to user: ${user.user_id || user.id}`);
       }
     } catch (roleErr) {
       // Don't fail registration if role assignment fails
-      logger.warn({ error: roleErr }, `Failed to auto-assign student role to user: ${user.user_id || user.id}`);
+      logger.warn({ error: roleErr }, `Failed to auto-assign ${userData.role} role to user: ${user.user_id || user.id}`);
     }
 
     logger.info(`User registered: ${user.user_id} (${user.user_email || user.user_mobile})`);

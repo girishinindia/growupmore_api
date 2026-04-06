@@ -43,12 +43,21 @@ const nameField = z
 //  REGISTRATION
 // ═══════════════════════════════════════════════════════════════
 
+const roleField = z
+  .string()
+  .min(2, 'Role must be at least 2 characters')
+  .max(50, 'Role must be at most 50 characters')
+  .regex(/^[a-z_]+$/, 'Role must be lowercase letters and underscores only')
+  .optional()
+  .default('student');
+
 const initiateRegistrationSchema = z.object({
   firstName: nameField,
   lastName: nameField,
   email: emailField,
   mobile: mobileField,
   password: passwordField,
+  role: roleField,
 });
 
 const verifyRegistrationEmailSchema = z.object({
