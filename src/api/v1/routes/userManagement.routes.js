@@ -138,8 +138,15 @@ router.delete(
   ctrl.deleteUserProfile
 );
 
+router.post(
+  '/user-profiles/:id/restore',
+  authorize('user_profile.update'),
+  validate(idParamSchema, 'params'),
+  ctrl.restoreUserProfile
+);
+
 // ============================================================================
-// USER EDUCATION (5 routes - with certificate upload)
+// USER EDUCATION (6 routes - with certificate upload)
 // ============================================================================
 router.get(
   '/user-education',
@@ -179,8 +186,15 @@ router.delete(
   ctrl.deleteUserEducation
 );
 
+router.post(
+  '/user-education/:id/restore',
+  authorize('user_education.update'),
+  validate(idParamSchema, 'params'),
+  ctrl.restoreUserEducation
+);
+
 // ============================================================================
-// USER EXPERIENCE (5 routes - no file upload)
+// USER EXPERIENCE (6 routes - no file upload)
 // ============================================================================
 router.get(
   '/user-experience',
@@ -218,8 +232,15 @@ router.delete(
   ctrl.deleteUserExperience
 );
 
+router.post(
+  '/user-experience/:id/restore',
+  authorize('user_experience.update'),
+  validate(idParamSchema, 'params'),
+  ctrl.restoreUserExperience
+);
+
 // ============================================================================
-// USER SOCIAL MEDIAS (5 routes - no file upload)
+// USER SOCIAL MEDIAS (6 routes - no file upload)
 // ============================================================================
 router.get(
   '/user-social-medias',
@@ -257,8 +278,15 @@ router.delete(
   ctrl.deleteUserSocialMedia
 );
 
+router.post(
+  '/user-social-medias/:id/restore',
+  authorize('user_social_media.update'),
+  validate(idParamSchema, 'params'),
+  ctrl.restoreUserSocialMedia
+);
+
 // ============================================================================
-// USER SKILLS (5 routes - with certificate upload)
+// USER SKILLS (6 routes - with certificate upload)
 // ============================================================================
 router.get(
   '/user-skills',
@@ -298,8 +326,15 @@ router.delete(
   ctrl.deleteUserSkill
 );
 
+router.post(
+  '/user-skills/:id/restore',
+  authorize('user_skill.update'),
+  validate(idParamSchema, 'params'),
+  ctrl.restoreUserSkill
+);
+
 // ============================================================================
-// USER LANGUAGES (5 routes - no file upload)
+// USER LANGUAGES (6 routes - no file upload)
 // ============================================================================
 router.get(
   '/user-languages',
@@ -337,8 +372,15 @@ router.delete(
   ctrl.deleteUserLanguage
 );
 
+router.post(
+  '/user-languages/:id/restore',
+  authorize('user_language.update'),
+  validate(idParamSchema, 'params'),
+  ctrl.restoreUserLanguage
+);
+
 // ============================================================================
-// USER DOCUMENTS (5 routes - with document file upload)
+// USER DOCUMENTS (6 routes - with document file upload)
 // ============================================================================
 router.get(
   '/user-documents',
@@ -378,8 +420,15 @@ router.delete(
   ctrl.deleteUserDocument
 );
 
+router.post(
+  '/user-documents/:id/restore',
+  authorize('user_document.update'),
+  validate(idParamSchema, 'params'),
+  ctrl.restoreUserDocument
+);
+
 // ============================================================================
-// USER PROJECTS (5 routes - with thumbnail upload)
+// USER PROJECTS (6 routes - with thumbnail upload)
 // ============================================================================
 router.get(
   '/user-projects',
@@ -417,6 +466,13 @@ router.delete(
   authorize('user_project.delete'),
   validate(idParamSchema, 'params'),
   ctrl.deleteUserProject
+);
+
+router.post(
+  '/user-projects/:id/restore',
+  authorize('user_project.update'),
+  validate(idParamSchema, 'params'),
+  ctrl.restoreUserProject
 );
 
 module.exports = router;

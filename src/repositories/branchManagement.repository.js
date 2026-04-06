@@ -405,9 +405,17 @@ class BranchManagementRepository {
   }
 
   async restoreDepartment(departmentId) {
-    const { error } = await supabase.rpc('sp_branch_departments_restore', { p_id: departmentId });
+    const { error } = await supabase.rpc('sp_departments_restore', { p_id: departmentId });
     if (error) {
       logger.error({ error }, 'BranchManagementRepository.restoreDepartment failed');
+      throw error;
+    }
+  }
+
+  async restoreBranchDepartment(branchDepartmentId) {
+    const { error } = await supabase.rpc('sp_branch_departments_restore', { p_id: branchDepartmentId });
+    if (error) {
+      logger.error({ error }, 'BranchManagementRepository.restoreBranchDepartment failed');
       throw error;
     }
   }

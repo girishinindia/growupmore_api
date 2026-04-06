@@ -59,5 +59,6 @@ router.get('/branch-departments/:id', authorize('branch_department.read'), valid
 router.post('/branch-departments', authorize('branch_department.create'), validate(createBranchDepartmentSchema), ctrl.createBranchDepartment);
 router.patch('/branch-departments/:id', authorize('branch_department.update'), validate(idParamSchema, 'params'), validate(updateBranchDepartmentSchema), ctrl.updateBranchDepartment);
 router.delete('/branch-departments/:id', authorize('branch_department.delete'), validate(idParamSchema, 'params'), ctrl.deleteBranchDepartment);
+router.post('/branch-departments/:id/restore', authorize('branch_department.update'), validate(idParamSchema, 'params'), ctrl.restoreBranchDepartment);
 
 module.exports = router;

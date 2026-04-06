@@ -37,7 +37,7 @@ graph TB
         REPO[MasterDataRepository]
         REPO -->|"rpc → BIGINT"| SP1["sp_countries_insert / sp_states_insert / sp_cities_insert"]
         REPO -->|"rpc → VOID"| SP2["sp_countries_update / sp_states_update / sp_cities_update / *_delete"]
-        REPO -->|"rpc → TABLE"| UDF["udf_get_countries / udf_getstates / udf_getcities"]
+        REPO -->|"rpc → TABLE"| UDF["udf_get_countries / udf_get_states / udf_get_cities"]
     end
     subgraph "Storage"
         SP1 --> DB[(Supabase PostgreSQL)]

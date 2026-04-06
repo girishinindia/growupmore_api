@@ -493,6 +493,14 @@ class UserManagementRepository {
     }
   }
 
+  async restoreUserProfile(id) {
+    const { error } = await supabase.rpc('sp_user_profiles_restore', { p_id: id });
+    if (error) {
+      logger.error({ error }, 'UserManagementRepository.restoreUserProfile failed');
+      throw error;
+    }
+  }
+
   // ============================================================================
   // USER EDUCATION
   // ============================================================================
@@ -670,6 +678,14 @@ class UserManagementRepository {
 
     if (error) {
       logger.error({ error }, 'UserManagementRepository.deleteUserEducation failed');
+      throw error;
+    }
+  }
+
+  async restoreUserEducation(id) {
+    const { error } = await supabase.rpc('sp_user_education_restore', { p_id: id });
+    if (error) {
+      logger.error({ error }, 'UserManagementRepository.restoreUserEducation failed');
       throw error;
     }
   }
@@ -871,6 +887,14 @@ class UserManagementRepository {
     }
   }
 
+  async restoreUserExperience(id) {
+    const { error } = await supabase.rpc('sp_user_experience_restore', { p_id: id });
+    if (error) {
+      logger.error({ error }, 'UserManagementRepository.restoreUserExperience failed');
+      throw error;
+    }
+  }
+
   // ============================================================================
   // USER SOCIAL MEDIAS
   // ============================================================================
@@ -1015,6 +1039,14 @@ class UserManagementRepository {
 
     if (error) {
       logger.error({ error }, 'UserManagementRepository.deleteUserSocialMedia failed');
+      throw error;
+    }
+  }
+
+  async restoreUserSocialMedia(id) {
+    const { error } = await supabase.rpc('sp_user_social_medias_restore', { p_id: id });
+    if (error) {
+      logger.error({ error }, 'UserManagementRepository.restoreUserSocialMedia failed');
       throw error;
     }
   }
@@ -1170,6 +1202,14 @@ class UserManagementRepository {
 
     if (error) {
       logger.error({ error }, 'UserManagementRepository.deleteUserSkill failed');
+      throw error;
+    }
+  }
+
+  async restoreUserSkill(id) {
+    const { error } = await supabase.rpc('sp_user_skills_restore', { p_id: id });
+    if (error) {
+      logger.error({ error }, 'UserManagementRepository.restoreUserSkill failed');
       throw error;
     }
   }
@@ -1338,6 +1378,14 @@ class UserManagementRepository {
 
     if (error) {
       logger.error({ error }, 'UserManagementRepository.deleteUserLanguage failed');
+      throw error;
+    }
+  }
+
+  async restoreUserLanguage(id) {
+    const { error } = await supabase.rpc('sp_user_languages_restore', { p_id: id });
+    if (error) {
+      logger.error({ error }, 'UserManagementRepository.restoreUserLanguage failed');
       throw error;
     }
   }
@@ -1518,6 +1566,14 @@ class UserManagementRepository {
 
     if (error) {
       logger.error({ error }, 'UserManagementRepository.deleteUserDocument failed');
+      throw error;
+    }
+  }
+
+  async restoreUserDocument(id) {
+    const { error } = await supabase.rpc('sp_user_documents_restore', { p_id: id });
+    if (error) {
+      logger.error({ error }, 'UserManagementRepository.restoreUserDocument failed');
       throw error;
     }
   }
@@ -1823,6 +1879,14 @@ class UserManagementRepository {
 
     if (error) {
       logger.error({ error }, 'UserManagementRepository.deleteUserProject failed');
+      throw error;
+    }
+  }
+
+  async restoreUserProject(id) {
+    const { error } = await supabase.rpc('sp_user_projects_restore', { p_id: id });
+    if (error) {
+      logger.error({ error }, 'UserManagementRepository.restoreUserProject failed');
       throw error;
     }
   }

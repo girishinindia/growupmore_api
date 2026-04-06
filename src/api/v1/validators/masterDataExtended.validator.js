@@ -56,9 +56,11 @@ const coerceSmallInt = z.preprocess(
 // SKILLS SCHEMAS
 // ============================================================================
 
+const SKILL_CATEGORIES = ['technical', 'soft_skill', 'tool', 'framework', 'language', 'domain', 'certification', 'other'];
+
 const createSkillSchema = z.object({
   name: z.string().min(1).max(200).trim(),
-  category: z.string().max(50).optional().default('technical'),
+  category: z.enum(SKILL_CATEGORIES).optional().default('technical'),
   description: z.string().optional().nullable(),
   iconUrl: z.string().url().optional().nullable(),
   isActive: coerceBoolean.optional().default(true),
@@ -66,7 +68,7 @@ const createSkillSchema = z.object({
 
 const updateSkillSchema = z.object({
   name: z.string().min(1).max(200).trim().optional(),
-  category: z.string().max(50).optional(),
+  category: z.enum(SKILL_CATEGORIES).optional(),
   description: z.string().optional().nullable(),
   iconUrl: z.string().url().optional().nullable(),
   isActive: coerceBoolean.optional(),

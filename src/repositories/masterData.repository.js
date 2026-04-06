@@ -11,13 +11,13 @@
  *   - sp_countries_delete     — soft delete, returns void
  *
  *   STATES:
- *   - udf_getstates           — read, search, filter, paginate
+ *   - udf_get_states           — read, search, filter, paginate
  *   - sp_states_insert        — create, returns new id (BIGINT)
  *   - sp_states_update        — update, returns void
  *   - sp_states_delete        — soft delete, returns void
  *
  *   CITIES:
- *   - udf_getcities           — read, search, filter, paginate
+ *   - udf_get_cities           — read, search, filter, paginate
  *   - sp_cities_insert        — create, returns new id (BIGINT)
  *   - sp_cities_update        — update, returns void
  *   - sp_cities_delete        — soft delete, returns void
@@ -161,7 +161,7 @@ class MasterDataRepository {
   // ─────────────────────────────────────────────────────────────
 
   async findStateById(stateId) {
-    const { data, error } = await supabase.rpc('udf_getstates', {
+    const { data, error } = await supabase.rpc('udf_get_states', {
       p_id: stateId,
       p_country_is_active: null,
       p_state_is_active: null,
@@ -189,7 +189,7 @@ class MasterDataRepository {
   }
 
   async getStates(options = {}) {
-    const { data, error } = await supabase.rpc('udf_getstates', {
+    const { data, error } = await supabase.rpc('udf_get_states', {
       p_id: null,
       p_country_is_active: null,
       p_state_is_active: null,
@@ -272,7 +272,7 @@ class MasterDataRepository {
   // ─────────────────────────────────────────────────────────────
 
   async findCityById(cityId) {
-    const { data, error } = await supabase.rpc('udf_getcities', {
+    const { data, error } = await supabase.rpc('udf_get_cities', {
       p_id: cityId,
       p_country_is_active: null,
       p_state_is_active: null,
@@ -304,7 +304,7 @@ class MasterDataRepository {
   }
 
   async getCities(options = {}) {
-    const { data, error } = await supabase.rpc('udf_getcities', {
+    const { data, error } = await supabase.rpc('udf_get_cities', {
       p_id: null,
       p_country_is_active: null,
       p_state_is_active: null,

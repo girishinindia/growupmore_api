@@ -60,41 +60,49 @@ graph TB
 | 9 | `GET /user-profiles/:id` | `user_profile.read` | Get a single profile by ID |
 | 10 | `PATCH/user-profiles/:id` | `user_profile.update` | Update profile details |
 | 11 | `DELETE /user-profiles/:id` | `user_profile.delete` | Soft-delete a profile |
-| 12 | `POST /user-education` | `user_education.create` | Create education record with certificate |
+| 12 | `POST /user-profiles/:id/restore` | `user_profile.update` | Restore a soft-deleted profile |
+| 13 | `POST /user-education` | `user_education.create` | Create education record with certificate |
 | 13 | `GET /user-education` | `user_education.read` | List all education records with filters |
 | 14 | `GET /user-education/:id` | `user_education.read` | Get a single education record by ID |
 | 15 | `PATCH/user-education/:id` | `user_education.update` | Update education details |
 | 16 | `DELETE /user-education/:id` | `user_education.delete` | Soft-delete education record |
-| 17 | `POST /user-experience` | `user_experience.create` | Create experience record |
+| 17 | `POST /user-education/:id/restore` | `user_education.update` | Restore a soft-deleted education record |
+| 18 | `POST /user-experience` | `user_experience.create` | Create experience record |
 | 18 | `GET /user-experience` | `user_experience.read` | List all experience records with filters |
 | 19 | `GET /user-experience/:id` | `user_experience.read` | Get a single experience record by ID |
 | 20 | `PATCH/user-experience/:id` | `user_experience.update` | Update experience details |
-| 21 | `DELETE /user-experience/:id` | `user_experience.delete` | Soft-delete experience record |
-| 22 | `POST /user-social-medias` | `user_social_media.create` | Create social media record |
+| 22 | `DELETE /user-experience/:id` | `user_experience.delete` | Soft-delete experience record |
+| 23 | `POST /user-experience/:id/restore` | `user_experience.update` | Restore a soft-deleted experience record |
+| 24 | `POST /user-social-medias` | `user_social_media.create` | Create social media record |
 | 23 | `GET /user-social-medias` | `user_social_media.read` | List all social media records with filters |
 | 24 | `GET /user-social-medias/:id` | `user_social_media.read` | Get a single social media record by ID |
 | 25 | `PATCH/user-social-medias/:id` | `user_social_media.update` | Update social media details |
-| 26 | `DELETE /user-social-medias/:id` | `user_social_media.delete` | Soft-delete social media record |
-| 27 | `POST /user-skills` | `user_skill.create` | Create skill record with certificate |
+| 28 | `DELETE /user-social-medias/:id` | `user_social_media.delete` | Soft-delete social media record |
+| 29 | `POST /user-social-medias/:id/restore` | `user_social_media.update` | Restore a soft-deleted social media record |
+| 30 | `POST /user-skills` | `user_skill.create` | Create skill record with certificate |
 | 28 | `GET /user-skills` | `user_skill.read` | List all skill records with filters |
 | 29 | `GET /user-skills/:id` | `user_skill.read` | Get a single skill record by ID |
 | 30 | `PATCH/user-skills/:id` | `user_skill.update` | Update skill details |
-| 31 | `DELETE /user-skills/:id` | `user_skill.delete` | Soft-delete skill record |
-| 32 | `POST /user-languages` | `user_language.create` | Create language record |
+| 34 | `DELETE /user-skills/:id` | `user_skill.delete` | Soft-delete skill record |
+| 35 | `POST /user-skills/:id/restore` | `user_skill.update` | Restore a soft-deleted skill record |
+| 36 | `POST /user-languages` | `user_language.create` | Create language record |
 | 33 | `GET /user-languages` | `user_language.read` | List all language records with filters |
 | 34 | `GET /user-languages/:id` | `user_language.read` | Get a single language record by ID |
 | 35 | `PATCH/user-languages/:id` | `user_language.update` | Update language details |
-| 36 | `DELETE /user-languages/:id` | `user_language.delete` | Soft-delete language record |
-| 37 | `POST /user-documents` | `user_document.create` | Create document record with file |
+| 40 | `DELETE /user-languages/:id` | `user_language.delete` | Soft-delete language record |
+| 41 | `POST /user-languages/:id/restore` | `user_language.update` | Restore a soft-deleted language record |
+| 42 | `POST /user-documents` | `user_document.create` | Create document record with file |
 | 38 | `GET /user-documents` | `user_document.read` | List all document records with filters |
 | 39 | `GET /user-documents/:id` | `user_document.read` | Get a single document record by ID |
 | 40 | `PATCH/user-documents/:id` | `user_document.update` | Update document details |
-| 41 | `DELETE /user-documents/:id` | `user_document.delete` | Soft-delete document record |
-| 42 | `POST /user-projects` | `user_project.create` | Create project record with thumbnail |
+| 46 | `DELETE /user-documents/:id` | `user_document.delete` | Soft-delete document record |
+| 47 | `POST /user-documents/:id/restore` | `user_document.update` | Restore a soft-deleted document record |
+| 48 | `POST /user-projects` | `user_project.create` | Create project record with thumbnail |
 | 43 | `GET /user-projects` | `user_project.read` | List all project records with filters |
 | 44 | `GET /user-projects/:id` | `user_project.read` | Get a single project record by ID |
 | 45 | `PATCH/user-projects/:id` | `user_project.update` | Update project details |
-| 46 | `DELETE /user-projects/:id` | `user_project.delete` | Soft-delete project record |
+| 52 | `DELETE /user-projects/:id` | `user_project.delete` | Soft-delete project record |
+| 53 | `POST /user-projects/:id/restore` | `user_project.update` | Restore a soft-deleted project record |
 
 ---
 
@@ -621,6 +629,32 @@ Authorization: Bearer {{access_token}}
 }
 ```
 
+### 2.6 Restore User Profile
+
+**Request:**
+```
+POST /api/v1/user-management/user-profiles/{id}/restore
+```
+
+**Headers:**
+```
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "User Profile restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** Restores a soft-deleted user profile. No request body required.
+
 ---
 
 ## 3. USER EDUCATION
@@ -832,6 +866,32 @@ Authorization: Bearer {{access_token}}
   "message": "User education record deleted successfully"
 }
 ```
+
+### 3.6 Restore User Education
+
+**Request:**
+```
+POST /api/v1/user-management/user-education/{id}/restore
+```
+
+**Headers:**
+```
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "User Education restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** Restores a soft-deleted user education record. No request body required.
 
 ---
 
@@ -1052,6 +1112,32 @@ Authorization: Bearer {{access_token}}
 }
 ```
 
+### 4.6 Restore User Experience
+
+**Request:**
+```
+POST /api/v1/user-management/user-experience/{id}/restore
+```
+
+**Headers:**
+```
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "User Experience restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** Restores a soft-deleted user experience record. No request body required.
+
 ---
 
 ## 5. USER SOCIAL MEDIAS
@@ -1245,6 +1331,32 @@ Authorization: Bearer {{access_token}}
   "message": "User social media record deleted successfully"
 }
 ```
+
+### 5.6 Restore User Social Media
+
+**Request:**
+```
+POST /api/v1/user-management/user-social-medias/{id}/restore
+```
+
+**Headers:**
+```
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "User Social Media restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** Restores a soft-deleted user social media record. No request body required.
 
 ---
 
@@ -1440,6 +1552,32 @@ Authorization: Bearer {{access_token}}
   "message": "User skill record deleted successfully"
 }
 ```
+
+### 6.6 Restore User Skill
+
+**Request:**
+```
+POST /api/v1/user-management/user-skills/{id}/restore
+```
+
+**Headers:**
+```
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "User Skill restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** Restores a soft-deleted user skill record. No request body required.
 
 ---
 
@@ -1640,6 +1778,32 @@ Authorization: Bearer {{access_token}}
   "message": "User language record deleted successfully"
 }
 ```
+
+### 7.6 Restore User Language
+
+**Request:**
+```
+POST /api/v1/user-management/user-languages/{id}/restore
+```
+
+**Headers:**
+```
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "User Language restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** Restores a soft-deleted user language record. No request body required.
 
 ---
 
@@ -1846,6 +2010,32 @@ Authorization: Bearer {{access_token}}
   "message": "User document record deleted successfully"
 }
 ```
+
+### 8.6 Restore User Document
+
+**Request:**
+```
+POST /api/v1/user-management/user-documents/{id}/restore
+```
+
+**Headers:**
+```
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "User Document restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** Restores a soft-deleted user document record. No request body required.
 
 ---
 
@@ -2120,6 +2310,32 @@ Authorization: Bearer {{access_token}}
   "message": "User project record deleted successfully"
 }
 ```
+
+### 9.6 Restore User Project
+
+**Request:**
+```
+POST /api/v1/user-management/user-projects/{id}/restore
+```
+
+**Headers:**
+```
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "User Project restored successfully",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+> **Note:** Restores a soft-deleted user project record. No request body required.
 
 ---
 

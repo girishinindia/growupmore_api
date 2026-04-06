@@ -233,6 +233,15 @@ class BranchManagementController {
       next(error);
     }
   }
+
+  async restoreBranchDepartment(req, res, next) {
+    try {
+      const data = await branchManagementService.restoreBranchDepartment(req.params.id);
+      sendSuccess(res, { message: 'Branch Department restored successfully', data });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new BranchManagementController();

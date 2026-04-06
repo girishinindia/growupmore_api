@@ -307,6 +307,12 @@ class UserManagementService {
     }
   }
 
+  async restoreUserProfile(id) {
+    if (!id) throw new BadRequestError('User Profile ID is required');
+    await userManagementRepository.restoreUserProfile(id);
+    return { id };
+  }
+
   // ============================================================================
   // USER EDUCATION ENTITY
   // ============================================================================
@@ -439,6 +445,12 @@ class UserManagementService {
       logger.error(`Error deleting user education with ID ${id}:`, error);
       throw error;
     }
+  }
+
+  async restoreUserEducation(id) {
+    if (!id) throw new BadRequestError('User Education ID is required');
+    await userManagementRepository.restoreUserEducation(id);
+    return { id };
   }
 
   // ============================================================================
@@ -575,6 +587,12 @@ class UserManagementService {
     }
   }
 
+  async restoreUserExperience(id) {
+    if (!id) throw new BadRequestError('User Experience ID is required');
+    await userManagementRepository.restoreUserExperience(id);
+    return { id };
+  }
+
   // ============================================================================
   // USER SOCIAL MEDIAS ENTITY
   // ============================================================================
@@ -702,6 +720,12 @@ class UserManagementService {
     }
   }
 
+  async restoreUserSocialMedia(id) {
+    if (!id) throw new BadRequestError('User Social Media ID is required');
+    await userManagementRepository.restoreUserSocialMedia(id);
+    return { id };
+  }
+
   // ============================================================================
   // USER SKILLS ENTITY
   // ============================================================================
@@ -826,6 +850,12 @@ class UserManagementService {
       logger.error(`Error deleting user skill with ID ${id}:`, error);
       throw error;
     }
+  }
+
+  async restoreUserSkill(id) {
+    if (!id) throw new BadRequestError('User Skill ID is required');
+    await userManagementRepository.restoreUserSkill(id);
+    return { id };
   }
 
   // ============================================================================
@@ -961,6 +991,12 @@ class UserManagementService {
     }
   }
 
+  async restoreUserLanguage(id) {
+    if (!id) throw new BadRequestError('User Language ID is required');
+    await userManagementRepository.restoreUserLanguage(id);
+    return { id };
+  }
+
   // ============================================================================
   // USER DOCUMENTS ENTITY
   // ============================================================================
@@ -1090,6 +1126,12 @@ class UserManagementService {
       logger.error(`Error deleting user document with ID ${id}:`, error);
       throw error;
     }
+  }
+
+  async restoreUserDocument(id) {
+    if (!id) throw new BadRequestError('User Document ID is required');
+    await userManagementRepository.restoreUserDocument(id);
+    return { id };
   }
 
   // ============================================================================
@@ -1236,6 +1278,12 @@ class UserManagementService {
       logger.error(`Error deleting user project with ID ${id}:`, error);
       throw error;
     }
+  }
+
+  async restoreUserProject(id) {
+    if (!id) throw new BadRequestError('User Project ID is required');
+    await userManagementRepository.restoreUserProject(id);
+    return { id };
   }
 }
 

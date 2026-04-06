@@ -204,6 +204,15 @@ class UserManagementController {
     }
   }
 
+  async restoreUserProfile(req, res, next) {
+    try {
+      const data = await userManagementService.restoreUserProfile(req.params.id);
+      sendSuccess(res, { message: 'User Profile restored successfully', data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   // ============ USER EDUCATION ============
   async getUserEducations(req, res, next) {
     try {
@@ -298,6 +307,15 @@ class UserManagementController {
     }
   }
 
+  async restoreUserEducation(req, res, next) {
+    try {
+      const data = await userManagementService.restoreUserEducation(req.params.id);
+      sendSuccess(res, { message: 'User Education restored successfully', data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   // ============ USER EXPERIENCE ============
   async getUserExperiences(req, res, next) {
     try {
@@ -365,6 +383,15 @@ class UserManagementController {
     }
   }
 
+  async restoreUserExperience(req, res, next) {
+    try {
+      const data = await userManagementService.restoreUserExperience(req.params.id);
+      sendSuccess(res, { message: 'User Experience restored successfully', data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   // ============ USER SOCIAL MEDIAS ============
   async getUserSocialMedias(req, res, next) {
     try {
@@ -426,6 +453,15 @@ class UserManagementController {
       const { id } = req.params;
       await userManagementService.deleteUserSocialMedia(id, req.user.userId);
       sendSuccess(res, { data: null, message: 'User Social Media deleted successfully' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async restoreUserSocialMedia(req, res, next) {
+    try {
+      const data = await userManagementService.restoreUserSocialMedia(req.params.id);
+      sendSuccess(res, { message: 'User Social Media restored successfully', data });
     } catch (error) {
       next(error);
     }
@@ -525,6 +561,15 @@ class UserManagementController {
     }
   }
 
+  async restoreUserSkill(req, res, next) {
+    try {
+      const data = await userManagementService.restoreUserSkill(req.params.id);
+      sendSuccess(res, { message: 'User Skill restored successfully', data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   // ============ USER LANGUAGES ============
   async getUserLanguages(req, res, next) {
     try {
@@ -587,6 +632,15 @@ class UserManagementController {
       const { id } = req.params;
       await userManagementService.deleteUserLanguage(id, req.user.userId);
       sendSuccess(res, { data: null, message: 'User Language deleted successfully' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async restoreUserLanguage(req, res, next) {
+    try {
+      const data = await userManagementService.restoreUserLanguage(req.params.id);
+      sendSuccess(res, { message: 'User Language restored successfully', data });
     } catch (error) {
       next(error);
     }
@@ -685,6 +739,15 @@ class UserManagementController {
     }
   }
 
+  async restoreUserDocument(req, res, next) {
+    try {
+      const data = await userManagementService.restoreUserDocument(req.params.id);
+      sendSuccess(res, { message: 'User Document restored successfully', data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   // ============ USER PROJECTS ============
   async getUserProjects(req, res, next) {
     try {
@@ -775,6 +838,15 @@ class UserManagementController {
 
       await userManagementService.deleteUserProject(id, req.user.userId);
       sendSuccess(res, { data: null, message: 'User Project deleted successfully' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async restoreUserProject(req, res, next) {
+    try {
+      const data = await userManagementService.restoreUserProject(req.params.id);
+      sendSuccess(res, { message: 'User Project restored successfully', data });
     } catch (error) {
       next(error);
     }
