@@ -25,7 +25,7 @@ class QuestionBankService {
         sortTable: sort?.table || 'translation',
         sortColumn: sort?.column || 'question_text',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.pageIndex || 0,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.pageSize || 20,
       };
       return await questionBankRepository.getMcqQuestions(repoOptions);
@@ -372,7 +372,7 @@ class QuestionBankService {
         sortTable: sort?.table || 'translation',
         sortColumn: sort?.column || 'created_at',
         sortOrder: sort?.order || 'DESC',
-        pageIndex: pagination.pageIndex || 0,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.pageSize || 25,
       };
       return await questionBankRepository.getOneWordQuestions(repoOptions);
@@ -708,7 +708,7 @@ class QuestionBankService {
         sortTable: sort?.table || 'translation',
         sortColumn: sort?.column || 'dq_display_order',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.pageIndex || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.pageSize || 50,
       };
       return await questionBankRepository.getDescriptiveQuestions(repoOptions);
@@ -921,7 +921,7 @@ class QuestionBankService {
         sortTable: sort?.table || 'question',
         sortColumn: sort?.column || 'created_at',
         sortDirection: sort?.direction || 'DESC',
-        pageIndex: pagination.pageIndex || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.pageSize || 20,
       };
       return await questionBankRepository.getMatchingQuestions(repoOptions);
@@ -1079,7 +1079,7 @@ class QuestionBankService {
         sortTable: sort?.table || 'question',
         sortColumn: sort?.column || 'oq_id',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.pageIndex || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.pageSize || 10,
       };
       return await questionBankRepository.getOrderingQuestions(repoOptions);

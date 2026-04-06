@@ -23,7 +23,7 @@ class ReferralManagementService {
       referrerRewardStatus,
       sortColumn,
       sortDirection,
-      pageIndex: page,
+      pageIndex: page - 1,
       pageSize: limit,
     });
   }
@@ -112,7 +112,7 @@ class ReferralManagementService {
       rewardStatus,
       sortColumn,
       sortDirection,
-      pageIndex: page,
+      pageIndex: page - 1,
       pageSize: limit,
     });
   }

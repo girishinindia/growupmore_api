@@ -28,7 +28,7 @@ class BranchManagementService {
         sortTable: sort?.table || 'branch',
         sortColumn: sort?.field || 'id',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
 
@@ -119,7 +119,7 @@ class BranchManagementService {
         sortTable: sort?.table || 'department',
         sortColumn: sort?.field || 'id',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
 
@@ -215,7 +215,7 @@ class BranchManagementService {
         sortTable: sort?.table || 'branch_department',
         sortColumn: sort?.field || 'id',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
 

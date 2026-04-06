@@ -31,7 +31,7 @@ class CallFollowupManagementService {
         search,
         sortBy,
         sortDir,
-        pageIndex: page,
+        pageIndex: page - 1,
         pageSize: limit,
       };
 
@@ -403,7 +403,7 @@ class CallFollowupManagementService {
         scheduledBefore,
         sortBy,
         sortDir,
-        pageIndex: page,
+        pageIndex: page - 1,
         pageSize: limit,
       };
 

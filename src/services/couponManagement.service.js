@@ -29,7 +29,7 @@ class CouponManagementService {
         searchTerm,
         sortColumn,
         sortDirection,
-        pageIndex: page,
+        pageIndex: page - 1,
         pageSize: limit,
       };
 
@@ -266,7 +266,7 @@ class CouponManagementService {
         searchTerm,
         sortColumn,
         sortDirection,
-        pageIndex: page,
+        pageIndex: page - 1,
         pageSize: limit,
       };
 
@@ -450,7 +450,7 @@ class CouponManagementService {
         searchTerm,
         sortColumn,
         sortDirection,
-        pageIndex: page,
+        pageIndex: page - 1,
         pageSize: limit,
       };
 
@@ -634,7 +634,7 @@ class CouponManagementService {
         searchTerm,
         sortColumn,
         sortDirection,
-        pageIndex: page,
+        pageIndex: page - 1,
         pageSize: limit,
       };
 
@@ -818,7 +818,7 @@ class CouponManagementService {
         searchTerm,
         sortColumn,
         sortDirection,
-        pageIndex: page,
+        pageIndex: page - 1,
         pageSize: limit,
       };
 

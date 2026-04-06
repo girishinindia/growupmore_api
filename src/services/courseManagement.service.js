@@ -24,7 +24,7 @@ class CourseManagementService {
         sortTable: sort?.table || 'course',
         sortColumn: sort?.field || 'id',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
       return await courseManagementRepository.getCourses(repoOptions);
@@ -381,7 +381,7 @@ class CourseManagementService {
         sortTable: sort?.table || 'module',
         sortColumn: sort?.field || 'display_order',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
       return await courseManagementRepository.getCourseModules(repoOptions);
@@ -581,7 +581,7 @@ class CourseManagementService {
         sortTable: sort?.table || 'topic',
         sortColumn: sort?.field || 'display_order',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
       return await courseManagementRepository.getCourseModuleTopics(repoOptions);
@@ -935,7 +935,7 @@ class CourseManagementService {
         sortTable: sort?.table || 'bundle',
         sortColumn: sort?.field || 'id',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
       return await courseManagementRepository.getBundles(repoOptions);
@@ -1153,7 +1153,7 @@ class CourseManagementService {
         sortTable: sort?.table || 'bundle_course',
         sortColumn: sort?.field || 'display_order',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
       return await courseManagementRepository.getBundleCourses(repoOptions);

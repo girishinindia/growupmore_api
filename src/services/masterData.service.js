@@ -30,7 +30,7 @@ class MasterDataService {
         searchTerm: search || null,
         sortColumn: sort?.field || 'id',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
 
@@ -121,7 +121,7 @@ class MasterDataService {
         sortTable: sort?.table || 'state',
         sortColumn: sort?.field || 'id',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
 
@@ -223,7 +223,7 @@ class MasterDataService {
         sortTable: sort?.table || 'city',
         sortColumn: sort?.field || 'id',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
 

@@ -55,7 +55,7 @@ class RbacService {
         filterIsSystemRole: filters.isSystemRole !== undefined ? filters.isSystemRole : null,
         sortColumn: sort?.field || 'role_name',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 50,
       };
 
@@ -281,7 +281,7 @@ class RbacService {
       const repoOptions = {
         sortColumn: sort?.field || 'perm_name',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 50,
       };
 
@@ -476,7 +476,7 @@ class RbacService {
         filterRoleCode: roleCode || null,
         sortColumn: sort?.field || 'ura_created_at',
         sortDirection: sort?.direction || 'DESC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
 
@@ -664,7 +664,7 @@ class RbacService {
       const repoOptions = {
         sortColumn: sort?.field || 'perm_name',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 50,
       };
 

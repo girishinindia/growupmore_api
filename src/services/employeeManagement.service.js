@@ -40,7 +40,7 @@ class EmployeeManagementService {
         sortTable: sort?.table || 'emp',
         sortColumn: sort?.field || 'id',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
 

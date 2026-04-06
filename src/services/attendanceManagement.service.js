@@ -28,7 +28,7 @@ class AttendanceManagementService {
         filterSearchTerm: search || null,
         sortColumn: sort?.field || 'created_at',
         sortDirection: sort?.direction || 'DESC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
       return await attendanceManagementRepository.getAttendance(repoOptions);

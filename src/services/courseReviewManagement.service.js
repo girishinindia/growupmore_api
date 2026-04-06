@@ -47,7 +47,7 @@ class CourseReviewManagementService {
         sortTable: 'review',
         sortColumn: sortBy,
         sortDirection: sortDir,
-        pageIndex: page,
+        pageIndex: page - 1,
         pageSize: limit,
       };
 

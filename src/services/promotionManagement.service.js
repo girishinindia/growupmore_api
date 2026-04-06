@@ -31,7 +31,7 @@ class PromotionManagementService {
         searchTerm: search || null,
         sortColumn: sort?.field || 'id',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
 
@@ -238,7 +238,7 @@ class PromotionManagementService {
         filterIsActive: filters.isActive !== undefined ? filters.isActive : null,
         sortColumn: sort?.field || 'display_order',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
 

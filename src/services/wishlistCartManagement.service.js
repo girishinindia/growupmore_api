@@ -29,7 +29,7 @@ class WishlistCartManagementService {
         filterIsActive: options.filterIsActive !== undefined ? options.filterIsActive : null,
         filterIsDeleted: options.filterIsDeleted !== undefined ? options.filterIsDeleted : false,
         searchTerm: options.searchTerm || null,
-        pageIndex: options.page || 1,
+        pageIndex: (options.page || 1) - 1,
         pageSize: options.limit || 20,
       };
 
@@ -178,7 +178,7 @@ class WishlistCartManagementService {
         filterIsActive: options.filterIsActive !== undefined ? options.filterIsActive : null,
         filterIsDeleted: options.filterIsDeleted !== undefined ? options.filterIsDeleted : false,
         searchTerm: options.searchTerm || null,
-        pageIndex: options.page || 1,
+        pageIndex: (options.page || 1) - 1,
         pageSize: options.limit || 20,
       };
 
@@ -313,7 +313,7 @@ class WishlistCartManagementService {
         filterIsActive: options.filterIsActive !== undefined ? options.filterIsActive : null,
         filterIsDeleted: options.filterIsDeleted !== undefined ? options.filterIsDeleted : false,
         searchTerm: options.searchTerm || null,
-        pageIndex: options.page || 1,
+        pageIndex: (options.page || 1) - 1,
         pageSize: options.limit || 20,
       };
 

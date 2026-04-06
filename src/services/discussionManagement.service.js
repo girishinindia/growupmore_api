@@ -45,7 +45,7 @@ class DiscussionManagementService {
         searchTerm,
         sortColumn: sortBy,
         sortDirection: sortDir,
-        pageIndex: page,
+        pageIndex: page - 1,
         pageSize: limit,
       };
 
@@ -307,7 +307,7 @@ class DiscussionManagementService {
         searchTerm,
         sortColumn: sortBy,
         sortDirection: sortDir,
-        pageIndex: page,
+        pageIndex: page - 1,
         pageSize: limit,
       };
 
@@ -555,7 +555,7 @@ class DiscussionManagementService {
         voteType,
         sortColumn: sortBy,
         sortDirection: sortDir,
-        pageIndex: page,
+        pageIndex: page - 1,
         pageSize: limit,
       };
 

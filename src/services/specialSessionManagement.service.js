@@ -43,7 +43,7 @@ class SpecialSessionManagementService {
         searchTerm,
         sortColumn: sortBy,
         sortDirection: sortDir,
-        pageIndex: page,
+        pageIndex: page - 1,
         pageSize: limit,
       };
 
@@ -420,7 +420,7 @@ class SpecialSessionManagementService {
         searchTerm,
         sortColumn: sortBy,
         sortDirection: sortDir,
-        pageIndex: page,
+        pageIndex: page - 1,
         pageSize: limit,
       };
 

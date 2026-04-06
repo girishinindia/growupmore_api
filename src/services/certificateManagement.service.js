@@ -34,7 +34,7 @@ class CertificateManagementService {
         sortTable,
         sortColumn: sortBy,
         sortDirection: sortDir,
-        pageIndex: page,
+        pageIndex: page - 1,
         pageSize: limit,
       };
 
@@ -228,7 +228,7 @@ class CertificateManagementService {
         searchTerm,
         sortColumn: sortBy,
         sortDirection: sortDir,
-        pageIndex: page,
+        pageIndex: page - 1,
         pageSize: limit,
       };
 

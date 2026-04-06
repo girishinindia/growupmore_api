@@ -22,7 +22,7 @@ class UserManagementService {
         searchTerm: search || null,
         sortColumn: sort?.field || 'id',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
       return await userManagementRepository.getUsers(repoOptions);
@@ -189,7 +189,7 @@ class UserManagementService {
         searchTerm: search || null,
         sortColumn: sort?.field || 'id',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
       return await userManagementRepository.getUserProfiles(repoOptions);
@@ -334,7 +334,7 @@ class UserManagementService {
         searchTerm: search || null,
         sortColumn: sort?.field || 'id',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
       return await userManagementRepository.getUserEducation(repoOptions);
@@ -475,7 +475,7 @@ class UserManagementService {
         searchTerm: search || null,
         sortColumn: sort?.field || 'id',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
       return await userManagementRepository.getUserExperience(repoOptions);
@@ -615,7 +615,7 @@ class UserManagementService {
         searchTerm: search || null,
         sortColumn: sort?.field || 'id',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
       return await userManagementRepository.getUserSocialMedias(repoOptions);
@@ -750,7 +750,7 @@ class UserManagementService {
         searchTerm: search || null,
         sortColumn: sort?.field || 'id',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
       return await userManagementRepository.getUserSkills(repoOptions);
@@ -886,7 +886,7 @@ class UserManagementService {
         searchTerm: search || null,
         sortColumn: sort?.field || 'id',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
       return await userManagementRepository.getUserLanguages(repoOptions);
@@ -1022,7 +1022,7 @@ class UserManagementService {
         searchTerm: search || null,
         sortColumn: sort?.field || 'id',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
       return await userManagementRepository.getUserDocuments(repoOptions);
@@ -1163,7 +1163,7 @@ class UserManagementService {
         searchTerm: search || null,
         sortColumn: sort?.field || 'id',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
       return await userManagementRepository.getUserProjects(repoOptions);

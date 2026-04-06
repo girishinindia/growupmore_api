@@ -17,7 +17,7 @@ class MaterialManagementService {
         sortTable: sort?.table || 'subject',
         sortColumn: sort?.field || 'display_order',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
       return await materialManagementRepository.getSubjects(repoOptions);
@@ -97,7 +97,7 @@ class MaterialManagementService {
         sortTable: sort?.table || 'chapter',
         sortColumn: sort?.field || 'display_order',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
       return await materialManagementRepository.getChapters(repoOptions);
@@ -178,7 +178,7 @@ class MaterialManagementService {
         sortTable: sort?.table || 'topic',
         sortColumn: sort?.field || 'display_order',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
       return await materialManagementRepository.getTopics(repoOptions);
@@ -257,7 +257,7 @@ class MaterialManagementService {
         sortTable: sort?.table || 'sub_topic',
         sortColumn: sort?.field || 'display_order',
         sortDirection: sort?.direction || 'ASC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
       return await materialManagementRepository.getSubTopics(repoOptions);

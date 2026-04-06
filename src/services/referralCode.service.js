@@ -23,7 +23,7 @@ class ReferralCodeService {
         filterReferrerRewardType: filters.referrerRewardType || null,
         sortColumn: sort?.field || 'created_at',
         sortDirection: sort?.direction || 'DESC',
-        pageIndex: pagination.page || 1,
+        pageIndex: (pagination.page || 1) - 1,
         pageSize: pagination.limit || 20,
       };
 
